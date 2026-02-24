@@ -31,10 +31,12 @@ else
   echo ".env found"
 fi
 
-# Generate Prisma client
+# Generate Prisma client and push schema
 echo ""
-echo "Generating Prisma client..."
+echo "Setting up database..."
 pnpm --filter @mismo/db db:generate
+pnpm --filter @mismo/db db:push --accept-data-loss
+pnpm --filter @mismo/db db:seed
 
 # Start dev servers
 echo ""

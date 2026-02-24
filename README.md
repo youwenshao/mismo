@@ -40,6 +40,11 @@ pnpm --filter @mismo/db db:generate
 pnpm dev
 ```
 
+## Documentation
+
+- [Design System](docs/mismo-design-system.md) - UI principles and tokens.
+- [Development Log](docs/development-log.md) - History of major features and troubleshooting guides.
+
 ## Scripts
 
 ```bash

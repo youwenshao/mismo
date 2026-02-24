@@ -4,38 +4,29 @@ const prisma = new PrismaClient()
 
 async function main() {
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@mismo.dev' },
+    where: { supabaseAuthId: 'seed-admin-001' },
     update: {},
     create: {
-      email: 'admin@mismo.dev',
-      name: 'Admin',
+      supabaseAuthId: 'seed-admin-001',
       role: 'ADMIN',
-      ageVerified: true,
-      ageTier: 'ADULT',
     },
   })
 
   const engineer = await prisma.user.upsert({
-    where: { email: 'engineer@mismo.dev' },
+    where: { supabaseAuthId: 'seed-engineer-001' },
     update: {},
     create: {
-      email: 'engineer@mismo.dev',
-      name: 'Dev Engineer',
+      supabaseAuthId: 'seed-engineer-001',
       role: 'ENGINEER',
-      ageVerified: true,
-      ageTier: 'ADULT',
     },
   })
 
   const client = await prisma.user.upsert({
-    where: { email: 'client@example.com' },
+    where: { supabaseAuthId: 'seed-client-001' },
     update: {},
     create: {
-      email: 'client@example.com',
-      name: 'Test Client',
+      supabaseAuthId: 'seed-client-001',
       role: 'CLIENT',
-      ageVerified: true,
-      ageTier: 'ADULT',
     },
   })
 
