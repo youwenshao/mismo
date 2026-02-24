@@ -1,0 +1,186 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CLIENT
+  ENGINEER
+  ADMIN
+}
+
+enum AgeTier {
+  MINOR
+  ADULT
+}
+
+enum ProjectStatus {
+  DISCOVERY
+  REVIEW
+  CONTRACTED
+  DEVELOPMENT
+  VERIFICATION
+  DELIVERED
+  CANCELLED
+}
+
+enum ServiceTier {
+  VIBE
+  VERIFIED
+  FOUNDRY
+}
+
+enum SafetyTier {
+  GREEN
+  YELLOW
+  RED
+}
+
+enum ArchTemplate {
+  SERVERLESS_SAAS
+  MONOLITHIC_MVP
+  MICROSERVICES_SCALE
+}
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  name             String?
+  role             Role      @default(CLIENT)
+  ageVerified      Boolean   @default(false)
+  ageTier          AgeTier?
+  stripeCustomerId String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  projects          Project[]
+  interviewSessions InterviewSession[]
+  prdComments       PRDComment[]
+  reviewTasks       ReviewTask[]       @relation("AssignedEngineer")
+}
+
+model Project {
+  id             String        @id @default(cuid())
+  name           String
+  status         ProjectStatus @default(DISCOVERY)
+  tier           ServiceTier
+  safetyScore    SafetyTier    @default(GREEN)
+  userId         String
+  assignedEngId  String?
+  contractSigned Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  user              User               @relation(fields: [userId], references: [id])
+  prd               PRD?
+  interviewSessions InterviewSession[]
+  contracts         Contract[]
+  reviewTasks       ReviewTask[]
+  buildLogs         BuildLog[]
+  tokenUsages       TokenUsage[]
+}
+
+model PRD {
+  id             String       @id @default(cuid())
+  projectId      String       @unique
+  content        Json
+  userStories    Json
+  apiSpec        Json?
+  dataModel      String?
+  archTemplate   ArchTemplate
+  ambiguityScore Float        @default(0)
+  lockedAt       DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  project  Project      @relation(fields: [projectId], references: [id])
+  comments PRDComment[]
+}
+
+model PRDComment {
+  id        String   @id @default(cuid())
+  prdId     String
+  userId    String
+  content   String
+  section   String
+  resolved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  prd  PRD  @relation(fields: [prdId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+}
+
+model InterviewSession {
+  id          String    @id @default(cuid())
+  userId      String
+  projectId   String?
+  state       Json
+  transcript  Json
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  expiresAt   DateTime
+
+  user    User     @relation(fields: [userId], references: [id])
+  project Project? @relation(fields: [projectId], references: [id])
+}
+
+model Contract {
+  id             String   @id @default(cuid())
+  projectId      String
+  type           String
+  status         String   @default("PENDING")
+  envelopeId     String?
+  signedAt       DateTime?
+  ipAcknowledged Boolean  @default(false)
+  ageAcknowledged Boolean @default(false)
+  aupAcknowledged Boolean @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id])
+}
+
+model ReviewTask {
+  id           String    @id @default(cuid())
+  projectId    String
+  engineerId   String?
+  type         String
+  status       String    @default("PENDING")
+  notes        String?
+  slaDeadline  DateTime
+  claimedAt    DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  project  Project @relation(fields: [projectId], references: [id])
+  engineer User?   @relation("AssignedEngineer", fields: [engineerId], references: [id])
+}
+
+model BuildLog {
+  id        String   @id @default(cuid())
+  projectId String
+  stage     String
+  status    String
+  output    String
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id])
+}
+
+model TokenUsage {
+  id        String   @id @default(cuid())
+  projectId String
+  feature   String
+  tokens    Int
+  cost      Float
+  agent     String
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id])
+}
