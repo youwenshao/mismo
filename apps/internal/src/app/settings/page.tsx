@@ -7,7 +7,7 @@ export default function SettingsPage() {
         </h1>
       </div>
 
-      <p className="mt-8 text-sm text-[var(--text-secondary)]">
+      <p className="mt-8 text-sm leading-relaxed text-[var(--text-secondary)]">
         Settings configuration coming soon.
       </p>
     </div>

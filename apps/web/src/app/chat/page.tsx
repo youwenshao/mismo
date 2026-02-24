@@ -164,7 +164,7 @@ export default function ChatPage() {
   return (
     <div className="flex h-dvh flex-col bg-[var(--bg-primary)]">
       {/* Header */}
-      <header className="flex shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--bg-primary)] px-6 py-5">
+      <header className="flex shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--bg-primary)] px-6 py-6">
         <div className="flex items-center gap-5">
           <Link
             href="/"
@@ -194,7 +194,7 @@ export default function ChatPage() {
               <h1 className="font-[var(--font-sans)] text-sm font-semibold text-[var(--text-primary)]">
                 Mo &mdash; Your AI Consultant
               </h1>
-              <p className="mt-1 text-xs text-[var(--text-secondary)]">
+              <p className="mt-3 text-xs text-[var(--text-secondary)]">
                 {isStreaming ? "Typing…" : currentPhase}
               </p>
             </div>
@@ -206,7 +206,7 @@ export default function ChatPage() {
       </header>
 
       {error && (
-        <div className="border-b border-[var(--border)] bg-[var(--bg-secondary)] px-4 py-2 text-center text-sm text-[var(--accent)]">
+        <div className="border-l-2 border-[var(--accent)] px-6 py-6 text-sm text-[var(--accent)]">
           {error}
         </div>
       )}

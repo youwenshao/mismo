@@ -75,25 +75,25 @@ export default function ReviewQueuePage() {
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-[var(--border)]">
-              <th className="px-5 py-5 text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-secondary)]">
+              <th className="px-6 py-6 text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-secondary)]">
                 Project
               </th>
-              <th className="px-5 py-5 text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-secondary)]">
+              <th className="px-6 py-6 text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-secondary)]">
                 Client
               </th>
-              <th className="px-5 py-5 text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-secondary)]">
+              <th className="px-6 py-6 text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-secondary)]">
                 Type
               </th>
-              <th className="px-5 py-5 text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-secondary)]">
+              <th className="px-6 py-6 text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-secondary)]">
                 Priority
               </th>
-              <th className="px-5 py-5 text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-secondary)]">
+              <th className="px-6 py-6 text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-secondary)]">
                 SLA Deadline
               </th>
-              <th className="px-5 py-5 text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-secondary)]">
+              <th className="px-6 py-6 text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-secondary)]">
                 Status
               </th>
-              <th className="px-5 py-5 text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-secondary)]">
+              <th className="px-6 py-6 text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-secondary)]">
                 Action
               </th>
             </tr>
@@ -104,35 +104,35 @@ export default function ReviewQueuePage() {
                 key={task.id}
                 className="border-b border-[var(--border)] transition-colors hover:bg-[var(--bg-secondary)]"
               >
-                <td className="px-5 py-5 font-medium text-[var(--text-primary)]">
+                <td className="px-6 py-6 font-medium text-[var(--text-primary)]">
                   {task.projectName}
                 </td>
-                <td className="px-5 py-5 text-[var(--text-secondary)]">
+                <td className="px-6 py-6 text-[var(--text-secondary)]">
                   {task.client}
                 </td>
-                <td className="px-5 py-5">
+                <td className="px-6 py-6">
                   <span className={`text-xs ${reviewTypeConfig[task.reviewType]}`}>
                     {task.reviewType}
                   </span>
                 </td>
-                <td className="px-5 py-5">
+                <td className="px-6 py-6">
                   <span className={`text-xs ${priorityConfig[task.priority]}`}>
                     {task.priority}
                   </span>
                 </td>
-                <td className="px-4 py-4">
+                <td className="px-6 py-6">
                   <span
                     className={`text-xs font-medium ${getSlaColor(task.slaDeadline)}`}
                   >
                     {formatDeadlineCountdown(task.slaDeadline)}
                   </span>
                 </td>
-                <td className="px-5 py-5">
+                <td className="px-6 py-6">
                   <span className={`text-xs ${statusConfig[task.status]}`}>
                     {task.status}
                   </span>
                 </td>
-                <td className="px-5 py-5">
+                <td className="px-6 py-6">
                   {task.status === "Pending" ? (
                     <button
                       onClick={() => handleClaim(task.id)}
@@ -156,7 +156,7 @@ export default function ReviewQueuePage() {
         </table>
       </div>
 
-      <div className="mt-10 flex items-center justify-center gap-10 text-xs text-[var(--text-secondary)]">
+      <div className="mt-12 flex items-center justify-center gap-10 text-xs text-[var(--text-secondary)]">
         <span className="font-medium">
           <span className="text-[var(--dash-active)]">{pending}</span> pending
         </span>

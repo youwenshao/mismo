@@ -158,17 +158,17 @@ function PrdTab({ project }: { project: Project }) {
       </h3>
       <div className="space-y-6 text-sm leading-relaxed text-[var(--text-secondary)]">
         <div>
-          <h4 className="mb-3 font-[var(--font-sans)] font-semibold text-[var(--text-primary)]">
+          <h4 className="mb-6 font-[var(--font-sans)] font-semibold text-[var(--text-primary)]">
             1. Overview
           </h4>
           <p>{project.description}</p>
         </div>
 
         <div>
-          <h4 className="mb-3 font-[var(--font-sans)] font-semibold text-[var(--text-primary)]">
+          <h4 className="mb-6 font-[var(--font-sans)] font-semibold text-[var(--text-primary)]">
             2. Goals
           </h4>
-            <ul className="list-disc space-y-2 pl-5">
+            <ul className="list-disc space-y-6 pl-5">
             <li>
               Deliver a production-ready {project.name.toLowerCase()} application
             </li>
@@ -181,7 +181,7 @@ function PrdTab({ project }: { project: Project }) {
         </div>
 
         <div>
-          <h4 className="mb-3 font-[var(--font-sans)] font-semibold text-[var(--text-primary)]">
+          <h4 className="mb-6 font-[var(--font-sans)] font-semibold text-[var(--text-primary)]">
             3. Target Users
           </h4>
           <p>
@@ -192,10 +192,10 @@ function PrdTab({ project }: { project: Project }) {
         </div>
 
         <div>
-          <h4 className="mb-3 font-[var(--font-sans)] font-semibold text-[var(--text-primary)]">
+          <h4 className="mb-6 font-[var(--font-sans)] font-semibold text-[var(--text-primary)]">
             4. Technical Requirements
           </h4>
-          <ul className="list-disc space-y-2 pl-5">
+          <ul className="list-disc space-y-6 pl-5">
             <li>Next.js application with App Router</li>
             <li>TypeScript with strict mode</li>
             <li>Supabase for authentication and database</li>
@@ -233,7 +233,7 @@ function BuildLogsTab({ projectId }: { projectId: string }) {
               className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${cfg.dot}`}
             />
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-6">
                 <p className="text-sm text-[var(--text-primary)]">
                   {log.message}
                 </p>
@@ -241,7 +241,7 @@ function BuildLogsTab({ projectId }: { projectId: string }) {
                   {cfg.label}
                 </span>
               </div>
-              <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
+              <p className="mt-3 text-xs text-[var(--text-secondary)]">
                 {new Date(log.timestamp).toLocaleString("en-US", {
                   month: "short",
                   day: "numeric",
@@ -280,7 +280,7 @@ function TokenUsageTab({ project }: { project: Project }) {
       <h3 className="mb-8 font-[var(--font-sans)] text-base font-semibold text-[var(--text-primary)]">
         Token Consumption
       </h3>
-      <div className="mb-2 flex items-end justify-between">
+      <div className="mb-6 flex items-end justify-between">
         <div>
           <span className="font-[var(--font-serif)] text-3xl font-bold text-[var(--text-primary)]">
             {project.tokensUsed.toLocaleString()}
@@ -297,22 +297,22 @@ function TokenUsageTab({ project }: { project: Project }) {
           style={{ width: `${Math.min(pct, 100)}%` }}
         />
       </div>
-      <div className="mt-4 grid grid-cols-3 gap-4 border-t border-[var(--border)] pt-4">
+      <div className="mt-8 grid grid-cols-3 gap-8 border-t border-[var(--border)] pt-8">
         <div>
           <p className="text-xs text-[var(--text-secondary)]">Used</p>
-          <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
+          <p className="mt-3 text-sm font-semibold text-[var(--text-primary)]">
             {project.tokensUsed.toLocaleString()}
           </p>
         </div>
         <div>
           <p className="text-xs text-[var(--text-secondary)]">Remaining</p>
-          <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
+          <p className="mt-3 text-sm font-semibold text-[var(--text-primary)]">
             {(project.tokenBudget - project.tokensUsed).toLocaleString()}
           </p>
         </div>
         <div>
           <p className="text-xs text-[var(--text-secondary)]">Est. Cost</p>
-          <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
+          <p className="mt-3 text-sm font-semibold text-[var(--text-primary)]">
             ${((project.tokensUsed / 1000) * 0.03).toFixed(2)}
           </p>
         </div>
@@ -348,7 +348,7 @@ export default function ProjectDetailPage() {
       <div className="mb-10">
         <Link
           href="/projects"
-          className="mb-6 inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+          className="mb-6 inline-flex items-center gap-4 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
         >
           <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
           Projects

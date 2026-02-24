@@ -128,7 +128,7 @@ export default function StatusPage() {
       <h1 className="mb-8 font-[var(--font-serif)] text-[1.75rem] font-semibold leading-[1.2] tracking-[-0.01em] text-[var(--text-primary)]">
         Project Status
       </h1>
-      <p className="mb-16 text-sm text-[var(--text-secondary)]">
+      <p className="mb-16 text-sm leading-relaxed text-[var(--text-secondary)]">
         Track your project through each stage of the development pipeline.
       </p>
 
@@ -160,20 +160,20 @@ export default function StatusPage() {
                 )}
               </div>
 
-              <div className="mt-3 flex flex-col items-center gap-0.5 px-1">
+              <div className="mt-6 flex flex-col items-center gap-1 px-1">
                 <p
                   className={`text-center text-sm font-medium ${labelColor(stage.status)}`}
                 >
                   {stage.name}
                 </p>
-                <p className="text-center text-xs text-[var(--text-secondary)]">
+                <p className="mt-3 text-center text-xs leading-relaxed text-[var(--text-secondary)]">
                   {stage.description}
                 </p>
-                <p className="text-center text-xs text-[var(--text-secondary)]">
+                <p className="mt-3 text-center text-xs text-[var(--text-secondary)]">
                   {stage.date}
                 </p>
                 {stage.status === "current" && (
-                  <span className="mt-1 text-xs font-medium text-[var(--accent)]">
+                  <span className="mt-3 text-xs font-medium text-[var(--accent)]">
                     In Progress
                   </span>
                 )}
@@ -202,14 +202,14 @@ export default function StatusPage() {
               >
                 {stage.name}
               </p>
-              <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
+              <p className="mt-3 text-xs leading-relaxed text-[var(--text-secondary)]">
                 {stage.description}
               </p>
-              <p className="text-xs text-[var(--text-secondary)]">
+              <p className="mt-3 text-xs text-[var(--text-secondary)]">
                 {stage.date}
               </p>
               {stage.status === "current" && (
-                <span className="mt-1.5 text-xs font-medium text-[var(--accent)]">
+                <span className="mt-3 text-xs font-medium text-[var(--accent)]">
                   In Progress
                 </span>
               )}
@@ -223,11 +223,11 @@ export default function StatusPage() {
         <h2 className="font-[var(--font-serif)] text-lg font-semibold text-[var(--text-primary)]">
           Live Preview
         </h2>
-        <p className="mt-2 text-sm text-[var(--text-secondary)]">
+        <p className="mt-6 text-sm leading-relaxed text-[var(--text-secondary)]">
           Preview updates automatically as development progresses.
         </p>
 
-        <div className="mt-8 flex flex-col gap-6 bg-[var(--bg-secondary)] p-6 sm:flex-row sm:items-center">
+        <div className="mt-8 flex flex-col gap-6 sm:flex-row sm:items-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -259,7 +259,7 @@ export default function StatusPage() {
         <h2 className="font-[var(--font-serif)] text-lg font-semibold text-[var(--text-primary)]">
           Request Changes
         </h2>
-        <p className="mt-2 text-sm text-[var(--text-secondary)]">
+        <p className="mt-6 text-sm leading-relaxed text-[var(--text-secondary)]">
           You have{" "}
           <span className="font-medium text-[var(--accent)]">
             2 free revision cycles
@@ -286,7 +286,7 @@ export default function StatusPage() {
                 Revision request submitted successfully
               </p>
             </div>
-            <p className="mt-2 text-sm text-[var(--text-primary)]">
+            <p className="mt-6 text-sm leading-relaxed text-[var(--text-primary)]">
               We&apos;ll review your notes and incorporate the changes.
               You&apos;ll be notified when the updated preview is ready.
             </p>
@@ -298,7 +298,7 @@ export default function StatusPage() {
               onChange={(e) => setRevisionNotes(e.target.value)}
               placeholder="Describe the changes you'd like…"
               rows={4}
-              className="w-full rounded-[2px] border border-[var(--border)] bg-[var(--bg-primary)] p-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--accent)] focus:outline-none"
+              className="w-full rounded-[2px] border border-[var(--border)] bg-[var(--bg-primary)] p-6 text-sm leading-relaxed text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--accent)] focus:outline-none"
             />
             <button
               onClick={handleSubmitRevision}

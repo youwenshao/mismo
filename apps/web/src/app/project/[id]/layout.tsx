@@ -39,10 +39,10 @@ export default function ProjectLayout({
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] font-[var(--font-sans)]">
       <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--bg-primary)]">
-        <div className="mx-auto flex h-14 max-w-5xl items-center gap-6 px-6">
+        <div className="mx-auto flex h-20 max-w-5xl items-center gap-6 px-6">
           <Link
             href="/"
-            className="text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+            className="font-[var(--font-serif)] text-lg font-bold tracking-[-0.03em] text-[var(--text-primary)] transition-colors hover:text-[var(--text-primary)]"
           >
             Mismo
           </Link>
@@ -64,7 +64,7 @@ export default function ProjectLayout({
                 <Link
                   key={tab.label}
                   href={href}
-                  className={`border-b-2 pb-3 pt-2 text-sm font-medium transition-colors ${
+                  className={`border-b-2 pb-6 pt-3 text-sm font-medium transition-colors ${
                     isActive
                       ? "border-[var(--accent)] text-[var(--accent)]"
                       : "border-transparent text-[var(--text-secondary)] hover:border-[var(--border)] hover:text-[var(--text-primary)]"

@@ -73,7 +73,7 @@ export default function ProjectsPage() {
             placeholder="Search projects or clients..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-[2px] border border-[var(--border)] bg-[var(--bg-primary)] py-2 pl-10 pr-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--accent)] focus:outline-none"
+            className="w-full rounded-[2px] border border-[var(--border)] bg-[var(--bg-primary)] py-3 pl-10 pr-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--accent)] focus:outline-none"
           />
         </div>
         <div className="flex gap-3">
@@ -116,10 +116,10 @@ export default function ProjectsPage() {
                     {project.tier}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                <p className="mt-3 text-xs text-[var(--text-secondary)]">
                   {project.client}
                 </p>
-                <p className="mt-2 line-clamp-1 text-xs text-[var(--text-secondary)]">
+                <p className="mt-4 line-clamp-1 text-xs text-[var(--text-secondary)]">
                   {project.description}
                 </p>
               </div>

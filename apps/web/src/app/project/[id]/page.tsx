@@ -62,13 +62,13 @@ export default async function ProjectDashboardPage({
         <h1 className="font-[var(--font-serif)] text-[1.75rem] font-semibold leading-[1.2] tracking-[-0.01em] text-[var(--text-primary)]">
           Project Overview
         </h1>
-        <p className="mt-8 text-sm text-[var(--text-secondary)]">
+        <p className="mt-8 text-sm leading-relaxed text-[var(--text-secondary)]">
           {MOCK_PROJECT.name} — your project at a glance.
         </p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-12 sm:grid-cols-3">
         <StatCard label="Tier" value={MOCK_PROJECT.tier} />
         <StatCard
           label="Safety Score"
@@ -100,7 +100,6 @@ export default async function ProjectDashboardPage({
             href={`/project/${id}/checkout?tier=VERIFIED`}
             label="Billing"
             description="View payment details"
-            isLast
           />
         </div>
       </section>
@@ -114,11 +113,10 @@ export default async function ProjectDashboardPage({
           {RECENT_ACTIVITY.map((item, i) => {
             const iconPath = ICON_PATHS[item.icon] ?? ICON_PATHS.document!;
             const isFirst = i === 0;
-            const isLast = i === RECENT_ACTIVITY.length - 1;
             return (
               <div
                 key={item.id}
-                className={`flex items-start gap-6 py-8 ${!isLast ? "border-b border-[var(--border)]" : ""}`}
+                className="flex items-start gap-6 py-8"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -138,7 +136,7 @@ export default async function ProjectDashboardPage({
                   <p className="text-sm font-medium text-[var(--text-primary)]">
                     {item.action}
                   </p>
-                  <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                  <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
                     {item.detail}
                   </p>
                 </div>
@@ -156,7 +154,7 @@ export default async function ProjectDashboardPage({
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="p-6">
+    <div>
       <p className="text-xs font-medium text-[var(--text-secondary)]">
         {label}
       </p>
@@ -171,22 +169,20 @@ function QuickLink({
   href,
   label,
   description,
-  isLast = false,
 }: {
   href: string;
   label: string;
   description: string;
-  isLast?: boolean;
 }) {
   return (
     <Link
       href={href}
-      className={`group block py-6 ${!isLast ? "border-b border-[var(--border)]" : ""}`}
+      className="group block py-8"
     >
       <p className="text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--accent)]">
         {label}
       </p>
-      <p className="mt-3 text-xs text-[var(--text-secondary)]">
+      <p className="mt-3 text-xs leading-relaxed text-[var(--text-secondary)]">
         {description}
       </p>
     </Link>

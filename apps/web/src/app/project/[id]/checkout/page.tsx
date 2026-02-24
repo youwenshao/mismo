@@ -82,7 +82,7 @@ function SuccessView({ projectId }: { projectId: string }) {
       <h1 className="font-[var(--font-serif)] text-3xl font-bold text-[var(--text-primary)]">
         Payment Successful
       </h1>
-      <p className="mt-3 text-[var(--text-secondary)]">
+      <p className="mt-3 leading-relaxed text-[var(--text-secondary)]">
         Your project is being set up. You&apos;ll receive a confirmation email
         shortly with next steps.
       </p>
@@ -172,7 +172,7 @@ export default function CheckoutPage() {
 
       <main className="mx-auto max-w-3xl px-6 py-16">
         {isCanceled && (
-          <div className="mb-10 border-l-2 border-amber-500 bg-amber-50 p-4 text-sm text-amber-800">
+          <div className="mb-10 border-l-2 border-[var(--accent)] bg-[var(--bg-secondary)] p-6 text-sm text-[var(--text-primary)]">
             Payment was canceled. You can try again when you&apos;re ready.
           </div>
         )}
@@ -190,7 +190,7 @@ export default function CheckoutPage() {
               / project
             </span>
           </div>
-          <p className="mt-6 text-[var(--text-secondary)]">
+          <p className="mt-6 leading-relaxed text-[var(--text-secondary)]">
             {tier.description}
           </p>
 
@@ -198,7 +198,7 @@ export default function CheckoutPage() {
             {tier.features.map((feature) => (
               <li
                 key={feature}
-                className="flex items-start gap-4 text-sm text-[var(--text-primary)]"
+                className="flex items-start gap-4 text-sm leading-relaxed text-[var(--text-primary)]"
               >
                 <CheckIcon />
                 {feature}
@@ -212,12 +212,12 @@ export default function CheckoutPage() {
           <h2 className="font-[var(--font-serif)] text-lg font-semibold text-[var(--text-primary)]">
             Age Verification
           </h2>
-          <p className="mt-6 text-sm text-[var(--text-secondary)]">
+          <p className="mt-6 text-sm leading-relaxed text-[var(--text-secondary)]">
             Please confirm your age group to proceed.
           </p>
 
           <div className="mt-10 space-y-6">
-            <label className="flex cursor-pointer items-center gap-4 border border-[var(--border)] p-5 transition-colors has-[:checked]:border-[var(--accent)]">
+            <label className="flex cursor-pointer items-center gap-6 border border-[var(--border)] p-5 transition-colors has-[:checked]:border-[var(--accent)]">
               <input
                 type="radio"
                 name="age-group"
@@ -231,7 +231,7 @@ export default function CheckoutPage() {
               </span>
             </label>
 
-            <label className="flex cursor-pointer items-center gap-4 border border-[var(--border)] p-5 transition-colors has-[:checked]:border-[var(--accent)]">
+            <label className="flex cursor-pointer items-center gap-6 border border-[var(--border)] p-5 transition-colors has-[:checked]:border-[var(--accent)]">
               <input
                 type="radio"
                 name="age-group"
@@ -251,7 +251,7 @@ export default function CheckoutPage() {
               <p className="font-medium text-[var(--text-primary)]">
                 Parental confirmation required
               </p>
-              <p className="mt-3 text-[var(--text-secondary)]">
+              <p className="mt-3 leading-relaxed text-[var(--text-secondary)]">
                 Users aged 16–17 require parental or guardian confirmation. A
                 confirmation email will be sent to your parent/guardian, and a
                 24-hour cooling-off period will apply before your project begins.
@@ -265,33 +265,33 @@ export default function CheckoutPage() {
           <h2 className="font-[var(--font-serif)] text-lg font-semibold text-[var(--text-primary)]">
             Acknowledgments
           </h2>
-          <p className="mt-6 text-sm text-[var(--text-secondary)]">
+          <p className="mt-6 text-sm leading-relaxed text-[var(--text-secondary)]">
             Please review and accept the following before proceeding.
           </p>
 
           <div className="mt-10 space-y-8">
-            <label className="flex cursor-pointer items-start gap-4">
+            <label className="flex cursor-pointer items-start gap-6">
               <input
                 type="checkbox"
                 checked={ackIp}
                 onChange={(e) => setAckIp(e.target.checked)}
                 className="mt-0.5 h-4 w-4 accent-[var(--accent)]"
               />
-              <span className="text-sm text-[var(--text-primary)]">
+              <span className="text-sm leading-relaxed text-[var(--text-primary)]">
                 I understand the IP ownership terms — all intellectual property
                 for the delivered code and assets will transfer to me upon full
                 payment.
               </span>
             </label>
 
-            <label className="flex cursor-pointer items-start gap-4">
+            <label className="flex cursor-pointer items-start gap-6">
               <input
                 type="checkbox"
                 checked={ackAup}
                 onChange={(e) => setAckAup(e.target.checked)}
                 className="mt-0.5 h-4 w-4 accent-[var(--accent)]"
               />
-              <span className="text-sm text-[var(--text-primary)]">
+              <span className="text-sm leading-relaxed text-[var(--text-primary)]">
                 I accept the{" "}
                 <a
                   href="#"
@@ -303,14 +303,14 @@ export default function CheckoutPage() {
               </span>
             </label>
 
-            <label className="flex cursor-pointer items-start gap-4">
+            <label className="flex cursor-pointer items-start gap-6">
               <input
                 type="checkbox"
                 checked={ackAge}
                 onChange={(e) => setAckAge(e.target.checked)}
                 className="mt-0.5 h-4 w-4 accent-[var(--accent)]"
               />
-              <span className="text-sm text-[var(--text-primary)]">
+              <span className="text-sm leading-relaxed text-[var(--text-primary)]">
                 I confirm my age verification status above is accurate.
               </span>
             </label>
@@ -333,7 +333,7 @@ export default function CheckoutPage() {
             {loading ? "Redirecting to payment…" : "Proceed to Payment"}
           </button>
 
-          <p className="mt-8 text-center text-xs text-[var(--text-secondary)]">
+          <p className="mt-8 text-xs leading-relaxed text-[var(--text-secondary)]">
             You&apos;ll be redirected to Stripe&apos;s secure checkout to
             complete payment.
           </p>

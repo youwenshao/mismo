@@ -54,7 +54,7 @@ export default function MonitoringPage() {
           <p className="text-sm font-medium text-[var(--text-secondary)]">
             Pipeline Health
           </p>
-          <div className="mt-4 flex items-center gap-4">
+          <div className="mt-4 flex items-center gap-6">
             <span className="h-2.5 w-2.5 rounded-full bg-[var(--dash-complete)]" />
             <span className="font-[var(--font-serif)] text-3xl font-bold text-[var(--text-primary)]">
               Healthy
@@ -85,7 +85,7 @@ export default function MonitoringPage() {
 
               return (
                 <div key={project.id}>
-                  <div className="mb-1 flex items-center justify-between text-sm">
+                  <div className="mb-3 flex items-center justify-between text-sm">
                     <span className="font-medium text-[var(--text-primary)]">
                       {project.name}
                     </span>
@@ -114,7 +114,7 @@ export default function MonitoringPage() {
           {mockActivityFeed.map((item) => (
             <div
               key={item.id}
-              className="flex items-start gap-5 border-b border-[var(--border)] py-8"
+              className="flex items-start gap-5 py-8"
             >
               <span
                 className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${activityDotColor[item.type]}`}
@@ -123,7 +123,7 @@ export default function MonitoringPage() {
                 <p className="text-sm text-[var(--text-primary)]">
                   {item.message}
                 </p>
-                <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
+                <p className="mt-3 text-xs text-[var(--text-secondary)]">
                   {formatTimestamp(item.timestamp)}
                 </p>
               </div>

@@ -19,6 +19,13 @@ Turborepo monorepo with pnpm workspaces.
 ## Getting Started
 
 ```bash
+# Quickstart (install, generate Prisma, start dev servers)
+pnpm quickstart
+```
+
+Or step by step:
+
+```bash
 # Install dependencies
 pnpm install
 
@@ -36,6 +43,7 @@ pnpm dev
 ## Scripts
 
 ```bash
+pnpm quickstart   # Install, generate Prisma, start dev servers
 pnpm build        # Build all packages
 pnpm dev          # Start all dev servers
 pnpm lint         # Lint all packages

@@ -33,7 +33,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-[var(--border)] bg-[var(--bg-primary)] md:flex">
-        <div className="flex items-center gap-2 border-b border-[var(--border)] px-6 py-5">
+        <div className="flex items-center gap-4 border-b border-[var(--border)] px-6 py-5">
           <span className="font-[var(--font-serif)] text-[28px] font-bold tracking-[-0.03em] text-[var(--text-primary)]">
             Mismo
           </span>
@@ -42,7 +42,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </span>
         </div>
 
-        <nav className="flex-1 space-y-2 px-4 py-6">
+        <nav className="flex-1 space-y-6 px-4 py-8">
           {navItems.map((item) => {
             const isActive =
               item.path === "/"
@@ -66,7 +66,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="border-t border-[var(--border)] px-6 py-4">
+        <div className="border-t border-[var(--border)] px-6 py-6">
           <p className="text-xs text-[var(--text-secondary)]">
             Mismo Platform v0.1
           </p>
@@ -78,7 +78,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-4">
             <button
               type="button"
-              className="p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] md:hidden"
+              className="p-3 text-[var(--text-secondary)] hover:text-[var(--text-primary)] md:hidden"
               aria-label="Open menu"
             >
               <Menu className="h-5 w-5" strokeWidth={1.5} />

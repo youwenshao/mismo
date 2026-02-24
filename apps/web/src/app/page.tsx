@@ -258,11 +258,11 @@ function Pricing() {
           Every tier gets you a working product. Pick the level of quality
           assurance that fits your stage.
         </p>
-        <div className="mt-16 grid grid-cols-1 gap-12 lg:grid-cols-3">
+        <div className="mt-16 grid grid-cols-1 gap-16 lg:grid-cols-3">
           {tiers.map((tier) => (
             <div
               key={tier.name}
-              className={`flex flex-col ${tier.highlighted ? "bg-[var(--bg-secondary)] p-8" : "p-0"}`}
+              className={`flex flex-col ${tier.highlighted ? "border-l-2 border-[var(--accent)] pl-8" : ""}`}
             >
               <div className="flex items-baseline gap-4">
                 <h3 className="font-[var(--font-sans)] text-lg font-semibold text-[var(--text-primary)]">
@@ -285,7 +285,7 @@ function Pricing() {
                   / project
                 </span>
               </p>
-              <ul className="mt-10 flex-1 space-y-5">
+              <ul className="mt-10 flex-1 space-y-6">
                 {tier.features.map((feature) => (
                   <li
                     key={feature}

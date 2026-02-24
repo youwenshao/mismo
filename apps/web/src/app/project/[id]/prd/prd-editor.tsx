@@ -101,7 +101,7 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
     <div className="relative">
       {/* Ambiguity warning banner */}
       {ambiguityHigh && (
-        <div className="mb-8 flex items-start gap-3 border-l-2 border-amber-500 bg-amber-50 p-4">
+        <div className="mb-8 flex items-start gap-4 border-l-2 border-amber-500 bg-amber-50 p-6">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 20 20"
@@ -118,7 +118,7 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
             <p className="text-sm font-semibold text-amber-800">
               Some requirements need clarification
             </p>
-            <p className="mt-0.5 text-sm text-amber-700">
+            <p className="mt-3 text-sm leading-relaxed text-amber-700">
               Ambiguity score is {prd.ambiguityScore}%. A project manager will
               reach out to resolve open questions before development begins.
             </p>
@@ -136,7 +136,7 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
             v{prd.version}
           </span>
         </div>
-        <p className="mt-4 text-sm text-[var(--text-secondary)]">
+        <p className="mt-4 text-sm leading-relaxed text-[var(--text-secondary)]">
           Product Requirements Document &middot; Last updated{" "}
           {prd.lastUpdated}
         </p>
@@ -153,7 +153,7 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
             <section
               key={section.id}
               id={section.id}
-              className={`mb-24 border-b border-[var(--border)] pb-16 ${
+              className={`mb-24 ${
                 isTBD ? "bg-amber-50" : ""
               }`}
             >
@@ -211,21 +211,21 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
                   </h3>
 
                   {(comments[section.id] ?? []).length === 0 && (
-                    <p className="mb-4 text-sm text-[var(--text-secondary)]">
+                    <p className="mb-4 text-sm leading-relaxed text-[var(--text-secondary)]">
                       No comments yet. Be the first to add one.
                     </p>
                   )}
 
-                  <div className="space-y-4">
+                  <div className="space-y-8">
                     {(comments[section.id] ?? []).map((comment) => (
                       <div
                         key={comment.id}
-                        className={`py-3 ${
+                        className={`py-6 ${
                           comment.resolved ? "opacity-60" : ""
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-4">
                             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--accent)] text-xs font-semibold text-white">
                               {comment.author[0]}
                             </span>
@@ -252,7 +252,7 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
                             </span>
                           )}
                         </div>
-                        <p className="mt-1.5 text-sm text-[var(--text-secondary)]">
+                        <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
                           {comment.content}
                         </p>
                       </div>
@@ -260,7 +260,7 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
                   </div>
 
                   {/* Add comment input */}
-                  <div className="mt-4 flex gap-2">
+                  <div className="mt-6 flex gap-6">
                     <input
                       type="text"
                       value={newComment}
@@ -269,12 +269,12 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
                         if (e.key === "Enter") addComment(section.id);
                       }}
                       placeholder="Add a comment..."
-                      className="flex-1 rounded-[2px] border border-[var(--border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--accent)]"
+                      className="flex-1 rounded-[2px] border border-[var(--border)] bg-[var(--bg-primary)] px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--accent)]"
                     />
                     <button
                       onClick={() => addComment(section.id)}
                       disabled={!newComment.trim()}
-                      className="rounded-[4px] bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+                      className="rounded-[4px] bg-[var(--accent)] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       Send
                     </button>
@@ -287,7 +287,7 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
       </div>
 
       {/* Approve button */}
-      <div className="mt-12 flex flex-col items-center pb-12">
+      <div className="mt-12 pb-12">
         <button
           disabled={ambiguityHigh}
           className={`rounded-[4px] px-8 py-3.5 text-base font-semibold transition-colors ${
@@ -299,7 +299,7 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
           Approve PRD &amp; Continue
         </button>
         {ambiguityHigh && (
-          <p className="mt-2 text-center text-sm text-[var(--text-secondary)]">
+          <p className="mt-6 text-sm leading-relaxed text-[var(--text-secondary)]">
             Resolve ambiguities before approving
           </p>
         )}
@@ -358,7 +358,7 @@ function SectionContent({
       return (
         <div className="space-y-8">
           <div>
-            <h3 className="mb-2 font-[var(--font-sans)] text-sm font-medium uppercase tracking-wide text-[var(--text-secondary)]">
+            <h3 className="mb-6 font-[var(--font-sans)] text-sm font-medium uppercase tracking-wide text-[var(--text-secondary)]">
               Description
             </h3>
             <p className="leading-relaxed">
@@ -366,7 +366,7 @@ function SectionContent({
             </p>
           </div>
           <div>
-            <h3 className="mb-2 font-[var(--font-sans)] text-sm font-medium uppercase tracking-wide text-[var(--text-secondary)]">
+            <h3 className="mb-6 font-[var(--font-sans)] text-sm font-medium uppercase tracking-wide text-[var(--text-secondary)]">
               Problem Statement
             </h3>
             <p className="leading-relaxed">
@@ -378,16 +378,15 @@ function SectionContent({
 
     case "target-users":
       return (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-3">
           {prd.targetUsers.personas.map((persona) => (
             <div
               key={persona.name}
-              className="bg-[var(--bg-secondary)] p-6"
             >
               <h3 className="font-[var(--font-sans)] text-sm font-semibold text-[var(--text-primary)]">
                 {persona.name}
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
+              <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
                 <HighlightTBD text={persona.description} />
               </p>
             </div>
@@ -397,19 +396,19 @@ function SectionContent({
 
     case "features":
       return (
-        <div>
-          {prd.features.map((feature, i) => (
+        <div className="space-y-8">
+          {prd.features.map((feature) => (
             <div
               key={feature.name}
-              className={`pb-6 ${i < prd.features.length - 1 ? "mb-6 border-b border-[var(--border)]" : ""}`}
+              className="pb-8"
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-4">
                 <h3 className="font-[var(--font-sans)] text-sm font-semibold text-[var(--text-primary)]">
                   {feature.name}
                 </h3>
                 <PriorityBadge priority={feature.priority} />
               </div>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
+              <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
                 <HighlightTBD text={feature.description} />
               </p>
             </div>
@@ -422,10 +421,10 @@ function SectionContent({
         <div className="space-y-8">
           {prd.userStories.map((story) => (
             <div key={story.title}>
-              <h3 className="mb-3 font-[var(--font-sans)] text-sm font-semibold text-[var(--text-primary)]">
+              <h3 className="mb-6 font-[var(--font-sans)] text-sm font-semibold text-[var(--text-primary)]">
                 {story.title}
               </h3>
-              <pre className="overflow-x-auto rounded-[4px] bg-[var(--code-bg)] p-4 font-[var(--font-mono)] text-sm leading-relaxed text-[var(--text-primary)]">
+              <pre className="overflow-x-auto rounded-[4px] bg-[var(--code-bg)] p-6 font-[var(--font-mono)] text-sm leading-relaxed text-[var(--text-primary)]">
                 <code>
                   <span className="text-emerald-700">Given </span>
                   <HighlightTBD text={story.given} />
@@ -445,7 +444,7 @@ function SectionContent({
     case "data-model":
       return (
         <div>
-          <div className="mb-4 flex items-center gap-2">
+          <div className="mb-6 flex items-center gap-4">
             <span className="text-sm font-medium text-[var(--text-secondary)]">
               Mermaid.js
             </span>
@@ -453,7 +452,7 @@ function SectionContent({
               Diagram rendering coming soon
             </span>
           </div>
-          <pre className="overflow-x-auto rounded-[4px] bg-[var(--code-bg)] p-4 font-[var(--font-mono)] text-sm leading-relaxed text-[var(--text-primary)]">
+          <pre className="overflow-x-auto rounded-[4px] bg-[var(--code-bg)] p-6 font-[var(--font-mono)] text-sm leading-relaxed text-[var(--text-primary)]">
             <code>{prd.dataModel}</code>
           </pre>
         </div>
@@ -461,11 +460,11 @@ function SectionContent({
 
     case "api":
       return prd.apiSpec ? (
-        <pre className="overflow-x-auto rounded-[4px] bg-[var(--code-bg)] p-4 font-[var(--font-mono)] text-sm leading-relaxed text-[var(--text-primary)]">
+        <pre className="overflow-x-auto rounded-[4px] bg-[var(--code-bg)] p-6 font-[var(--font-mono)] text-sm leading-relaxed text-[var(--text-primary)]">
           <code>{JSON.stringify(prd.apiSpec, null, 2)}</code>
         </pre>
       ) : (
-        <p className="text-sm italic text-[var(--text-secondary)]">
+        <p className="text-sm italic leading-relaxed text-[var(--text-secondary)]">
           No API specification provided yet.
         </p>
       );
