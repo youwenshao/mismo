@@ -101,12 +101,12 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
     <div className="relative">
       {/* Ambiguity warning banner */}
       {ambiguityHigh && (
-        <div className="mb-8 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 dark:border-amber-500/30 dark:bg-amber-950/30">
+        <div className="mb-8 flex items-start gap-3 border-l-2 border-amber-500 bg-amber-50 p-4">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 20 20"
             fill="currentColor"
-            className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400"
+            className="mt-0.5 h-5 w-5 shrink-0 text-amber-600"
           >
             <path
               fillRule="evenodd"
@@ -115,10 +115,10 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
             />
           </svg>
           <div>
-            <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+            <p className="text-sm font-semibold text-amber-800">
               Some requirements need clarification
             </p>
-            <p className="mt-0.5 text-sm text-amber-700 dark:text-amber-400">
+            <p className="mt-0.5 text-sm text-amber-700">
               Ambiguity score is {prd.ambiguityScore}%. A project manager will
               reach out to resolve open questions before development begins.
             </p>
@@ -127,23 +127,23 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
       )}
 
       {/* Header */}
-      <div className="mb-10">
-        <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+      <div className="mb-12">
+        <div className="flex items-center gap-6">
+          <h1 className="font-[var(--font-serif)] text-[1.75rem] font-semibold leading-[1.2] tracking-[-0.01em] text-[var(--text-primary)]">
             {prd.projectName}
           </h1>
-          <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+          <span className="text-xs font-medium text-[var(--text-secondary)]">
             v{prd.version}
           </span>
         </div>
-        <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-4 text-sm text-[var(--text-secondary)]">
           Product Requirements Document &middot; Last updated{" "}
           {prd.lastUpdated}
         </p>
       </div>
 
       {/* Sections */}
-      <div className="space-y-10">
+      <div>
         {prd.sections.map((section) => {
           const isTBD = sectionHasTBD(section.id);
           const isCommentOpen = activeSectionId === section.id;
@@ -153,28 +153,26 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
             <section
               key={section.id}
               id={section.id}
-              className={`relative rounded-lg border p-6 transition-colors ${
-                isTBD
-                  ? "border-l-4 border-amber-300 bg-amber-50/50 dark:border-amber-500/40 dark:bg-amber-950/20"
-                  : "border-gray-200 bg-white dark:border-white/10 dark:bg-gray-900/50"
+              className={`mb-24 border-b border-[var(--border)] pb-16 ${
+                isTBD ? "bg-amber-50" : ""
               }`}
             >
               {/* Section header with comment button */}
-              <div className="mb-4 flex items-start justify-between">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <div className="mb-8 flex items-start justify-between">
+                <h2 className="font-[var(--font-serif)] text-lg font-semibold text-[var(--text-primary)]">
                   {section.title}
                   {isTBD && (
-                    <span className="ml-2 inline-flex items-center rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/50 dark:text-amber-300">
+                    <span className="ml-2 text-xs font-medium text-amber-700">
                       Needs clarification
                     </span>
                   )}
                 </h2>
                 <button
                   onClick={() => toggleCommentPanel(section.id)}
-                  className={`relative flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                  className={`relative flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors ${
                     isCommentOpen
-                      ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-400"
-                      : "text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+                      ? "text-[var(--accent)]"
+                      : "text-[var(--text-secondary)] hover:text-[var(--accent)]"
                   }`}
                   aria-label={`Comments for ${section.title}`}
                 >
@@ -193,7 +191,7 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
                     />
                   </svg>
                   {unresolvedCount > 0 && (
-                    <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-indigo-600 px-1 text-[10px] font-bold text-white">
+                    <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--accent)] px-1 text-[10px] font-bold text-white">
                       {unresolvedCount}
                     </span>
                   )}
@@ -201,42 +199,40 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
               </div>
 
               {/* Section content */}
-              <div className="prose-sm text-gray-700 dark:text-gray-300">
+              <div className="text-sm leading-relaxed text-[var(--text-primary)]">
                 <SectionContent section={section} prd={prd} />
               </div>
 
               {/* Comment panel */}
               {isCommentOpen && (
-                <div className="mt-6 border-t border-gray-200 pt-5 dark:border-white/10">
-                  <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-white">
+                <div className="mt-12 border-t border-[var(--border)] pt-8">
+                  <h3 className="mb-3 text-sm font-semibold text-[var(--text-primary)]">
                     Comments
                   </h3>
 
                   {(comments[section.id] ?? []).length === 0 && (
-                    <p className="mb-4 text-sm text-gray-400 dark:text-gray-500">
+                    <p className="mb-4 text-sm text-[var(--text-secondary)]">
                       No comments yet. Be the first to add one.
                     </p>
                   )}
 
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {(comments[section.id] ?? []).map((comment) => (
                       <div
                         key={comment.id}
-                        className={`rounded-lg border p-3 ${
-                          comment.resolved
-                            ? "border-gray-100 bg-gray-50 opacity-60 dark:border-gray-800 dark:bg-gray-900"
-                            : "border-gray-200 bg-white dark:border-white/10 dark:bg-gray-900"
+                        className={`py-3 ${
+                          comment.resolved ? "opacity-60" : ""
                         }`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-400">
+                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--accent)] text-xs font-semibold text-white">
                               {comment.author[0]}
                             </span>
-                            <span className="text-sm font-medium text-gray-900 dark:text-white">
+                            <span className="text-sm font-medium text-[var(--text-primary)]">
                               {comment.author}
                             </span>
-                            <span className="text-xs text-gray-400 dark:text-gray-500">
+                            <span className="text-xs text-[var(--text-secondary)]">
                               {formatTimestamp(comment.timestamp)}
                             </span>
                           </div>
@@ -245,18 +241,18 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
                               onClick={() =>
                                 resolveComment(section.id, comment.id)
                               }
-                              className="rounded px-2 py-0.5 text-xs font-medium text-gray-400 transition-colors hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-900/30 dark:hover:text-green-400"
+                              className="text-xs font-medium text-[var(--text-secondary)] transition-colors hover:text-green-700"
                             >
                               Resolve
                             </button>
                           )}
                           {comment.resolved && (
-                            <span className="text-xs font-medium text-green-600 dark:text-green-400">
+                            <span className="text-xs font-medium text-green-600">
                               Resolved
                             </span>
                           )}
                         </div>
-                        <p className="mt-1.5 text-sm text-gray-600 dark:text-gray-300">
+                        <p className="mt-1.5 text-sm text-[var(--text-secondary)]">
                           {comment.content}
                         </p>
                       </div>
@@ -273,12 +269,12 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
                         if (e.key === "Enter") addComment(section.id);
                       }}
                       placeholder="Add a comment..."
-                      className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 outline-none transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400"
+                      className="flex-1 rounded-[2px] border border-[var(--border)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--accent)]"
                     />
                     <button
                       onClick={() => addComment(section.id)}
                       disabled={!newComment.trim()}
-                      className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="rounded-[4px] bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       Send
                     </button>
@@ -294,16 +290,16 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
       <div className="mt-12 flex flex-col items-center pb-12">
         <button
           disabled={ambiguityHigh}
-          className={`rounded-xl px-8 py-3.5 text-base font-semibold shadow-lg transition-all ${
+          className={`rounded-[4px] px-8 py-3.5 text-base font-semibold transition-colors ${
             ambiguityHigh
-              ? "cursor-not-allowed bg-gray-200 text-gray-400 shadow-none dark:bg-gray-800 dark:text-gray-500"
-              : "bg-indigo-600 text-white shadow-indigo-500/25 hover:bg-indigo-500 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.98]"
+              ? "cursor-not-allowed bg-[var(--bg-secondary)] text-[var(--text-secondary)]"
+              : "bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]"
           }`}
         >
           Approve PRD &amp; Continue
         </button>
         {ambiguityHigh && (
-          <p className="mt-2 text-center text-sm text-gray-400 dark:text-gray-500">
+          <p className="mt-2 text-center text-sm text-[var(--text-secondary)]">
             Resolve ambiguities before approving
           </p>
         )}
@@ -318,19 +314,12 @@ function PriorityBadge({
   priority: "must-have" | "should-have" | "nice-to-have";
 }) {
   const styles = {
-    "must-have":
-      "bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-950/30 dark:text-red-400 dark:ring-red-400/20",
-    "should-have":
-      "bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-950/30 dark:text-blue-400 dark:ring-blue-400/20",
-    "nice-to-have":
-      "bg-gray-50 text-gray-600 ring-gray-500/10 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-400/20",
+    "must-have": "text-[var(--accent)] font-medium",
+    "should-have": "text-[var(--text-primary)] font-medium",
+    "nice-to-have": "text-[var(--text-secondary)]",
   };
   return (
-    <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${styles[priority]}`}
-    >
-      {priority}
-    </span>
+    <span className={`text-xs ${styles[priority]}`}>{priority}</span>
   );
 }
 
@@ -345,7 +334,7 @@ function HighlightTBD({ text }: { text: string }) {
         part === "TBD" ? (
           <mark
             key={i}
-            className="rounded bg-amber-200 px-1 font-semibold text-amber-900 dark:bg-amber-700/40 dark:text-amber-200"
+            className="bg-amber-200 px-1 font-semibold text-amber-900"
           >
             TBD
           </mark>
@@ -367,9 +356,9 @@ function SectionContent({
   switch (section.type) {
     case "overview":
       return (
-        <div className="space-y-4">
+        <div className="space-y-8">
           <div>
-            <h3 className="mb-1 text-sm font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+            <h3 className="mb-2 font-[var(--font-sans)] text-sm font-medium uppercase tracking-wide text-[var(--text-secondary)]">
               Description
             </h3>
             <p className="leading-relaxed">
@@ -377,7 +366,7 @@ function SectionContent({
             </p>
           </div>
           <div>
-            <h3 className="mb-1 text-sm font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+            <h3 className="mb-2 font-[var(--font-sans)] text-sm font-medium uppercase tracking-wide text-[var(--text-secondary)]">
               Problem Statement
             </h3>
             <p className="leading-relaxed">
@@ -389,16 +378,16 @@ function SectionContent({
 
     case "target-users":
       return (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {prd.targetUsers.personas.map((persona) => (
             <div
               key={persona.name}
-              className="rounded-lg border border-gray-100 bg-gray-50/50 p-4 dark:border-white/5 dark:bg-gray-800/30"
+              className="bg-[var(--bg-secondary)] p-6"
             >
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+              <h3 className="font-[var(--font-sans)] text-sm font-semibold text-[var(--text-primary)]">
                 {persona.name}
               </h3>
-              <p className="mt-1 text-sm leading-relaxed">
+              <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
                 <HighlightTBD text={persona.description} />
               </p>
             </div>
@@ -408,23 +397,21 @@ function SectionContent({
 
     case "features":
       return (
-        <div className="space-y-3">
-          {prd.features.map((feature) => (
+        <div>
+          {prd.features.map((feature, i) => (
             <div
               key={feature.name}
-              className="flex items-start gap-3 rounded-lg border border-gray-100 bg-gray-50/50 p-4 dark:border-white/5 dark:bg-gray-800/30"
+              className={`pb-6 ${i < prd.features.length - 1 ? "mb-6 border-b border-[var(--border)]" : ""}`}
             >
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {feature.name}
-                  </h3>
-                  <PriorityBadge priority={feature.priority} />
-                </div>
-                <p className="mt-1 text-sm leading-relaxed">
-                  <HighlightTBD text={feature.description} />
-                </p>
+              <div className="flex items-center gap-2">
+                <h3 className="font-[var(--font-sans)] text-sm font-semibold text-[var(--text-primary)]">
+                  {feature.name}
+                </h3>
+                <PriorityBadge priority={feature.priority} />
               </div>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">
+                <HighlightTBD text={feature.description} />
+              </p>
             </div>
           ))}
         </div>
@@ -432,21 +419,21 @@ function SectionContent({
 
     case "user-stories":
       return (
-        <div className="space-y-4">
+        <div className="space-y-8">
           {prd.userStories.map((story) => (
             <div key={story.title}>
-              <h3 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">
+              <h3 className="mb-3 font-[var(--font-sans)] text-sm font-semibold text-[var(--text-primary)]">
                 {story.title}
               </h3>
-              <pre className="overflow-x-auto rounded-lg border border-gray-200 bg-gray-950 p-4 text-sm leading-relaxed text-gray-100 dark:border-white/10">
+              <pre className="overflow-x-auto rounded-[4px] bg-[var(--code-bg)] p-4 font-[var(--font-mono)] text-sm leading-relaxed text-[var(--text-primary)]">
                 <code>
-                  <span className="text-emerald-400">Given </span>
+                  <span className="text-emerald-700">Given </span>
                   <HighlightTBD text={story.given} />
                   {"\n"}
-                  <span className="text-sky-400">When </span>
+                  <span className="text-sky-700">When </span>
                   <HighlightTBD text={story.when} />
                   {"\n"}
-                  <span className="text-amber-400">Then </span>
+                  <span className="text-amber-700">Then </span>
                   <HighlightTBD text={story.then} />
                 </code>
               </pre>
@@ -458,15 +445,15 @@ function SectionContent({
     case "data-model":
       return (
         <div>
-          <div className="mb-2 flex items-center gap-2">
-            <span className="rounded bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
+          <div className="mb-4 flex items-center gap-2">
+            <span className="text-sm font-medium text-[var(--text-secondary)]">
               Mermaid.js
             </span>
-            <span className="text-xs text-gray-400 dark:text-gray-500">
+            <span className="text-xs text-[var(--text-secondary)]">
               Diagram rendering coming soon
             </span>
           </div>
-          <pre className="overflow-x-auto rounded-lg border border-gray-200 bg-gray-950 p-4 text-sm leading-relaxed text-gray-100 dark:border-white/10">
+          <pre className="overflow-x-auto rounded-[4px] bg-[var(--code-bg)] p-4 font-[var(--font-mono)] text-sm leading-relaxed text-[var(--text-primary)]">
             <code>{prd.dataModel}</code>
           </pre>
         </div>
@@ -474,23 +461,21 @@ function SectionContent({
 
     case "api":
       return prd.apiSpec ? (
-        <pre className="overflow-x-auto rounded-lg border border-gray-200 bg-gray-950 p-4 text-sm leading-relaxed text-gray-100 dark:border-white/10">
+        <pre className="overflow-x-auto rounded-[4px] bg-[var(--code-bg)] p-4 font-[var(--font-mono)] text-sm leading-relaxed text-[var(--text-primary)]">
           <code>{JSON.stringify(prd.apiSpec, null, 2)}</code>
         </pre>
       ) : (
-        <p className="text-sm italic text-gray-400 dark:text-gray-500">
+        <p className="text-sm italic text-[var(--text-secondary)]">
           No API specification provided yet.
         </p>
       );
 
     case "architecture":
       return (
-        <div className="space-y-3">
-          <div className="inline-flex items-center rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 dark:border-indigo-500/30 dark:bg-indigo-950/30">
-            <span className="text-sm font-semibold text-indigo-700 dark:text-indigo-400">
-              {prd.architecture.template}
-            </span>
-          </div>
+        <div className="space-y-6">
+          <span className="text-sm font-semibold text-[var(--accent)]">
+            {prd.architecture.template}
+          </span>
           <p className="leading-relaxed">
             <HighlightTBD text={prd.architecture.description} />
           </p>

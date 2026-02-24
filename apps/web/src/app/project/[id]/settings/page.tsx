@@ -1,14 +1,14 @@
 export default function SettingsPage() {
   return (
     <div className="flex flex-col items-center justify-center py-24">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--bg-secondary)]">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
           strokeWidth={1.5}
           stroke="currentColor"
-          className="h-7 w-7 text-gray-400 dark:text-gray-500"
+          className="h-7 w-7 text-[var(--text-secondary)]"
         >
           <path
             strokeLinecap="round"
@@ -22,10 +22,10 @@ export default function SettingsPage() {
           />
         </svg>
       </div>
-      <h2 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">
-        Project Settings
+      <h2 className="mt-4 font-[var(--font-serif)] text-lg font-semibold text-[var(--text-primary)]">
+        Project settings
       </h2>
-      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+      <p className="mt-1 text-sm text-[var(--text-secondary)]">
         Project settings coming soon.
       </p>
     </div>

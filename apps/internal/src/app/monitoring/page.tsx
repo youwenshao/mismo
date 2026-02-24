@@ -1,10 +1,10 @@
 import { mockActivityFeed, mockProjects } from "@/lib/mock-data";
 
 const activityDotColor: Record<string, string> = {
-  info: "bg-blue-500",
-  success: "bg-green-500",
-  warning: "bg-yellow-500",
-  error: "bg-red-500",
+  info: "bg-[var(--dash-info)]",
+  success: "bg-[var(--dash-complete)]",
+  warning: "bg-[var(--dash-warning)]",
+  error: "bg-[var(--dash-critical)]",
 };
 
 function formatTimestamp(iso: string): string {
@@ -28,51 +28,46 @@ export default function MonitoringPage() {
   ];
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+    <div className="mx-auto max-w-4xl">
+      <div className="mb-12">
+        <h1 className="font-[var(--font-serif)] text-[1.75rem] font-semibold leading-[1.2] tracking-[-0.01em] text-[var(--text-primary)]">
           Monitoring
         </h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-8 text-sm text-[var(--text-secondary)]">
           System health and metrics
         </p>
       </div>
 
-      {/* Metric cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
         {metrics.map((m) => (
-          <div
-            key={m.label}
-            className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-          >
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+          <div key={m.label}>
+            <p className="text-sm font-medium text-[var(--text-secondary)]">
               {m.label}
             </p>
-            <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">
+            <p className="mt-4 font-[var(--font-serif)] text-3xl font-bold text-[var(--text-primary)]">
               {m.value}
             </p>
           </div>
         ))}
 
-        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+        <div>
+          <p className="text-sm font-medium text-[var(--text-secondary)]">
             Pipeline Health
           </p>
-          <div className="mt-2 flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
-            <span className="text-3xl font-bold text-green-600 dark:text-green-400">
+          <div className="mt-4 flex items-center gap-4">
+            <span className="h-2.5 w-2.5 rounded-full bg-[var(--dash-complete)]" />
+            <span className="font-[var(--font-serif)] text-3xl font-bold text-[var(--text-primary)]">
               Healthy
             </span>
           </div>
         </div>
       </div>
 
-      {/* Token usage overview */}
-      <div className="mt-8">
-        <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
+      <div className="mt-16">
+        <h2 className="mb-8 font-[var(--font-sans)] text-lg font-semibold text-[var(--text-primary)]">
           Token Usage by Project
         </h2>
-        <div className="space-y-3 rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div className="space-y-8">
           {mockProjects
             .filter((p) => p.tokensUsed > 0)
             .sort((a, b) => b.tokensUsed - a.tokensUsed)
@@ -83,23 +78,23 @@ export default function MonitoringPage() {
               );
               const barColor =
                 pct > 85
-                  ? "bg-red-500"
+                  ? "bg-[var(--dash-critical)]"
                   : pct > 60
-                    ? "bg-yellow-500"
-                    : "bg-indigo-500";
+                    ? "bg-[var(--dash-warning)]"
+                    : "bg-[var(--accent)]";
 
               return (
                 <div key={project.id}>
                   <div className="mb-1 flex items-center justify-between text-sm">
-                    <span className="font-medium text-gray-700 dark:text-gray-300">
+                    <span className="font-medium text-[var(--text-primary)]">
                       {project.name}
                     </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                    <span className="text-xs text-[var(--text-secondary)]">
                       {project.tokensUsed.toLocaleString()} /{" "}
                       {project.tokenBudget.toLocaleString()}
                     </span>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--bg-secondary)]">
                     <div
                       className={`h-full rounded-full ${barColor} transition-all`}
                       style={{ width: `${Math.min(pct, 100)}%` }}
@@ -111,32 +106,29 @@ export default function MonitoringPage() {
         </div>
       </div>
 
-      {/* Recent activity */}
-      <div className="mt-8">
-        <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
+      <div className="mt-16">
+        <h2 className="mb-8 font-[var(--font-sans)] text-lg font-semibold text-[var(--text-primary)]">
           Recent Activity
         </h2>
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <ul className="divide-y divide-gray-100 dark:divide-gray-800">
-            {mockActivityFeed.map((item) => (
-              <li
-                key={item.id}
-                className="flex items-start gap-3 px-5 py-3.5"
-              >
-                <span
-                  className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${activityDotColor[item.type]}`}
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                    {item.message}
-                  </p>
-                  <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
-                    {formatTimestamp(item.timestamp)}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
+        <div>
+          {mockActivityFeed.map((item) => (
+            <div
+              key={item.id}
+              className="flex items-start gap-5 border-b border-[var(--border)] py-8"
+            >
+              <span
+                className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${activityDotColor[item.type]}`}
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-[var(--text-primary)]">
+                  {item.message}
+                </p>
+                <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
+                  {formatTimestamp(item.timestamp)}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

@@ -162,13 +162,13 @@ export default function ChatPage() {
     : 15;
 
   return (
-    <div className="flex h-dvh flex-col bg-gray-50 font-sans dark:bg-gray-950">
+    <div className="flex h-dvh flex-col bg-[var(--bg-primary)]">
       {/* Header */}
-      <header className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 py-3 dark:border-white/10 dark:bg-gray-900">
-        <div className="flex items-center gap-3">
+      <header className="flex shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--bg-primary)] px-6 py-5">
+        <div className="flex items-center gap-5">
           <Link
             href="/"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/10 dark:hover:text-white"
+            className="flex h-8 w-8 items-center justify-center text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
             aria-label="Back to home"
           >
             <svg
@@ -186,44 +186,48 @@ export default function ChatPage() {
               />
             </svg>
           </Link>
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white">
+          <div className="flex items-center gap-4">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-bold text-white">
               M
             </div>
             <div>
-              <h1 className="text-sm font-semibold text-gray-900 dark:text-white">
+              <h1 className="font-[var(--font-sans)] text-sm font-semibold text-[var(--text-primary)]">
                 Mo &mdash; Your AI Consultant
               </h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-xs text-[var(--text-secondary)]">
                 {isStreaming ? "Typing…" : currentPhase}
               </p>
             </div>
           </div>
         </div>
-        <div className="text-xs text-gray-400 dark:text-gray-500">
+        <div className="text-xs text-[var(--text-secondary)]">
           {timeRemaining} min remaining
         </div>
       </header>
 
       {error && (
-        <div className="border-b border-red-200 bg-red-50 px-4 py-2 text-center text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
+        <div className="border-b border-[var(--border)] bg-[var(--bg-secondary)] px-4 py-2 text-center text-sm text-[var(--accent)]">
           {error}
         </div>
       )}
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6">
-        <div className="mx-auto flex max-w-2xl flex-col gap-4">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-8">
+        <div className="mx-auto max-w-[680px]">
           {messages.map((msg) => (
             <div
               key={msg.id}
-              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+              className={`py-8 border-b border-[var(--border)] ${
+                msg.role === "user"
+                  ? "border-l-2 border-l-[var(--accent)] pl-6"
+                  : ""
+              }`}
             >
               <div
-                className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                className={`text-sm leading-relaxed text-[var(--text-primary)] ${
                   msg.role === "user"
-                    ? "rounded-br-md bg-indigo-600 text-white"
-                    : "rounded-bl-md bg-white text-gray-800 shadow-sm ring-1 ring-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:ring-white/10"
+                    ? "font-[var(--font-sans)]"
+                    : "font-[var(--font-serif)]"
                 }`}
               >
                 {msg.content}
@@ -233,11 +237,11 @@ export default function ChatPage() {
 
           {isStreaming &&
             messages[messages.length - 1]?.role !== "assistant" && (
-              <div className="flex justify-start">
-                <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md bg-white px-4 py-3 shadow-sm ring-1 ring-gray-200 dark:bg-gray-800 dark:ring-white/10">
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.3s]" />
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.15s]" />
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-gray-400" />
+              <div className="py-6">
+                <div className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--text-secondary)] [animation-delay:-0.3s]" />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--text-secondary)] [animation-delay:-0.15s]" />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--text-secondary)]" />
                 </div>
               </div>
             )}
@@ -245,17 +249,17 @@ export default function ChatPage() {
       </div>
 
       {/* Input */}
-      <div className="shrink-0 border-t border-gray-200 bg-white px-4 py-3 dark:border-white/10 dark:bg-gray-900">
+      <div className="shrink-0 border-t border-[var(--border)] bg-[var(--bg-primary)] px-6 py-6">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             send();
           }}
-          className="mx-auto flex max-w-2xl items-center gap-2"
+          className="mx-auto flex max-w-[680px] items-center gap-5"
         >
           <button
             type="button"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-white/10 dark:hover:text-gray-300"
+            className="flex h-10 w-10 shrink-0 items-center justify-center text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
             aria-label="Voice input (coming soon)"
           >
             <svg
@@ -284,7 +288,7 @@ export default function ChatPage() {
                 : "Describe your product idea…"
             }
             disabled={context?.currentState === "COMPLETE"}
-            className="h-10 flex-1 rounded-full border border-gray-300 bg-gray-50 px-4 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 disabled:opacity-50 dark:border-white/15 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-indigo-500"
+            className="h-10 flex-1 rounded-[2px] border border-[var(--border)] bg-[var(--bg-primary)] px-4 py-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--accent)] focus:outline-none disabled:opacity-50"
           />
           <button
             type="submit"
@@ -293,7 +297,7 @@ export default function ChatPage() {
               isStreaming ||
               context?.currentState === "COMPLETE"
             }
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm transition-all hover:bg-indigo-500 disabled:opacity-40 disabled:hover:bg-indigo-600"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-white transition-colors hover:bg-[var(--accent-hover)] disabled:opacity-40"
             aria-label="Send message"
           >
             <svg

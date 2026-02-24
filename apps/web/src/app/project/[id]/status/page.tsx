@@ -51,22 +51,22 @@ type StageStatus = (typeof stages)[number]["status"];
 
 function connectorColor(targetStatus: StageStatus) {
   return targetStatus === "completed" || targetStatus === "current"
-    ? "bg-green-500 dark:bg-green-400"
-    : "bg-gray-200 dark:bg-gray-700";
+    ? "bg-[var(--text-primary)]"
+    : "bg-[var(--border)]";
 }
 
 function labelColor(status: StageStatus) {
-  if (status === "completed") return "text-green-700 dark:text-green-400";
-  if (status === "current") return "text-indigo-700 dark:text-indigo-400";
-  return "text-gray-400 dark:text-gray-500";
+  if (status === "completed") return "text-[var(--text-primary)]";
+  if (status === "current") return "text-[var(--accent)]";
+  return "text-[var(--text-secondary)]";
 }
 
 function circleClasses(status: StageStatus) {
   if (status === "completed")
-    return "border-green-500 bg-green-500 dark:border-green-400 dark:bg-green-400";
+    return "border-[var(--text-primary)] bg-[var(--text-primary)]";
   if (status === "current")
-    return "border-indigo-600 bg-indigo-600 dark:border-indigo-400 dark:bg-indigo-400";
-  return "border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-900";
+    return "border-[var(--accent)] bg-[var(--accent)]";
+  return "border-[var(--border)] bg-[var(--bg-primary)]";
 }
 
 function StageIndicator({
@@ -85,7 +85,7 @@ function StageIndicator({
     <div className="relative flex items-center justify-center">
       {status === "current" && (
         <span
-          className={`absolute ${pulse} animate-pulse rounded-full bg-indigo-500/20 dark:bg-indigo-400/20`}
+          className={`absolute ${pulse} animate-pulse rounded-full bg-[var(--accent)]/20`}
         />
       )}
       <div
@@ -107,7 +107,7 @@ function StageIndicator({
         ) : status === "current" ? (
           <div className={`${dot} rounded-full bg-white`} />
         ) : (
-          <div className={`${dot} rounded-full bg-gray-300 dark:bg-gray-600`} />
+          <div className={`${dot} rounded-full bg-[var(--border)]`} />
         )}
       </div>
     </div>
@@ -125,14 +125,14 @@ export default function StatusPage() {
 
   return (
     <div>
-      <h1 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+      <h1 className="mb-8 font-[var(--font-serif)] text-[1.75rem] font-semibold leading-[1.2] tracking-[-0.01em] text-[var(--text-primary)]">
         Project Status
       </h1>
-      <p className="mb-10 text-sm text-gray-500 dark:text-gray-400">
+      <p className="mb-16 text-sm text-[var(--text-secondary)]">
         Track your project through each stage of the development pipeline.
       </p>
 
-      {/* ── Desktop horizontal timeline ── */}
+      {/* Desktop horizontal timeline */}
       <div className="hidden lg:block">
         <div className="flex items-start">
           {stages.map((stage, i) => (
@@ -166,14 +166,14 @@ export default function StatusPage() {
                 >
                   {stage.name}
                 </p>
-                <p className="text-center text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-center text-xs text-[var(--text-secondary)]">
                   {stage.description}
                 </p>
-                <p className="text-center text-xs text-gray-400 dark:text-gray-500">
+                <p className="text-center text-xs text-[var(--text-secondary)]">
                   {stage.date}
                 </p>
                 {stage.status === "current" && (
-                  <span className="mt-1 inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-600/20 dark:bg-indigo-950/50 dark:text-indigo-400 dark:ring-indigo-400/20">
+                  <span className="mt-1 text-xs font-medium text-[var(--accent)]">
                     In Progress
                   </span>
                 )}
@@ -183,10 +183,10 @@ export default function StatusPage() {
         </div>
       </div>
 
-      {/* ── Mobile / tablet vertical timeline ── */}
+      {/* Mobile / tablet vertical timeline */}
       <div className="lg:hidden">
         {stages.map((stage, i) => (
-          <div key={stage.name} className="flex gap-4">
+          <div key={stage.name} className="flex gap-8">
             <div className="flex flex-col items-center">
               <StageIndicator status={stage.status} size="sm" />
               {i < stages.length - 1 && (
@@ -202,14 +202,14 @@ export default function StatusPage() {
               >
                 {stage.name}
               </p>
-              <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+              <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
                 {stage.description}
               </p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">
+              <p className="text-xs text-[var(--text-secondary)]">
                 {stage.date}
               </p>
               {stage.status === "current" && (
-                <span className="mt-1.5 inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-600/20 dark:bg-indigo-950/50 dark:text-indigo-400 dark:ring-indigo-400/20">
+                <span className="mt-1.5 text-xs font-medium text-[var(--accent)]">
                   In Progress
                 </span>
               )}
@@ -218,65 +218,63 @@ export default function StatusPage() {
         ))}
       </div>
 
-      {/* ── Live Preview ── */}
-      <div className="mt-12 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-gray-900">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+      {/* Live Preview */}
+      <div className="mt-20">
+        <h2 className="font-[var(--font-serif)] text-lg font-semibold text-[var(--text-primary)]">
           Live Preview
         </h2>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-2 text-sm text-[var(--text-secondary)]">
           Preview updates automatically as development progresses.
         </p>
 
-        <div className="mt-4 flex flex-col gap-3 rounded-lg border border-gray-100 bg-gray-50 p-4 sm:flex-row sm:items-center dark:border-white/5 dark:bg-gray-800/50">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/40">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="h-4 w-4 text-indigo-600 dark:text-indigo-400"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
-              />
-            </svg>
-          </div>
-          <code className="min-w-0 flex-1 truncate text-sm text-gray-700 dark:text-gray-300">
+        <div className="mt-8 flex flex-col gap-6 bg-[var(--bg-secondary)] p-6 sm:flex-row sm:items-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="h-5 w-5 shrink-0 text-[var(--accent)]"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+            />
+          </svg>
+          <code className="min-w-0 flex-1 truncate font-[var(--font-mono)] text-sm text-[var(--text-primary)]">
             https://taskflow-preview.vercel.app
           </code>
           <a
             href="#"
-            className="inline-flex shrink-0 items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-500"
+            className="inline-flex shrink-0 items-center justify-center rounded-[4px] bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-hover)]"
           >
             Open Preview
           </a>
         </div>
       </div>
 
-      {/* ── Request Changes ── */}
-      <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-gray-900">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+      {/* Request Changes */}
+      <div className="mt-20 border-t border-[var(--border)] pt-16">
+        <h2 className="font-[var(--font-serif)] text-lg font-semibold text-[var(--text-primary)]">
           Request Changes
         </h2>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-2 text-sm text-[var(--text-secondary)]">
           You have{" "}
-          <span className="font-medium text-indigo-600 dark:text-indigo-400">
+          <span className="font-medium text-[var(--accent)]">
             2 free revision cycles
           </span>{" "}
           remaining.
         </p>
 
         {submitted ? (
-          <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-500/30 dark:bg-green-950/20">
-            <div className="flex items-center gap-2">
+          <div className="mt-8 border-l-2 border-[var(--accent)] bg-[var(--bg-secondary)] p-6">
+            <div className="flex items-center gap-3">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
                 fill="currentColor"
-                className="h-5 w-5 text-green-600 dark:text-green-400"
+                className="h-5 w-5 text-[var(--accent)]"
               >
                 <path
                   fillRule="evenodd"
@@ -284,28 +282,28 @@ export default function StatusPage() {
                   clipRule="evenodd"
                 />
               </svg>
-              <p className="text-sm font-medium text-green-800 dark:text-green-300">
+              <p className="text-sm font-medium text-[var(--text-primary)]">
                 Revision request submitted successfully
               </p>
             </div>
-            <p className="mt-1 text-sm text-green-700 dark:text-green-400">
+            <p className="mt-2 text-sm text-[var(--text-primary)]">
               We&apos;ll review your notes and incorporate the changes.
               You&apos;ll be notified when the updated preview is ready.
             </p>
           </div>
         ) : (
-          <div className="mt-4">
+          <div className="mt-8">
             <textarea
               value={revisionNotes}
               onChange={(e) => setRevisionNotes(e.target.value)}
               placeholder="Describe the changes you'd like…"
               rows={4}
-              className="w-full rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-white/10 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400"
+              className="w-full rounded-[2px] border border-[var(--border)] bg-[var(--bg-primary)] p-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--accent)] focus:outline-none"
             />
             <button
               onClick={handleSubmitRevision}
               disabled={!revisionNotes.trim()}
-              className="mt-3 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-6 rounded-[4px] bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Submit Revision Request
             </button>

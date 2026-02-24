@@ -12,36 +12,30 @@ import {
 } from "@/lib/mock-data";
 
 const priorityConfig: Record<Priority, string> = {
-  Critical:
-    "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-  High: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
-  Medium:
-    "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
-  Low: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+  Critical: "text-[var(--dash-active)] font-semibold",
+  High: "text-[var(--text-primary)] font-semibold",
+  Medium: "text-[var(--text-secondary)] font-normal",
+  Low: "text-[#A3A3A0] font-normal",
 };
 
 const statusConfig: Record<ReviewStatus, string> = {
-  Pending:
-    "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  "In Review":
-    "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  Completed:
-    "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  Pending: "text-[var(--dash-pending)] font-normal",
+  "In Review": "text-[var(--dash-active)] font-medium",
+  Completed: "text-[var(--dash-complete)] font-medium",
 };
 
 const reviewTypeConfig: Record<ReviewType, string> = {
-  Spec: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-  Code: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400",
-  Security:
-    "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
+  Spec: "text-[var(--text-secondary)] font-medium",
+  Code: "text-[var(--text-primary)] font-medium",
+  Security: "text-[var(--dash-active)] font-medium",
 };
 
 function getSlaColor(deadline: string): string {
   const hours = getHoursUntilDeadline(deadline);
-  if (hours < 0) return "text-red-600 dark:text-red-400";
-  if (hours < 1) return "text-red-600 dark:text-red-400";
-  if (hours < 4) return "text-yellow-600 dark:text-yellow-400";
-  return "text-green-600 dark:text-green-400";
+  if (hours < 0) return "text-[var(--dash-critical)]";
+  if (hours < 1) return "text-[var(--dash-critical)]";
+  if (hours < 4) return "text-[var(--dash-warning)]";
+  return "text-[var(--text-primary)]";
 }
 
 export default function ReviewQueuePage() {
@@ -67,126 +61,113 @@ export default function ReviewQueuePage() {
   }
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+    <div className="mx-auto max-w-4xl">
+      <div className="mb-12">
+        <h1 className="font-[var(--font-serif)] text-[1.75rem] font-semibold leading-[1.2] tracking-[-0.01em] text-[var(--text-primary)]">
           Review Queue
         </h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-8 text-sm text-[var(--text-secondary)]">
           Projects awaiting human review
         </p>
       </div>
 
-      {/* Review table */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/50">
-                <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">
-                  Project
-                </th>
-                <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">
-                  Client
-                </th>
-                <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">
-                  Type
-                </th>
-                <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">
-                  Priority
-                </th>
-                <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">
-                  SLA Deadline
-                </th>
-                <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">
-                  Status
-                </th>
-                <th className="px-4 py-3 font-medium text-gray-500 dark:text-gray-400">
-                  Action
-                </th>
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="border-b border-[var(--border)]">
+              <th className="px-5 py-5 text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-secondary)]">
+                Project
+              </th>
+              <th className="px-5 py-5 text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-secondary)]">
+                Client
+              </th>
+              <th className="px-5 py-5 text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-secondary)]">
+                Type
+              </th>
+              <th className="px-5 py-5 text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-secondary)]">
+                Priority
+              </th>
+              <th className="px-5 py-5 text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-secondary)]">
+                SLA Deadline
+              </th>
+              <th className="px-5 py-5 text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-secondary)]">
+                Status
+              </th>
+              <th className="px-5 py-5 text-xs font-medium uppercase tracking-[0.05em] text-[var(--text-secondary)]">
+                Action
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {tasks.map((task) => (
+              <tr
+                key={task.id}
+                className="border-b border-[var(--border)] transition-colors hover:bg-[var(--bg-secondary)]"
+              >
+                <td className="px-5 py-5 font-medium text-[var(--text-primary)]">
+                  {task.projectName}
+                </td>
+                <td className="px-5 py-5 text-[var(--text-secondary)]">
+                  {task.client}
+                </td>
+                <td className="px-5 py-5">
+                  <span className={`text-xs ${reviewTypeConfig[task.reviewType]}`}>
+                    {task.reviewType}
+                  </span>
+                </td>
+                <td className="px-5 py-5">
+                  <span className={`text-xs ${priorityConfig[task.priority]}`}>
+                    {task.priority}
+                  </span>
+                </td>
+                <td className="px-4 py-4">
+                  <span
+                    className={`text-xs font-medium ${getSlaColor(task.slaDeadline)}`}
+                  >
+                    {formatDeadlineCountdown(task.slaDeadline)}
+                  </span>
+                </td>
+                <td className="px-5 py-5">
+                  <span className={`text-xs ${statusConfig[task.status]}`}>
+                    {task.status}
+                  </span>
+                </td>
+                <td className="px-5 py-5">
+                  {task.status === "Pending" ? (
+                    <button
+                      onClick={() => handleClaim(task.id)}
+                      className="rounded-[4px] bg-[var(--accent)] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[var(--accent-hover)]"
+                    >
+                      Claim
+                    </button>
+                  ) : task.status === "In Review" ? (
+                    <span className="text-xs text-[var(--text-secondary)]">
+                      {task.assignee}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-[var(--dash-complete)] font-medium">
+                      Done
+                    </span>
+                  )}
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {tasks.map((task) => (
-                <tr
-                  key={task.id}
-                  className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                >
-                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
-                    {task.projectName}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                    {task.client}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${reviewTypeConfig[task.reviewType]}`}
-                    >
-                      {task.reviewType}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${priorityConfig[task.priority]}`}
-                    >
-                      {task.priority}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`text-xs font-medium ${getSlaColor(task.slaDeadline)}`}
-                    >
-                      {formatDeadlineCountdown(task.slaDeadline)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusConfig[task.status]}`}
-                    >
-                      {task.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    {task.status === "Pending" ? (
-                      <button
-                        onClick={() => handleClaim(task.id)}
-                        className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-700"
-                      >
-                        Claim
-                      </button>
-                    ) : task.status === "In Review" ? (
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {task.assignee}
-                      </span>
-                    ) : (
-                      <span className="text-xs text-green-600 dark:text-green-400">
-                        Done
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      {/* Stats bar */}
-      <div className="mt-6 flex items-center justify-center gap-6 text-xs text-gray-500 dark:text-gray-400">
+      <div className="mt-10 flex items-center justify-center gap-10 text-xs text-[var(--text-secondary)]">
         <span className="font-medium">
-          <span className="text-amber-600 dark:text-amber-400">{pending}</span>{" "}
-          pending
+          <span className="text-[var(--dash-active)]">{pending}</span> pending
         </span>
-        <span className="h-3 w-px bg-gray-200 dark:bg-gray-700" />
+        <span className="h-3 w-px bg-[var(--border)]" />
         <span className="font-medium">
-          <span className="text-blue-600 dark:text-blue-400">{inReview}</span>{" "}
-          in review
+          <span className="text-[var(--dash-active)]">{inReview}</span> in
+          review
         </span>
-        <span className="h-3 w-px bg-gray-200 dark:bg-gray-700" />
+        <span className="h-3 w-px bg-[var(--border)]" />
         <span className="font-medium">
-          <span className="text-green-600 dark:text-green-400">
-            {completed}
-          </span>{" "}
+          <span className="text-[var(--dash-complete)]">{completed}</span>{" "}
           completed today
         </span>
       </div>

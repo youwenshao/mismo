@@ -37,26 +37,24 @@ export default function ProjectLayout({
   const activeSegment = subPath.split("/")[0];
 
   return (
-    <div className="min-h-screen bg-white font-sans dark:bg-gray-950">
-      {/* Top bar */}
-      <header className="sticky top-0 z-40 border-b border-gray-200/80 bg-white/90 backdrop-blur-md dark:border-white/10 dark:bg-gray-950/90">
-        <div className="mx-auto flex h-14 max-w-5xl items-center gap-4 px-6">
+    <div className="min-h-screen bg-[var(--bg-primary)] font-[var(--font-sans)]">
+      <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--bg-primary)]">
+        <div className="mx-auto flex h-14 max-w-5xl items-center gap-6 px-6">
           <Link
             href="/"
-            className="text-sm font-medium text-gray-400 transition-colors hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-300"
+            className="text-sm font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
           >
             Mismo
           </Link>
-          <span className="text-gray-300 dark:text-gray-600">/</span>
-          <h1 className="text-sm font-semibold text-gray-900 dark:text-white">
+          <span className="text-[var(--border)]">/</span>
+          <h1 className="font-[var(--font-sans)] text-sm font-semibold text-[var(--text-primary)]">
             {project.name}
           </h1>
           <StatusBadge status={project.status} />
         </div>
 
-        {/* Tab navigation */}
         <div className="mx-auto max-w-5xl px-6">
-          <nav className="-mb-px flex gap-6" aria-label="Project tabs">
+          <nav className="-mb-px flex gap-10" aria-label="Project tabs">
             {tabs.map((tab) => {
               const href = tab.segment
                 ? `/project/${projectId}/${tab.segment}`
@@ -68,8 +66,8 @@ export default function ProjectLayout({
                   href={href}
                   className={`border-b-2 pb-3 pt-2 text-sm font-medium transition-colors ${
                     isActive
-                      ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
-                      : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-300"
+                      ? "border-[var(--accent)] text-[var(--accent)]"
+                      : "border-transparent text-[var(--text-secondary)] hover:border-[var(--border)] hover:text-[var(--text-primary)]"
                   }`}
                 >
                   {tab.label}
@@ -80,25 +78,18 @@ export default function ProjectLayout({
         </div>
       </header>
 
-      {/* Content */}
-      <main className="mx-auto max-w-5xl px-6 py-8">{children}</main>
+      <main className="mx-auto max-w-5xl px-6 py-12">{children}</main>
     </div>
   );
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const color =
+  const style =
     status === "In Review"
-      ? "bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-900/30 dark:text-amber-400 dark:ring-amber-400/20"
+      ? "text-[var(--accent)] font-medium"
       : status === "Approved"
-        ? "bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-900/30 dark:text-green-400 dark:ring-green-400/20"
-        : "bg-gray-50 text-gray-600 ring-gray-500/10 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-400/20";
+        ? "text-[var(--text-primary)] font-medium"
+        : "text-[var(--text-secondary)]";
 
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${color}`}
-    >
-      {status}
-    </span>
-  );
+  return <span className={`text-xs ${style}`}>{status}</span>;
 }

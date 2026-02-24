@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Search } from "lucide-react";
 import {
   mockProjects,
   type Project,
@@ -11,32 +12,25 @@ import {
 
 type Filter = "All" | "Active" | "Completed";
 
-const tierBadge: Record<ProjectTier, string> = {
-  Starter: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
-  Pro: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400",
-  Enterprise:
-    "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+const tierStyle: Record<ProjectTier, string> = {
+  Starter: "text-[var(--text-secondary)]",
+  Pro: "text-[var(--text-primary)] font-medium",
+  Enterprise: "text-[var(--accent)] font-medium",
 };
 
-const statusBadge: Record<ProjectStatus, string> = {
-  Discovery:
-    "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
-  "Spec Review":
-    "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-  Development:
-    "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  "Code Review":
-    "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  Testing:
-    "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
-  Completed:
-    "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+const statusStyle: Record<ProjectStatus, string> = {
+  Discovery: "text-[var(--dash-pending)]",
+  "Spec Review": "text-[var(--dash-active)]",
+  Development: "text-[var(--dash-active)]",
+  "Code Review": "text-[var(--dash-warning)]",
+  Testing: "text-[var(--dash-warning)]",
+  Completed: "text-[var(--dash-complete)]",
 };
 
 function safetyColor(score: number): string {
-  if (score >= 90) return "text-green-600 dark:text-green-400";
-  if (score >= 80) return "text-yellow-600 dark:text-yellow-400";
-  return "text-red-600 dark:text-red-400";
+  if (score >= 90) return "text-[var(--text-primary)]";
+  if (score >= 80) return "text-[var(--dash-warning)]";
+  return "text-[var(--dash-active)]";
 }
 
 function isActive(p: Project): boolean {
@@ -61,49 +55,36 @@ export default function ProjectsPage() {
   const filters: Filter[] = ["All", "Active", "Completed"];
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+    <div className="mx-auto max-w-4xl">
+      <div className="mb-12">
+        <h1 className="font-[var(--font-serif)] text-[1.75rem] font-semibold leading-[1.2] tracking-[-0.01em] text-[var(--text-primary)]">
           Projects
         </h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-8 text-sm text-[var(--text-secondary)]">
           All client projects
         </p>
       </div>
 
-      {/* Search/filter bar */}
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <svg
-            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-            />
-          </svg>
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-secondary)]" strokeWidth={1.5} />
           <input
             type="text"
             placeholder="Search projects or clients..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+            className="w-full rounded-[2px] border border-[var(--border)] bg-[var(--bg-primary)] py-2 pl-10 pr-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--accent)] focus:outline-none"
           />
         </div>
-        <div className="flex gap-1 rounded-lg border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-900">
+        <div className="flex gap-3">
           {filters.map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`rounded-[4px] px-3 py-1.5 text-xs font-medium transition-colors ${
                 filter === f
-                  ? "bg-indigo-600 text-white"
-                  : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                  ? "bg-[var(--accent)] text-white"
+                  : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
               {f}
@@ -112,60 +93,52 @@ export default function ProjectsPage() {
         </div>
       </div>
 
-      {/* Project grid */}
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200 bg-white px-6 py-16 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="flex flex-col items-center justify-center px-6 py-16">
+          <p className="text-sm text-[var(--text-secondary)]">
             No projects match your search.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <div>
           {filtered.map((project) => (
             <Link
               key={project.id}
               href={`/projects/${project.id}`}
-              className="group rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-indigo-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-indigo-700"
+              className="group flex items-center justify-between border-b border-[var(--border)] py-10 transition-colors hover:bg-[var(--bg-secondary)]"
             >
-              <div className="mb-3 flex items-start justify-between">
-                <div>
-                  <h3 className="font-semibold text-gray-900 group-hover:text-indigo-600 dark:text-gray-100 dark:group-hover:text-indigo-400">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-3">
+                  <h3 className="font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent)]">
                     {project.name}
                   </h3>
-                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                    {project.client}
-                  </p>
+                  <span className={`text-xs ${tierStyle[project.tier]}`}>
+                    {project.tier}
+                  </span>
                 </div>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${tierBadge[project.tier]}`}
-                >
-                  {project.tier}
-                </span>
+                <p className="mt-1 text-xs text-[var(--text-secondary)]">
+                  {project.client}
+                </p>
+                <p className="mt-2 line-clamp-1 text-xs text-[var(--text-secondary)]">
+                  {project.description}
+                </p>
               </div>
 
-              <p className="mb-4 line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
-                {project.description}
-              </p>
-
-              <div className="flex items-center justify-between">
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusBadge[project.status]}`}
-                >
+              <div className="ml-6 flex shrink-0 items-center gap-6">
+                <span className={`text-xs ${statusStyle[project.status]}`}>
                   {project.status}
                 </span>
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`text-xs font-bold ${safetyColor(project.safetyScore)}`}
-                  >
-                    {project.safetyScore}%
-                  </span>
-                  <span className="text-xs text-gray-400 dark:text-gray-500">
-                    {new Date(project.createdAt).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </span>
-                </div>
+                <span
+                  className={`text-xs font-bold ${safetyColor(project.safetyScore)}`}
+                >
+                  {project.safetyScore}%
+                </span>
+                <span className="text-xs text-[var(--text-secondary)]">
+                  {new Date(project.createdAt).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </span>
               </div>
             </Link>
           ))}

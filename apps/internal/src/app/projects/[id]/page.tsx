@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import {
   getProjectById,
   getBuildLogsForProject,
@@ -11,46 +12,40 @@ import {
   type ProjectStatus,
 } from "@/lib/mock-data";
 
-const tierBadge: Record<ProjectTier, string> = {
-  Starter: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
-  Pro: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400",
-  Enterprise:
-    "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+const tierStyle: Record<ProjectTier, string> = {
+  Starter: "text-[var(--text-secondary)]",
+  Pro: "text-[var(--text-primary)] font-medium",
+  Enterprise: "text-[var(--accent)] font-medium",
 };
 
-const statusBadge: Record<ProjectStatus, string> = {
-  Discovery: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
-  "Spec Review":
-    "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-  Development:
-    "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  "Code Review":
-    "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  Testing:
-    "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
-  Completed:
-    "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+const statusStyle: Record<ProjectStatus, string> = {
+  Discovery: "text-[var(--dash-pending)]",
+  "Spec Review": "text-[var(--dash-active)]",
+  Development: "text-[var(--dash-active)]",
+  "Code Review": "text-[var(--dash-warning)]",
+  Testing: "text-[var(--dash-warning)]",
+  Completed: "text-[var(--dash-complete)]",
 };
 
 const logStatusConfig = {
   success: {
-    dot: "bg-green-500",
-    text: "text-green-700 dark:text-green-400",
+    dot: "bg-[var(--dash-complete)]",
+    text: "text-[var(--dash-complete)]",
     label: "Success",
   },
   error: {
-    dot: "bg-red-500",
-    text: "text-red-700 dark:text-red-400",
+    dot: "bg-[var(--dash-critical)]",
+    text: "text-[var(--dash-critical)]",
     label: "Error",
   },
   warning: {
-    dot: "bg-yellow-500",
-    text: "text-yellow-700 dark:text-yellow-400",
+    dot: "bg-[var(--dash-warning)]",
+    text: "text-[var(--dash-warning)]",
     label: "Warning",
   },
   info: {
-    dot: "bg-blue-500",
-    text: "text-blue-700 dark:text-blue-400",
+    dot: "bg-[var(--dash-info)]",
+    text: "text-[var(--dash-info)]",
     label: "Info",
   },
 };
@@ -65,15 +60,9 @@ const tabs: { id: Tab; label: string }[] = [
 ];
 
 function safetyColor(score: number): string {
-  if (score >= 90) return "text-green-600 dark:text-green-400";
-  if (score >= 80) return "text-yellow-600 dark:text-yellow-400";
-  return "text-red-600 dark:text-red-400";
-}
-
-function safetyBg(score: number): string {
-  if (score >= 90) return "bg-green-500";
-  if (score >= 80) return "bg-yellow-500";
-  return "bg-red-500";
+  if (score >= 90) return "text-[var(--text-primary)]";
+  if (score >= 80) return "text-[var(--dash-warning)]";
+  return "text-[var(--dash-active)]";
 }
 
 function OverviewTab({ project }: { project: Project }) {
@@ -81,20 +70,16 @@ function OverviewTab({ project }: { project: Project }) {
     { label: "Client", value: project.client },
     {
       label: "Tier",
-      badge: (
-        <span
-          className={`rounded-full px-2 py-0.5 text-xs font-medium ${tierBadge[project.tier]}`}
-        >
+      value: (
+        <span className={`text-sm ${tierStyle[project.tier]}`}>
           {project.tier}
         </span>
       ),
     },
     {
       label: "Status",
-      badge: (
-        <span
-          className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusBadge[project.status]}`}
-        >
+      value: (
+        <span className={`text-sm ${statusStyle[project.status]}`}>
           {project.status}
         </span>
       ),
@@ -110,40 +95,42 @@ function OverviewTab({ project }: { project: Project }) {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-        <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-gray-100">
+    <div className="space-y-12">
+      <div>
+        <h3 className="mb-8 font-[var(--font-sans)] text-base font-semibold text-[var(--text-primary)]">
           Project Information
         </h3>
-        <dl className="space-y-3">
+        <dl>
           {infoRows.map((row) => (
-            <div key={row.label} className="flex items-center justify-between">
-              <dt className="text-sm text-gray-500 dark:text-gray-400">
+            <div
+              key={row.label}
+              className="flex items-center justify-between border-b border-[var(--border)] py-6"
+            >
+              <dt className="text-sm text-[var(--text-secondary)]">
                 {row.label}
               </dt>
-              <dd className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                {row.badge ?? row.value}
+              <dd className="text-sm font-medium text-[var(--text-primary)]">
+                {row.value}
               </dd>
             </div>
           ))}
         </dl>
       </div>
 
-      {/* Safety Score */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-        <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-gray-100">
+      <div>
+        <h3 className="mb-8 font-[var(--font-sans)] text-base font-semibold text-[var(--text-primary)]">
           Safety Score
         </h3>
         <div className="flex items-center gap-4">
           <div
-            className={`text-4xl font-bold ${safetyColor(project.safetyScore)}`}
+            className={`font-[var(--font-serif)] text-4xl font-bold ${safetyColor(project.safetyScore)}`}
           >
             {project.safetyScore}%
           </div>
           <div className="flex-1">
-            <div className="h-3 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+            <div className="h-3 w-full overflow-hidden rounded-full bg-[var(--bg-secondary)]">
               <div
-                className={`h-full rounded-full ${safetyBg(project.safetyScore)} transition-all`}
+                className="h-full rounded-full bg-[var(--accent)] transition-all"
                 style={{ width: `${project.safetyScore}%` }}
               />
             </div>
@@ -151,12 +138,11 @@ function OverviewTab({ project }: { project: Project }) {
         </div>
       </div>
 
-      {/* Description */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-        <h3 className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100">
+      <div>
+        <h3 className="mb-8 font-[var(--font-sans)] text-base font-semibold text-[var(--text-primary)]">
           Description
         </h3>
-        <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+        <p className="text-sm leading-relaxed text-[var(--text-secondary)]">
           {project.description}
         </p>
       </div>
@@ -166,39 +152,56 @@ function OverviewTab({ project }: { project: Project }) {
 
 function PrdTab({ project }: { project: Project }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-      <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
+    <div className="space-y-6">
+      <h3 className="font-[var(--font-sans)] text-lg font-semibold text-[var(--text-primary)]">
         Product Requirements Document
       </h3>
-      <div className="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
-        <h4>1. Overview</h4>
-        <p>{project.description}</p>
+      <div className="space-y-6 text-sm leading-relaxed text-[var(--text-secondary)]">
+        <div>
+          <h4 className="mb-3 font-[var(--font-sans)] font-semibold text-[var(--text-primary)]">
+            1. Overview
+          </h4>
+          <p>{project.description}</p>
+        </div>
 
-        <h4>2. Goals</h4>
-        <ul>
-          <li>
-            Deliver a production-ready {project.name.toLowerCase()} application
-          </li>
-          <li>
-            Meet {project.tier} tier quality and performance requirements
-          </li>
-          <li>Maintain safety score above 85% throughout development</li>
-          <li>Complete within allocated token budget</li>
-        </ul>
+        <div>
+          <h4 className="mb-3 font-[var(--font-sans)] font-semibold text-[var(--text-primary)]">
+            2. Goals
+          </h4>
+            <ul className="list-disc space-y-2 pl-5">
+            <li>
+              Deliver a production-ready {project.name.toLowerCase()} application
+            </li>
+            <li>
+              Meet {project.tier} tier quality and performance requirements
+            </li>
+            <li>Maintain safety score above 85% throughout development</li>
+            <li>Complete within allocated token budget</li>
+          </ul>
+        </div>
 
-        <h4>3. Target Users</h4>
-        <p>
-          Primary users are {project.client}&apos;s customer base. The
-          application must support modern browsers and mobile-responsive layouts.
-        </p>
+        <div>
+          <h4 className="mb-3 font-[var(--font-sans)] font-semibold text-[var(--text-primary)]">
+            3. Target Users
+          </h4>
+          <p>
+            Primary users are {project.client}&apos;s customer base. The
+            application must support modern browsers and mobile-responsive
+            layouts.
+          </p>
+        </div>
 
-        <h4>4. Technical Requirements</h4>
-        <ul>
-          <li>Next.js application with App Router</li>
-          <li>TypeScript with strict mode</li>
-          <li>Supabase for authentication and database</li>
-          <li>Responsive design with Tailwind CSS</li>
-        </ul>
+        <div>
+          <h4 className="mb-3 font-[var(--font-sans)] font-semibold text-[var(--text-primary)]">
+            4. Technical Requirements
+          </h4>
+          <ul className="list-disc space-y-2 pl-5">
+            <li>Next.js application with App Router</li>
+            <li>TypeScript with strict mode</li>
+            <li>Supabase for authentication and database</li>
+            <li>Responsive design with Tailwind CSS</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
@@ -209,8 +212,8 @@ function BuildLogsTab({ projectId }: { projectId: string }) {
 
   if (logs.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-xl border border-gray-200 bg-white px-6 py-12 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+      <div className="flex flex-col items-center justify-center px-6 py-12">
+        <p className="text-sm text-[var(--text-secondary)]">
           No build logs available yet.
         </p>
       </div>
@@ -218,99 +221,98 @@ function BuildLogsTab({ projectId }: { projectId: string }) {
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-      <ul className="divide-y divide-gray-100 dark:divide-gray-800">
-        {logs.map((log) => {
-          const cfg = logStatusConfig[log.status];
-          return (
-            <li key={log.id} className="flex items-start gap-3 px-5 py-3.5">
-              <span
-                className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${cfg.dot}`}
-              />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                    {log.message}
-                  </p>
-                  <span
-                    className={`shrink-0 text-xs font-medium ${cfg.text}`}
-                  >
-                    {cfg.label}
-                  </span>
-                </div>
-                <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
-                  {new Date(log.timestamp).toLocaleString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    hour: "numeric",
-                    minute: "2-digit",
-                    hour12: true,
-                  })}
+    <div>
+      {logs.map((log) => {
+        const cfg = logStatusConfig[log.status];
+        return (
+          <div
+            key={log.id}
+            className="flex items-start gap-5 border-b border-[var(--border)] py-6"
+          >
+            <span
+              className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${cfg.dot}`}
+            />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-[var(--text-primary)]">
+                  {log.message}
                 </p>
+                <span className={`shrink-0 text-xs font-medium ${cfg.text}`}>
+                  {cfg.label}
+                </span>
               </div>
-            </li>
-          );
-        })}
-      </ul>
+              <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
+                {new Date(log.timestamp).toLocaleString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                })}
+              </p>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
 
 function TokenUsageTab({ project }: { project: Project }) {
   const pct = Math.round((project.tokensUsed / project.tokenBudget) * 100);
+
   const barColor =
-    pct > 85 ? "bg-red-500" : pct > 60 ? "bg-yellow-500" : "bg-indigo-500";
+    pct > 85
+      ? "bg-[var(--dash-critical)]"
+      : pct > 60
+        ? "bg-[var(--dash-warning)]"
+        : "bg-[var(--accent)]";
+
+  const pctColor =
+    pct > 85
+      ? "text-[var(--dash-critical)]"
+      : pct > 60
+        ? "text-[var(--dash-warning)]"
+        : "text-[var(--accent)]";
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-      <h3 className="mb-4 text-base font-semibold text-gray-900 dark:text-gray-100">
+    <div>
+      <h3 className="mb-8 font-[var(--font-sans)] text-base font-semibold text-[var(--text-primary)]">
         Token Consumption
       </h3>
       <div className="mb-2 flex items-end justify-between">
         <div>
-          <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+          <span className="font-[var(--font-serif)] text-3xl font-bold text-[var(--text-primary)]">
             {project.tokensUsed.toLocaleString()}
           </span>
-          <span className="ml-1 text-sm text-gray-500 dark:text-gray-400">
+          <span className="ml-1 text-sm text-[var(--text-secondary)]">
             / {project.tokenBudget.toLocaleString()} tokens
           </span>
         </div>
-        <span
-          className={`text-sm font-bold ${
-            pct > 85
-              ? "text-red-600 dark:text-red-400"
-              : pct > 60
-                ? "text-yellow-600 dark:text-yellow-400"
-                : "text-indigo-600 dark:text-indigo-400"
-          }`}
-        >
-          {pct}%
-        </span>
+        <span className={`text-sm font-bold ${pctColor}`}>{pct}%</span>
       </div>
-      <div className="h-4 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+      <div className="h-4 w-full overflow-hidden rounded-full bg-[var(--bg-secondary)]">
         <div
           className={`h-full rounded-full ${barColor} transition-all`}
           style={{ width: `${Math.min(pct, 100)}%` }}
         />
       </div>
-      <div className="mt-4 grid grid-cols-3 gap-4 border-t border-gray-100 pt-4 dark:border-gray-800">
+      <div className="mt-4 grid grid-cols-3 gap-4 border-t border-[var(--border)] pt-4">
         <div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Used</p>
-          <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <p className="text-xs text-[var(--text-secondary)]">Used</p>
+          <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
             {project.tokensUsed.toLocaleString()}
           </p>
         </div>
         <div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Remaining</p>
-          <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <p className="text-xs text-[var(--text-secondary)]">Remaining</p>
+          <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
             {(project.tokenBudget - project.tokensUsed).toLocaleString()}
           </p>
         </div>
         <div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Est. Cost
-          </p>
-          <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <p className="text-xs text-[var(--text-secondary)]">Est. Cost</p>
+          <p className="mt-1 text-sm font-semibold text-[var(--text-primary)]">
             ${((project.tokensUsed / 1000) * 0.03).toFixed(2)}
           </p>
         </div>
@@ -328,12 +330,12 @@ export default function ProjectDetailPage() {
   if (!project) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <h2 className="text-lg font-semibold text-[var(--text-primary)]">
           Project not found
         </h2>
         <Link
           href="/projects"
-          className="mt-3 text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+          className="mt-3 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
         >
           &larr; Back to projects
         </Link>
@@ -342,59 +344,41 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <div>
-      {/* Header */}
-      <div className="mb-6">
+    <div className="mx-auto max-w-4xl">
+      <div className="mb-10">
         <Link
           href="/projects"
-          className="mb-3 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          className="mb-6 inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
         >
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15.75 19.5 8.25 12l7.5-7.5"
-            />
-          </svg>
+          <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
           Projects
         </Link>
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <div className="flex items-center gap-6">
+          <h1 className="font-[var(--font-serif)] text-[1.75rem] font-semibold text-[var(--text-primary)]">
             {project.name}
           </h1>
-          <span
-            className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${tierBadge[project.tier]}`}
-          >
+          <span className={`text-xs ${tierStyle[project.tier]}`}>
             {project.tier}
           </span>
-          <span
-            className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusBadge[project.status]}`}
-          >
+          <span className={`text-xs ${statusStyle[project.status]}`}>
             {project.status}
           </span>
         </div>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        <p className="mt-4 text-sm text-[var(--text-secondary)]">
           {project.client}
         </p>
       </div>
 
-      {/* Tabs */}
-      <div className="mb-6 border-b border-gray-200 dark:border-gray-800">
-        <nav className="-mb-px flex gap-6">
+      <div className="mb-8 border-b border-[var(--border)]">
+        <nav className="-mb-px flex gap-10">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`whitespace-nowrap border-b-2 pb-3 text-sm font-medium transition-colors ${
+              className={`whitespace-nowrap border-b-2 pb-4 pt-1 text-sm font-medium transition-colors ${
                 activeTab === tab.id
-                  ? "border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400"
-                  : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                  ? "border-[var(--accent)] text-[var(--accent)]"
+                  : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               }`}
             >
               {tab.label}
@@ -403,7 +387,6 @@ export default function ProjectDetailPage() {
         </nav>
       </div>
 
-      {/* Tab content */}
       {activeTab === "overview" && <OverviewTab project={project} />}
       {activeTab === "prd" && <PrdTab project={project} />}
       {activeTab === "logs" && <BuildLogsTab projectId={project.id} />}
