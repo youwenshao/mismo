@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
     const contentValidation = prdContentSchema.safeParse(prd.content)
     const fullValidation = generatedPRDSchema.safeParse(prd)
 
-    const llmPromptPayload = specGenerator.generateWithLLM(interviewContext.extractedData)
+    const llmPromptPayload = specGenerator.generateWithLLM(interviewContext)
 
     return NextResponse.json({
       prd,

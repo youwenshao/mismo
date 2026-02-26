@@ -20,33 +20,33 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
     switch (sectionId) {
       case "overview":
         return (
-          hasTBD(prd.overview.description) ||
-          hasTBD(prd.overview.problemStatement)
+          hasTBD(prd.overview?.description || "") ||
+          hasTBD(prd.overview?.problemStatement || "")
         );
       case "target-users":
-        return prd.targetUsers.personas.some(
-          (p) => hasTBD(p.name) || hasTBD(p.description),
+        return (prd.targetUsers?.personas || []).some(
+          (p) => hasTBD(p.name || "") || hasTBD(p.description || ""),
         );
       case "features":
-        return prd.features.some(
-          (f) => hasTBD(f.name) || hasTBD(f.description),
+        return (prd.features || []).some(
+          (f) => hasTBD(f.name || "") || hasTBD(f.description || ""),
         );
       case "user-stories":
-        return prd.userStories.some(
+        return (prd.userStories || []).some(
           (s) =>
-            hasTBD(s.title) ||
-            hasTBD(s.given) ||
-            hasTBD(s.when) ||
-            hasTBD(s.then),
+            hasTBD(s.title || "") ||
+            hasTBD(s.given || "") ||
+            hasTBD(s.when || "") ||
+            hasTBD(s.then || ""),
         );
       case "data-model":
-        return hasTBD(prd.dataModel);
+        return hasTBD(prd.dataModel || "");
       case "api":
-        return hasTBD(JSON.stringify(prd.apiSpec));
+        return hasTBD(JSON.stringify(prd.apiSpec || {}));
       case "architecture":
         return (
-          hasTBD(prd.architecture.template) ||
-          hasTBD(prd.architecture.description)
+          hasTBD(prd.architecture?.template || "") ||
+          hasTBD(prd.architecture?.description || "")
         );
       default:
         return false;
@@ -379,7 +379,7 @@ function SectionContent({
     case "target-users":
       return (
         <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-3">
-          {prd.targetUsers.personas.map((persona) => (
+          {(prd.targetUsers?.personas || []).map((persona) => (
             <div
               key={persona.name}
             >
@@ -397,7 +397,7 @@ function SectionContent({
     case "features":
       return (
         <div className="space-y-8">
-          {prd.features.map((feature) => (
+          {(prd.features || []).map((feature) => (
             <div
               key={feature.name}
               className="pb-8"
@@ -419,7 +419,7 @@ function SectionContent({
     case "user-stories":
       return (
         <div className="space-y-8">
-          {prd.userStories.map((story) => (
+          {(prd.userStories || []).map((story) => (
             <div key={story.title}>
               <h3 className="mb-6 font-[var(--font-sans)] text-sm font-semibold text-[var(--text-primary)]">
                 {story.title}

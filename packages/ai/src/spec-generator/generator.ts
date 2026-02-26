@@ -83,7 +83,7 @@ export class SpecGenerator {
     return features.map((feature) => ({
       ...feature,
       userStories:
-        feature.userStories.length > 0
+        Array.isArray(feature.userStories) && feature.userStories.length > 0
           ? feature.userStories
           : this.buildGherkinStories(feature),
     }))
@@ -92,12 +92,12 @@ export class SpecGenerator {
   private buildGherkinStories(feature: PRDFeature): UserStory[] {
     const count = STORIES_BY_PRIORITY[feature.priority] ?? 1
     const stories: UserStory[] = []
-    const desc = feature.description.toLowerCase()
+    const desc = (feature.description || '').toLowerCase() || 'this feature'
 
     stories.push({
-      title: `Use ${feature.name}`,
+      title: `Use ${feature.name || 'Feature'}`,
       given: `a registered user who needs ${desc}`,
-      when: `they navigate to the ${feature.name} feature and interact with it`,
+      when: `they navigate to the ${feature.name || 'feature'} and interact with it`,
       then: `they can successfully ${desc} and see confirmation of the result`,
     })
 
@@ -204,9 +204,15 @@ export class SpecGenerator {
     return lines.join('\n')
   }
 
-  generateWithLLM(extractedData: Record<string, unknown>): LLMPromptPayload {
+  generateWithLLM(context: InterviewContext): LLMPromptPayload {
+    const { extractedData, messages } = context
     const projectName = (extractedData.projectName as string) || 'Untitled Project'
     const features = (extractedData.features as PRDFeature[]) || []
+
+    const transcript = messages
+      .filter((m) => m.role !== 'system')
+      .map((m) => `${m.role === 'user' ? 'Customer' : 'Mo'}: ${m.content}`)
+      .join('\n\n')
 
     const systemPrompt = [
       'You are a senior product manager at a top-tier software consultancy.',
@@ -241,13 +247,16 @@ export class SpecGenerator {
     ].join('\n')
 
     const userPrompt = [
-      '## Interview Data',
+      '## Interview Transcript',
+      transcript,
+      '',
+      '## Extracted Data (Pre-parsed)',
       JSON.stringify(extractedData, null, 2),
       '',
-      '## Identified Features',
+      '## Identified Features (Pre-parsed)',
       ...features.map((f, i) => `${i + 1}. ${f.name} [${f.priority}]: ${f.description}`),
       '',
-      'Generate the PRD now.',
+      'Generate the PRD now based on the transcript and pre-parsed data. The transcript is the primary source of truth.',
     ].join('\n')
 
     const requestedOutputSchema = JSON.stringify(
@@ -299,9 +308,11 @@ export class SpecGenerator {
       constraints: buildConstraints(extractedData),
     }
 
+    const flatUserStories = features.flatMap((f) => f.userStories || [])
+
     return {
       content,
-      userStories: features,
+      userStories: flatUserStories as any,
       archTemplate,
       ambiguityScore,
       mermaidDataModel,

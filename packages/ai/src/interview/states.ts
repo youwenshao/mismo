@@ -1,4 +1,5 @@
 import { InterviewState } from '@mismo/shared'
+import { STATE_PROMPTS } from './prompts'
 
 export interface StateConfig {
   id: InterviewState
@@ -11,63 +12,77 @@ export interface StateConfig {
 export const INTERVIEW_STATES: Record<InterviewState, StateConfig> = {
   [InterviewState.GREETING]: {
     id: InterviewState.GREETING,
-    systemPrompt: `You are Mo, the AI consultant at Mismo. Welcome the user warmly and explain that you'll help them turn their idea into a real product. Ask them to briefly describe what they want to build.`,
+    systemPrompt: STATE_PROMPTS.GREETING,
     extractionGoals: ['projectName', 'initialDescription'],
     maxTurns: 3,
     nextState: InterviewState.PROBLEM_DEFINITION,
   },
   [InterviewState.PROBLEM_DEFINITION]: {
     id: InterviewState.PROBLEM_DEFINITION,
-    systemPrompt: `You are Mo. Help the user articulate the core problem their product solves. Ask convergent questions: Who experiences this problem? How do they currently solve it? What makes this solution better? Extract a clear problem statement.`,
+    systemPrompt: STATE_PROMPTS.PROBLEM_DEFINITION,
     extractionGoals: ['problemStatement', 'currentSolutions', 'uniqueValue'],
     maxTurns: 5,
     nextState: InterviewState.TARGET_USERS,
   },
   [InterviewState.TARGET_USERS]: {
     id: InterviewState.TARGET_USERS,
-    systemPrompt: `You are Mo. Help identify target users. Present options like: "Who is your primary user? A) Individual consumers B) Small businesses C) Enterprise companies D) Other". Extract demographics, technical comfort level, and expected user volume.`,
+    systemPrompt: STATE_PROMPTS.TARGET_USERS,
     extractionGoals: ['primaryUsers', 'demographics', 'expectedVolume'],
     maxTurns: 4,
     nextState: InterviewState.FEATURE_EXTRACTION,
   },
   [InterviewState.FEATURE_EXTRACTION]: {
     id: InterviewState.FEATURE_EXTRACTION,
-    systemPrompt: `You are Mo. Extract the core features. For each feature the user mentions, classify it as must-have, should-have, or nice-to-have. Limit to 5-8 core features for MVP. Present trade-offs as multiple choice when appropriate.`,
+    systemPrompt: STATE_PROMPTS.FEATURE_EXTRACTION,
     extractionGoals: ['features', 'featurePriorities'],
     maxTurns: 8,
     nextState: InterviewState.TECHNICAL_TRADEOFFS,
   },
   [InterviewState.TECHNICAL_TRADEOFFS]: {
     id: InterviewState.TECHNICAL_TRADEOFFS,
-    systemPrompt: `You are Mo. Present technical decisions as simple A/B/C choices the user can understand: "For your app, which matters more? A) Speed to market (simpler, faster) B) Scalability (handles growth) C) Customization (flexible, more complex)". Map answers to architecture templates.`,
+    systemPrompt: STATE_PROMPTS.TECHNICAL_TRADEOFFS,
     extractionGoals: ['archPreference', 'scalabilityNeeds', 'complexityTolerance'],
     maxTurns: 4,
     nextState: InterviewState.MONETIZATION,
   },
   [InterviewState.MONETIZATION]: {
     id: InterviewState.MONETIZATION,
-    systemPrompt: `You are Mo. Ask about business model: "How will your product make money? A) Subscription/SaaS B) One-time purchase C) Freemium D) Marketplace/commission E) Not sure yet". Extract pricing thoughts and payment needs.`,
+    systemPrompt: STATE_PROMPTS.MONETIZATION,
     extractionGoals: ['businessModel', 'pricingStrategy', 'paymentNeeds'],
     maxTurns: 4,
     nextState: InterviewState.COMPLIANCE_CHECK,
   },
   [InterviewState.COMPLIANCE_CHECK]: {
     id: InterviewState.COMPLIANCE_CHECK,
-    systemPrompt: `You are Mo. Gather information needed for compliance screening. Ask about data handling: "Will your app handle any of these? A) Health/medical data B) Financial transactions C) Children's data D) Government IDs E) None of these". This is for safety classification.`,
+    systemPrompt: STATE_PROMPTS.COMPLIANCE_CHECK,
     extractionGoals: ['dataTypes', 'regulatoryDomains', 'contentTypes'],
     maxTurns: 3,
     nextState: InterviewState.SUMMARY,
   },
   [InterviewState.SUMMARY]: {
     id: InterviewState.SUMMARY,
-    systemPrompt: `You are Mo. Present a concise summary of everything discussed. Ask the user to confirm or correct any details. Format as a structured overview with sections for: Problem, Users, Features, Technical Approach, Business Model.`,
+    systemPrompt: STATE_PROMPTS.SUMMARY,
     extractionGoals: ['userConfirmation'],
     maxTurns: 3,
+    nextState: InterviewState.FEASIBILITY_AND_PRICING,
+  },
+  [InterviewState.FEASIBILITY_AND_PRICING]: {
+    id: InterviewState.FEASIBILITY_AND_PRICING,
+    systemPrompt: STATE_PROMPTS.FEASIBILITY_AND_PRICING,
+    extractionGoals: ['priceAccepted'],
+    maxTurns: 4,
+    nextState: InterviewState.CONFIRMATION,
+  },
+  [InterviewState.CONFIRMATION]: {
+    id: InterviewState.CONFIRMATION,
+    systemPrompt: STATE_PROMPTS.CONFIRMATION,
+    extractionGoals: ['finalConfirmation'],
+    maxTurns: 2,
     nextState: InterviewState.COMPLETE,
   },
   [InterviewState.COMPLETE]: {
     id: InterviewState.COMPLETE,
-    systemPrompt: `Interview complete.`,
+    systemPrompt: STATE_PROMPTS.COMPLETE,
     extractionGoals: [],
     maxTurns: 0,
     nextState: null,

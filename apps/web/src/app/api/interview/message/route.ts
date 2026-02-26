@@ -1,98 +1,143 @@
 import { NextRequest } from 'next/server'
-import { streamText } from 'ai'
-import { openai } from '@ai-sdk/openai'
-import { InterviewStateMachine, type InterviewContext } from '@mismo/ai'
+import { streamText, type LanguageModel } from 'ai'
+import {
+  InterviewStateMachine,
+  type InterviewContext,
+  getActiveModel,
+  calculatePriceEstimate,
+} from '@mismo/ai'
+import { prisma } from '@mismo/db'
 import { InterviewState } from '@mismo/shared'
+import { getMoRuntimeConfig } from '@/lib/mo-config'
 
 export async function POST(req: NextRequest) {
-  const { message, context } = (await req.json()) as {
-    message: string
-    context: InterviewContext
-  }
+  try {
+    const { sessionId, message } = (await req.json()) as {
+      sessionId: string
+      message: string
+    }
 
-  const machine = InterviewStateMachine.fromContext(context)
+    if (!sessionId || !message) {
+      return new Response(
+        JSON.stringify({ error: 'Missing sessionId or message' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } },
+      )
+    }
 
-  if (machine.isExpired) {
-    return new Response(
-      JSON.stringify({
-        error: 'Interview session has expired (15-minute limit reached)',
-        context: machine.getContext(),
-      }),
-      { status: 410, headers: { 'Content-Type': 'application/json' } },
-    )
-  }
+    const session = await prisma.interviewSession.findUnique({
+      where: { id: sessionId },
+    })
 
-  if (machine.isComplete) {
-    return new Response(
-      JSON.stringify({
-        error: 'Interview is already complete',
-        context: machine.getContext(),
-      }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } },
-    )
-  }
+    if (!session) {
+      return new Response(
+        JSON.stringify({ error: 'Session not found' }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } },
+      )
+    }
 
-  machine.addMessage({
-    role: 'user',
-    content: message,
-    timestamp: new Date().toISOString(),
-  })
+    const savedContext = session.state as unknown as InterviewContext
+    const machine = InterviewStateMachine.fromContext(savedContext)
 
-  const shouldTransition = machine.canTransition()
-  if (shouldTransition) {
-    machine.transition()
-  }
+    if (machine.isComplete) {
+      return new Response(
+        JSON.stringify({
+          error: 'Interview is already complete',
+          context: machine.getContext(),
+        }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } },
+      )
+    }
 
-  const systemPrompt = buildSystemPrompt(machine)
+    machine.addMessage({
+      role: 'user',
+      content: message,
+      timestamp: new Date().toISOString(),
+    })
 
-  const result = streamText({
-    model: openai('gpt-4o-mini'),
-    system: systemPrompt,
-    messages: machine.getContext().messages.map((m) => ({
-      role: m.role === 'system' ? ('system' as const) : m.role === 'user' ? ('user' as const) : ('assistant' as const),
-      content: m.content,
-    })),
-    onFinish: async ({ text }) => {
-      machine.addMessage({
-        role: 'assistant',
-        content: text,
-        timestamp: new Date().toISOString(),
+    if (machine.canTransition()) {
+      machine.transition()
+    }
+
+    const isAutoCompleting = machine.getContext().currentState === InterviewState.CONFIRMATION
+
+    let priceEstimateJson: string | undefined
+    let priceEstimateData: string | undefined
+    if (machine.getContext().currentState === InterviewState.FEASIBILITY_AND_PRICING) {
+      const data = machine.getContext().extractedData
+      const featureCount = Array.isArray(data.features) ? (data.features as unknown[]).length : 3
+      const estimate = calculatePriceEstimate({
+        featureCount,
+        archPreference: typeof data.archPreference === 'string' ? data.archPreference : 'balanced',
+        regulatoryDomains: Array.isArray(data.regulatoryDomains) ? data.regulatoryDomains as string[] : [],
+        complexityTolerance: typeof data.complexityTolerance === 'string' ? data.complexityTolerance : 'moderate',
+        expectedVolume: typeof data.expectedVolume === 'string' ? data.expectedVolume : 'medium',
       })
-    },
-  })
+      priceEstimateJson = JSON.stringify(estimate, null, 2)
+      priceEstimateData = JSON.stringify(estimate)
+    }
 
-  const response = result.toTextStreamResponse()
+    const systemPrompt = machine.buildFullSystemPrompt(priceEstimateJson)
+    const runtimeConfig = await getMoRuntimeConfig()
 
-  const updatedContext = machine.getContext()
-  response.headers.set('X-Interview-Context', JSON.stringify(updatedContext))
-  response.headers.set('X-Interview-State', updatedContext.currentState)
+    const result = streamText({
+      model: getActiveModel(runtimeConfig) as unknown as LanguageModel,
+      system: systemPrompt,
+      messages: machine.getContext().messages.map((m) => ({
+        role: m.role === 'system' ? ('system' as const) : m.role === 'user' ? ('user' as const) : ('assistant' as const),
+        content: m.content,
+      })),
+      onFinish: async ({ text }) => {
+        try {
+          const { cleanText } = machine.parseAndStripMetadata(text)
 
-  return response
-}
+          machine.addMessage({
+            role: 'assistant',
+            content: cleanText,
+            timestamp: new Date().toISOString(),
+          })
 
-function buildSystemPrompt(machine: InterviewStateMachine): string {
-  const config = machine.currentStateConfig
-  const ctx = machine.getContext()
+          if (isAutoCompleting) {
+            machine.transition()
+          }
 
-  let prompt = config.systemPrompt
+          machine.saveCheckpoint()
 
-  if (Object.keys(ctx.extractedData).length > 0) {
-    prompt += `\n\nInformation gathered so far:\n${JSON.stringify(ctx.extractedData, null, 2)}`
+          const updatedContext = machine.getContext()
+          await prisma.interviewSession.update({
+            where: { id: sessionId },
+            data: {
+              state: JSON.parse(JSON.stringify(updatedContext)),
+              transcript: JSON.parse(JSON.stringify(updatedContext.messages)),
+              completedAt: machine.isComplete ? new Date() : undefined,
+            },
+          })
+        } catch (error) {
+          console.error('Failed to persist interview stream result', {
+            sessionId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          })
+        }
+      },
+    })
+
+    const response = result.toTextStreamResponse()
+
+    const currentContext = machine.getContext()
+    response.headers.set('X-Interview-Session-Id', sessionId)
+    response.headers.set('X-Interview-State', isAutoCompleting ? InterviewState.COMPLETE : currentContext.currentState)
+    response.headers.set('X-Interview-Readiness', String(currentContext.readinessScore))
+    if (priceEstimateData) {
+      response.headers.set('X-Price-Estimate', priceEstimateData)
+    }
+
+    return response
+  } catch (error) {
+    console.error('Interview message request failed', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    })
+    return new Response(
+      JSON.stringify({ error: 'Unable to process interview message right now. Please try again.' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } },
+    )
   }
-
-  prompt += `\n\nYou are currently in the "${config.id}" phase of the interview.`
-  prompt += `\nExtraction goals for this phase: ${config.extractionGoals.join(', ')}`
-
-  if (config.nextState && config.nextState !== InterviewState.COMPLETE) {
-    prompt += `\nAfter this phase, you will move to: ${config.nextState}`
-  }
-
-  prompt += `\n\nIMPORTANT RULES:`
-  prompt += `\n- Keep responses concise (2-4 sentences max)`
-  prompt += `\n- Use convergent questions (multiple choice A/B/C/D when possible)`
-  prompt += `\n- Extract specific, actionable information`
-  prompt += `\n- Do not ask open-ended technical questions - present trade-offs as simple choices`
-  prompt += `\n- Be warm but efficient - this interview has a 15-minute time limit`
-
-  return prompt
 }

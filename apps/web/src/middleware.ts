@@ -30,7 +30,19 @@ export async function middleware(request: NextRequest) {
   const isHealthCheck = pathname === "/api/health";
   const start = Date.now();
 
-  const { supabaseResponse, user } = await updateSession(request);
+  let { supabaseResponse, user } = await updateSession(request);
+
+  // Development mode: bypass auth if flag is set
+  if (
+    process.env.NODE_ENV === "development" &&
+    process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === "true" &&
+    !user
+  ) {
+    user = {
+      id: "9b7acb0c-5947-4451-bd31-2f44284623f2",
+      email: "dev@mismo.test",
+    } as any;
+  }
 
   for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
     supabaseResponse.headers.set(key, value);

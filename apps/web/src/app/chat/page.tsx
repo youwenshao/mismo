@@ -1,168 +1,470 @@
 "use client";
 
-import { useState, useRef, useEffect, type FormEvent } from "react";
-import { ArrowUp, Mic, MessageSquare } from "lucide-react";
+import { useState, useCallback, useRef, useEffect, Suspense } from "react";
+import { Mic, MessageSquare } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { MessageList } from "./components/MessageList";
+import { ChatInput } from "./components/ChatInput";
+import { ReadinessBar } from "./components/ReadinessBar";
+import { SubmissionStatusPanel } from "./components/SubmissionStatusPanel";
+import type { PriceEstimate } from "@mismo/shared";
 
 type Message = { role: "user" | "assistant"; content: string };
 type Mode = "text" | "voice";
 
+interface Choice {
+  label: string;
+  description: string;
+}
+
+interface ConfirmDoneEvent {
+  projectId: string;
+}
+
+const CHOICES_REGEX = /\[CHOICES\]([\s\S]*?)\[\/CHOICES\]/gi;
+const META_REGEX = /\[META\]([\s\S]*?)\[\/META\]/;
+
+function parseChoicesFromContent(
+  content: string,
+): Choice[] | null {
+  CHOICES_REGEX.lastIndex = 0;
+  const match = CHOICES_REGEX.exec(content);
+  if (!match) return null;
+
+  const lines = match[1]
+    .trim()
+    .split("\n")
+    .filter((l) => l.trim());
+  return lines.map((line) => {
+    const trimmed = line.trim();
+    const colonIdx = trimmed.indexOf(":");
+    if (colonIdx === -1) return { label: trimmed, description: "" };
+    return {
+      label: trimmed.slice(0, colonIdx).trim(),
+      description: trimmed.slice(colonIdx + 1).trim(),
+    };
+  });
+}
+
+function stripMeta(text: string): string {
+  return text.replace(META_REGEX, "").trim();
+}
+
+function parseReadiness(text: string): number | null {
+  const match = text.match(META_REGEX);
+  if (!match) return null;
+  try {
+    const data = JSON.parse(match[1]);
+    return typeof data.readiness === "number" ? data.readiness : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function ChatPage() {
+  return (
+    <Suspense fallback={<div className="h-dvh flex items-center justify-center bg-white"><p className="text-gray-400 text-sm">Loading...</p></div>}>
+      <ChatPageInner />
+    </Suspense>
+  );
+}
+
+function ChatPageInner() {
+  const searchParams = useSearchParams();
+  const resumeSessionId = searchParams.get("session");
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [mode, setMode] = useState<Mode>("text");
-  const [context, setContext] = useState<Record<string, unknown> | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [readiness, setReadiness] = useState(0);
+  const [interviewState, setInterviewState] = useState<string>("GREETING");
+  const [priceEstimates, setPriceEstimates] = useState<Map<number, PriceEstimate>>(
+    new Map(),
+  );
+  const [parsedChoices, setParsedChoices] = useState<Map<number, Choice[]>>(
+    new Map(),
+  );
+  const [sessionLoaded, setSessionLoaded] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [confirmStatusMessage, setConfirmStatusMessage] = useState("");
+  const [confirmStreamOutput, setConfirmStreamOutput] = useState("");
+
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (resumeSessionId && !sessionLoaded) {
+      loadSession(resumeSessionId);
+    }
+  }, [resumeSessionId, sessionLoaded]);
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    const text = input.trim();
-    if (!text || isStreaming) return;
-
-    setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: text }]);
-    setIsStreaming(true);
-
+  async function loadSession(id: string) {
     try {
-      let ctx = context;
-      if (!ctx) {
-        const startRes = await fetch("/api/interview/start", { method: "POST" });
-        if (!startRes.ok) throw new Error("Failed to start session");
-        const startData = await startRes.json();
-        ctx = startData.state;
-        setContext(ctx);
+      const res = await fetch(`/api/interview/session/${id}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setSessionId(id);
+      const ctx = data.state;
+      if (ctx?.messages) {
+        const msgs: Message[] = ctx.messages
+          .filter((m: { role: string }) => m.role !== "system")
+          .map((m: { role: string; content: string }) => ({
+            role: m.role as "user" | "assistant",
+            content: m.content,
+          }));
+        setMessages(msgs);
+
+        const newChoices = new Map<number, Choice[]>();
+        msgs.forEach((msg, i) => {
+          if (msg.role === "assistant") {
+            const choices = parseChoicesFromContent(msg.content);
+            if (choices) newChoices.set(i, choices);
+          }
+        });
+        setParsedChoices(newChoices);
       }
+      if (ctx?.readinessScore) {
+        setReadiness(ctx.readinessScore);
+      }
+      if (ctx?.currentState) {
+        setInterviewState(ctx.currentState);
+      }
+      if (ctx?.currentState === "COMPLETE" && !data.projectId) {
+        setTimeout(() => {
+          void handleConfirm();
+        }, 500);
+      }
+      setSessionLoaded(true);
+    } catch {
+      // session load failed, start fresh
+    }
+  }
 
-      const res = await fetch("/api/interview/message", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, context: ctx }),
-      });
+  const sendMessage = useCallback(
+    async (text: string) => {
+      if (!text.trim() || isStreaming || isConfirming) return false;
 
-      if (!res.ok) throw new Error(`Server error (${res.status})`);
+      setInput("");
+      setMessages((prev) => [...prev, { role: "user", content: text }]);
+      setIsStreaming(true);
+      let succeeded = false;
 
-      const ctxHeader = res.headers.get("X-Interview-Context");
-      let updatedCtx = ctx;
-      if (ctxHeader) {
-        try {
-          updatedCtx = JSON.parse(ctxHeader);
-        } catch {
-          // header parse failed, keep previous context
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      try {
+        let sid = sessionId;
+        if (!sid) {
+          const startRes = await fetch("/api/interview/start", {
+            method: "POST",
+            signal: controller.signal,
+          });
+          if (!startRes.ok) throw new Error("Failed to start session");
+          const startData = await startRes.json();
+          sid = startData.sessionId;
+          setSessionId(sid);
         }
+
+        const res = await fetch("/api/interview/message", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId: sid, message: text }),
+          signal: controller.signal,
+        });
+
+        if (!res.ok) throw new Error(`Server error (${res.status})`);
+
+        const readinessHeader = res.headers.get("X-Interview-Readiness");
+        if (readinessHeader) {
+          const r = parseInt(readinessHeader, 10);
+          if (!isNaN(r)) setReadiness(r);
+        }
+
+        const priceHeader = res.headers.get("X-Price-Estimate");
+
+        const currentState = res.headers.get("X-Interview-State");
+        if (currentState) {
+          setInterviewState(currentState);
+        }
+
+        const reader = res.body!.getReader();
+        const decoder = new TextDecoder();
+        let fullText = "";
+
+        setMessages((prev) => {
+          const newIndex = prev.length;
+          if (priceHeader) {
+            try {
+              const parsedEstimate = JSON.parse(priceHeader);
+              setPriceEstimates((old) => {
+                const updated = new Map(old);
+                updated.set(newIndex, parsedEstimate);
+                return updated;
+              });
+            } catch {
+              // ignore parse errors
+            }
+          }
+          return [
+            ...prev,
+            { role: "assistant", content: "" },
+          ];
+        });
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          fullText += decoder.decode(value, { stream: true });
+          const snapshot = fullText;
+          setMessages((prev) => {
+            const next = [...prev];
+            next[next.length - 1] = {
+              role: "assistant",
+              content: snapshot,
+            };
+            return next;
+          });
+        }
+
+        const parsedReadiness = parseReadiness(fullText);
+        if (parsedReadiness !== null) setReadiness(parsedReadiness);
+
+        const cleanText = stripMeta(fullText);
+
+        setMessages((prev) => {
+          const next = [...prev];
+          next[next.length - 1] = {
+            role: "assistant",
+            content: cleanText,
+          };
+          return next;
+        });
+
+        const choices = parseChoicesFromContent(cleanText);
+        const finalChoices = choices ? [...choices] : [];
+        const isEarlyPhase =
+          currentState &&
+          !["SUMMARY", "FEASIBILITY_AND_PRICING", "CONFIRMATION", "COMPLETE"].includes(
+            currentState,
+          );
+        const newReadiness = parsedReadiness !== null ? parsedReadiness : readiness;
+        
+        if (newReadiness >= 85 && isEarlyPhase) {
+          finalChoices.push({
+            label: "Proceed to summary",
+            description: "We have enough information to wrap up",
+          });
+        }
+
+        if (finalChoices.length > 0) {
+          setMessages((prev) => {
+            setParsedChoices((old) => {
+              const updated = new Map(old);
+              updated.set(prev.length - 1, finalChoices);
+              return updated;
+            });
+            return prev;
+          });
+        }
+
+        if (currentState === "COMPLETE") {
+          setTimeout(() => {
+            void handleConfirm();
+          }, 1000);
+        }
+
+        succeeded = true;
+      } catch (err) {
+        if ((err as Error).name === "AbortError") {
+          // user stopped generation, keep partial response
+        } else {
+          console.error("Chat error:", err);
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: "Something went wrong. Please try again.",
+            },
+          ]);
+        }
+      } finally {
+        setIsStreaming(false);
+        abortControllerRef.current = null;
       }
+      return succeeded;
+    },
+    [isConfirming, isStreaming, sessionId],
+  );
 
-      const reader = res.body!.getReader();
+  function handleStop() {
+    abortControllerRef.current?.abort();
+  }
+
+  function handleSubmit() {
+    void sendMessage(input);
+  }
+
+  async function handleConfirm() {
+    if (!sessionId || isConfirming) return;
+    setIsConfirming(true);
+    setConfirmStatusMessage("Reviewing what we discussed so far...");
+    setConfirmStreamOutput("");
+    let shouldKeepPanel = false;
+    try {
+      const res = await fetch(
+        `/api/interview/session/${sessionId}/confirm`,
+        { method: "POST" },
+      );
+      if (!res.ok || !res.body) throw new Error("Confirmation failed");
+
+      const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      let fullText = "";
-
-      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+      let buffer = "";
+      let doneEvent: ConfirmDoneEvent | null = null;
 
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
-        fullText += decoder.decode(value, { stream: true });
-        const snapshot = fullText;
-        setMessages((prev) => {
-          const next = [...prev];
-          next[next.length - 1] = { role: "assistant", content: snapshot };
-          return next;
-        });
+        buffer += decoder.decode(value, { stream: true });
+
+        while (true) {
+          const lineBreak = buffer.indexOf("\n");
+          if (lineBreak === -1) break;
+          const line = buffer.slice(0, lineBreak).trim();
+          buffer = buffer.slice(lineBreak + 1);
+          if (!line) continue;
+
+          const event = JSON.parse(line) as {
+            type?: string;
+            message?: string;
+            text?: string;
+            projectId?: string;
+          };
+
+          if (event.type === "status" && event.message) {
+            setConfirmStatusMessage(event.message);
+            continue;
+          }
+
+          if (event.type === "delta" && event.text) {
+            setConfirmStreamOutput((prev) => prev + event.text);
+            continue;
+          }
+
+          if (event.type === "error") {
+            throw new Error(
+              event.message ||
+                "I hit a snag while preparing your project plan. Please try again.",
+            );
+          }
+
+          if (event.type === "done" && event.projectId) {
+            doneEvent = { projectId: event.projectId };
+            setConfirmStatusMessage("Your project plan is ready. Taking you there now...");
+          }
+        }
       }
 
-      // Append assistant message to context so the server has full history
-      if (updatedCtx && typeof updatedCtx === "object") {
-        const ctxMsgs = Array.isArray(
-          (updatedCtx as Record<string, unknown>).messages,
-        )
-          ? ((updatedCtx as Record<string, unknown>).messages as unknown[])
-          : [];
-        setContext({
-          ...updatedCtx,
-          messages: [
-            ...ctxMsgs,
-            {
-              role: "assistant",
-              content: fullText,
-              timestamp: new Date().toISOString(),
-            },
-          ],
-        });
-      } else {
-        setContext(updatedCtx);
+      if (!doneEvent) {
+        throw new Error("Project submission did not complete");
       }
-    } catch (err) {
-      console.error("Chat error:", err);
+      const projectId = doneEvent.projectId;
+
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: "Something went wrong. Please try again.",
+          content:
+            "Your project has been submitted! Our engineering team will review your specification within 24 hours.\n\nYou can track your project's progress in your dashboard.",
         },
       ]);
+      setPriceEstimates(new Map());
+      shouldKeepPanel = true;
+      setTimeout(() => {
+        setIsConfirming(false);
+        window.location.href = `/project/${projectId}`;
+      }, 1200);
+    } catch (err) {
+      console.error("Confirm error:", err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            "Something went wrong submitting your project. Please try again.",
+        },
+      ]);
+      setConfirmStatusMessage("");
+      setConfirmStreamOutput("");
     } finally {
-      setIsStreaming(false);
+      if (!shouldKeepPanel) {
+        setIsConfirming(false);
+      }
+    }
+  }
+
+  async function handleChoiceSelect(choice: Choice) {
+    await sendMessage(`${choice.label}: ${choice.description}`);
+  }
+
+  async function handleEditMessage(messageIndex: number, newContent: string) {
+    if (!sessionId || isStreaming) return;
+
+    const checkpointIndex = Math.floor(messageIndex / 2);
+
+    try {
+      const res = await fetch(
+        `/api/interview/session/${sessionId}/rewind`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ checkpointIndex }),
+        },
+      );
+
+      if (!res.ok) throw new Error("Rewind failed");
+
+      const data = await res.json();
+      const msgs: Message[] = data.messages
+        .filter((m: { role: string }) => m.role !== "system")
+        .map((m: { role: string; content: string }) => ({
+          role: m.role as "user" | "assistant",
+          content: m.content,
+        }));
+      setMessages(msgs);
+
+      if (data.state?.readinessScore) {
+        setReadiness(data.state.readinessScore);
+      }
+      if (data.state?.currentState) {
+        setInterviewState(data.state.currentState);
+      }
+
+      setParsedChoices((old) => {
+        const updated = new Map();
+        for (const [k, v] of old.entries()) {
+          if (k < msgs.length) updated.set(k, v);
+        }
+        return updated;
+      });
+
+      setPriceEstimates((old) => {
+        const updated = new Map();
+        for (const [k, v] of old.entries()) {
+          if (k < msgs.length) updated.set(k, v);
+        }
+        return updated;
+      });
+
+      await sendMessage(newContent);
+    } catch (err) {
+      console.error("Edit failed:", err);
     }
   }
 
   const hasMessages = messages.length > 0;
-
-  function ModeToggle() {
-    return (
-      <div className="flex justify-center gap-1 mt-3">
-        <button
-          onClick={() => setMode("text")}
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-full transition-colors ${
-            mode === "text"
-              ? "bg-gray-100 text-gray-900"
-              : "text-gray-400 hover:text-gray-600"
-          }`}
-        >
-          <MessageSquare size={12} />
-          Text
-        </button>
-        <button
-          onClick={() => setMode("voice")}
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-full transition-colors ${
-            mode === "voice"
-              ? "bg-gray-100 text-gray-900"
-              : "text-gray-400 hover:text-gray-600"
-          }`}
-        >
-          <Mic size={12} />
-          Voice
-        </button>
-      </div>
-    );
-  }
-
-  function ChatInput() {
-    return (
-      <form onSubmit={handleSubmit} className="max-w-2xl mx-auto relative">
-        <input
-          ref={inputRef}
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type a message..."
-          disabled={isStreaming}
-          className="w-full px-5 py-3 pr-14 text-base bg-white border border-gray-200 rounded-2xl outline-none focus:border-gray-300 transition-colors disabled:opacity-50"
-        />
-        <button
-          type="submit"
-          disabled={!input.trim() || isStreaming}
-          className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 bg-black text-white rounded-full flex items-center justify-center disabled:opacity-30 transition-opacity"
-        >
-          <ArrowUp size={18} />
-        </button>
-      </form>
-    );
-  }
 
   return (
     <div className="h-dvh flex flex-col bg-white">
@@ -178,6 +480,14 @@ export default function ChatPage() {
         </Link>
       </header>
 
+      {hasMessages && (
+        <div className="px-6 shrink-0">
+          <div className="max-w-2xl mx-auto">
+            <ReadinessBar score={readiness} />
+          </div>
+        </div>
+      )}
+
       {mode === "voice" ? (
         <>
           <div className="flex-1 flex flex-col items-center justify-center">
@@ -190,7 +500,7 @@ export default function ChatPage() {
             <p className="text-sm text-gray-400">Tap to speak</p>
           </div>
           <div className="shrink-0 border-t border-gray-100 px-4 py-3">
-            <ModeToggle />
+            <ModeToggle mode={mode} setMode={setMode} />
           </div>
         </>
       ) : !hasMessages ? (
@@ -199,42 +509,46 @@ export default function ChatPage() {
             What can I help you build?
           </h1>
           <div className="w-full max-w-2xl">
-            <ChatInput />
-            <ModeToggle />
+            <ChatInput
+              value={input}
+              onChange={setInput}
+              onSubmit={handleSubmit}
+              onStop={handleStop}
+              isStreaming={isStreaming}
+              disabled={isConfirming}
+            />
+            <ModeToggle mode={mode} setMode={setMode} />
           </div>
         </div>
       ) : (
         <>
-          <div className="flex-1 overflow-y-auto px-6">
-            <div className="max-w-2xl mx-auto space-y-6 py-6">
-              {messages.map((msg, i) => (
-                <div key={i}>
-                  <p className="text-xs text-gray-400 mb-1">
-                    {msg.role === "assistant" ? "Mo" : "You"}
-                  </p>
-                  {msg.role === "assistant" &&
-                  msg.content === "" &&
-                  isStreaming ? (
-                    <TypingIndicator />
-                  ) : (
-                    <p
-                      className={
-                        msg.role === "assistant"
-                          ? "text-base text-gray-700 whitespace-pre-wrap"
-                          : "text-base text-gray-900 font-medium"
-                      }
-                    >
-                      {msg.content}
-                    </p>
-                  )}
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-          </div>
+          <MessageList
+            messages={messages}
+            isStreaming={isStreaming}
+            parsedChoices={parsedChoices}
+            priceEstimates={priceEstimates}
+            onEditMessage={handleEditMessage}
+            onChoiceSelect={handleChoiceSelect}
+            editDisabled={isStreaming || isConfirming}
+          />
           <div className="shrink-0 border-t border-gray-100 px-4 py-3">
-            <ChatInput />
-            <ModeToggle />
+            {isConfirming && confirmStatusMessage && (
+              <div className="max-w-2xl mx-auto">
+                <SubmissionStatusPanel
+                  statusMessage={confirmStatusMessage}
+                  streamOutput={confirmStreamOutput}
+                />
+              </div>
+            )}
+            <ChatInput
+              value={input}
+              onChange={setInput}
+              onSubmit={handleSubmit}
+              onStop={handleStop}
+              isStreaming={isStreaming}
+              disabled={isConfirming}
+            />
+            <ModeToggle mode={mode} setMode={setMode} />
           </div>
         </>
       )}
@@ -242,12 +556,37 @@ export default function ChatPage() {
   );
 }
 
-function TypingIndicator() {
+function ModeToggle({
+  mode,
+  setMode,
+}: {
+  mode: Mode;
+  setMode: (m: Mode) => void;
+}) {
   return (
-    <div className="flex gap-1.5 py-1">
-      <span className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce [animation-delay:0ms]" />
-      <span className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce [animation-delay:150ms]" />
-      <span className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce [animation-delay:300ms]" />
+    <div className="flex justify-center gap-1 mt-3">
+      <button
+        onClick={() => setMode("text")}
+        className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-full transition-colors ${
+          mode === "text"
+            ? "bg-gray-100 text-gray-900"
+            : "text-gray-400 hover:text-gray-600"
+        }`}
+      >
+        <MessageSquare size={12} />
+        Text
+      </button>
+      <button
+        onClick={() => setMode("voice")}
+        className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-full transition-colors ${
+          mode === "voice"
+            ? "bg-gray-100 text-gray-900"
+            : "text-gray-400 hover:text-gray-600"
+        }`}
+      >
+        <Mic size={12} />
+        Voice
+      </button>
     </div>
   );
 }

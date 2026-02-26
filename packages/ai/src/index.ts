@@ -1,4 +1,5 @@
 export * from './interview'
+export * from './providers'
 export * from './safety'
 export * from './spec-generator'
 export * from './cicd'

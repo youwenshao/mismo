@@ -46,6 +46,8 @@ export enum InterviewState {
   MONETIZATION = 'MONETIZATION',
   COMPLIANCE_CHECK = 'COMPLIANCE_CHECK',
   SUMMARY = 'SUMMARY',
+  FEASIBILITY_AND_PRICING = 'FEASIBILITY_AND_PRICING',
+  CONFIRMATION = 'CONFIRMATION',
   COMPLETE = 'COMPLETE',
 }
 
@@ -83,4 +85,42 @@ export interface SafetyClassification {
   reasons: string[]
   flaggedKeywords: string[]
   llmReasoning: string
+}
+
+export interface PriceEstimate {
+  tierRecommendation: ServiceTier
+  priceRange: { min: number; max: number }
+  breakdown: {
+    basePrice: number
+    featureComplexity: number
+    architectureMultiplier: number
+    complianceAddon: number
+    hostingMonthly: { min: number; max: number }
+  }
+  estimatedTimeline: { min: number; max: number }
+  difficultyScore: number
+  feasibilityNotes: string[]
+}
+
+export interface ModelProviderConfig {
+  id: string
+  name: string
+  models: Array<{ id: string; name: string; default?: boolean }>
+  envKey: string
+}
+
+export interface ReadinessMetadata {
+  readiness: number
+  missing: string[]
+}
+
+export interface ChoiceOption {
+  label: string
+  description: string
+}
+
+export interface SessionCheckpoint {
+  messageIndex: number
+  context: Record<string, unknown>
+  timestamp: string
 }

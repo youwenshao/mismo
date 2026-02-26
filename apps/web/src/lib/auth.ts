@@ -19,6 +19,17 @@ export function isWhitelistedAdmin(emailHash: string): boolean {
 }
 
 export async function getSessionUser() {
+  // Development mode: bypass auth if flag is set
+  if (
+    process.env.NODE_ENV === "development" &&
+    process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === "true"
+  ) {
+    const dbUser = await prisma.user.findUnique({
+      where: { supabaseAuthId: "9b7acb0c-5947-4451-bd31-2f44284623f2" },
+    });
+    return dbUser;
+  }
+
   const supabase = await createClient();
   const {
     data: { user: authUser },
