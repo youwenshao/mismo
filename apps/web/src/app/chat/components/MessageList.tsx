@@ -22,6 +22,8 @@ interface MessageListProps {
   onEditMessage: (messageIndex: number, newContent: string) => void;
   onChoiceSelect: (choice: Choice) => void;
   editDisabled: boolean;
+  showProceedPrompt?: boolean;
+  onProceed?: () => void;
 }
 
 export function MessageList({
@@ -32,6 +34,8 @@ export function MessageList({
   onEditMessage,
   onChoiceSelect,
   editDisabled,
+  showProceedPrompt,
+  onProceed,
 }: MessageListProps) {
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -66,6 +70,8 @@ export function MessageList({
               }
               onChoiceSelect={onChoiceSelect}
               editDisabled={editDisabled || isStreaming}
+              showProceedPrompt={isLastAssistant ? showProceedPrompt : false}
+              onProceed={onProceed}
             />
           );
         })}

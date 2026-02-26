@@ -243,26 +243,12 @@ function ChatPageInner() {
         });
 
         const choices = parseChoicesFromContent(cleanText);
-        const finalChoices = choices ? [...choices] : [];
-        const isEarlyPhase =
-          currentState &&
-          !["SUMMARY", "FEASIBILITY_AND_PRICING", "CONFIRMATION", "COMPLETE"].includes(
-            currentState,
-          );
-        const newReadiness = parsedReadiness !== null ? parsedReadiness : readiness;
-        
-        if (newReadiness >= 85 && isEarlyPhase) {
-          finalChoices.push({
-            label: "Proceed to summary",
-            description: "We have enough information to wrap up",
-          });
-        }
 
-        if (finalChoices.length > 0) {
+        if (choices && choices.length > 0) {
           setMessages((prev) => {
             setParsedChoices((old) => {
               const updated = new Map(old);
-              updated.set(prev.length - 1, finalChoices);
+              updated.set(prev.length - 1, choices);
               return updated;
             });
             return prev;
@@ -309,7 +295,7 @@ function ChatPageInner() {
   async function handleConfirm() {
     if (!sessionId || isConfirming) return;
     setIsConfirming(true);
-    setConfirmStatusMessage("Reviewing what we discussed so far...");
+    setConfirmStatusMessage("Looking over our conversation...");
     setConfirmStreamOutput("");
     let shouldKeepPanel = false;
     try {
@@ -362,7 +348,7 @@ function ChatPageInner() {
 
           if (event.type === "done" && event.projectId) {
             doneEvent = { projectId: event.projectId };
-            setConfirmStatusMessage("Your project plan is ready. Taking you there now...");
+            setConfirmStatusMessage("All done! Taking you to your project...");
           }
         }
       }
@@ -464,6 +450,13 @@ function ChatPageInner() {
     }
   }
 
+  const isEarlyPhase = !["SUMMARY", "FEASIBILITY_AND_PRICING", "CONFIRMATION", "COMPLETE"].includes(interviewState);
+  const showProceedPrompt = readiness >= 85 && isEarlyPhase && !isStreaming && !isConfirming;
+
+  function handleProceed() {
+    void sendMessage("Proceed to summary: We have enough information to wrap up");
+  }
+
   const hasMessages = messages.length > 0;
 
   return (
@@ -530,6 +523,8 @@ function ChatPageInner() {
             onEditMessage={handleEditMessage}
             onChoiceSelect={handleChoiceSelect}
             editDisabled={isStreaming || isConfirming}
+            showProceedPrompt={showProceedPrompt}
+            onProceed={handleProceed}
           />
           <div className="shrink-0 border-t border-gray-100 px-4 py-3">
             {isConfirming && confirmStatusMessage && (

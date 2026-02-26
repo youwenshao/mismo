@@ -84,13 +84,13 @@ export async function POST(
 
       ;(async () => {
         try {
-          push({ type: 'status', message: 'Reviewing what we discussed so far…' })
+          push({ type: 'status', message: 'Looking over our conversation...' })
 
           const specGenerator = new SpecGenerator()
           const llmPayload = specGenerator.generateWithLLM(savedContext)
           const model = getActiveModel(runtimeConfig) as unknown as LanguageModel
 
-          push({ type: 'status', message: 'Drafting your project plan…' })
+          push({ type: 'status', message: 'Writing up your project plan...' })
 
           const result = streamText({
             model,
@@ -117,7 +117,7 @@ export async function POST(
             : fallbackPRD
           const usedLlm = !!validated?.success
 
-          push({ type: 'status', message: 'Finalizing and preparing your workspace…' })
+          push({ type: 'status', message: 'Putting the finishing touches on everything...' })
 
           const persisted = await prisma.$transaction(async (tx) => {
             const project = await tx.project.create({

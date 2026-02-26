@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useRef, useEffect, type FormEvent } from "react";
-import { Pencil, Check, X } from "lucide-react";
+import { Pencil, Check, X, ArrowRight } from "lucide-react";
 import { ChoiceSelector } from "./ChoiceSelector";
 import { TypingIndicator } from "./TypingIndicator";
 import { PriceCard } from "./PriceCard";
+import { MarkdownContent } from "./MarkdownContent";
 import type { PriceEstimate } from "@mismo/shared";
 
 interface Choice {
@@ -22,12 +23,22 @@ interface MessageBubbleProps {
   onEdit?: (newContent: string) => void;
   onChoiceSelect?: (choice: Choice) => void;
   editDisabled?: boolean;
+  showProceedPrompt?: boolean;
+  onProceed?: () => void;
 }
 
 const CHOICES_REGEX = /\[CHOICES\]([\s\S]*?)\[\/CHOICES\]/g;
+const META_BLOCK_REGEX = /\[META\][\s\S]*?\[\/META\]/g;
 
 function stripChoiceBlocks(text: string): string {
   return text.replace(CHOICES_REGEX, "").trim();
+}
+
+function stripMetaBlocks(text: string): string {
+  let cleaned = text.replace(META_BLOCK_REGEX, "");
+  cleaned = cleaned.replace(/\[META\][\s\S]*$/, "");
+  cleaned = cleaned.replace(/\[M(?:E(?:T(?:A)?)?)?$/, "");
+  return cleaned.trim();
 }
 
 export function MessageBubble({
@@ -40,6 +51,8 @@ export function MessageBubble({
   onEdit,
   onChoiceSelect,
   editDisabled,
+  showProceedPrompt,
+  onProceed,
 }: MessageBubbleProps) {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(content);
@@ -67,7 +80,7 @@ export function MessageBubble({
   }
 
   const displayContent =
-    role === "assistant" ? stripChoiceBlocks(content) : content;
+    role === "assistant" ? stripMetaBlocks(stripChoiceBlocks(content)) : content;
   const isEmptyStreaming =
     role === "assistant" && content === "" && isStreaming;
 
@@ -119,15 +132,16 @@ export function MessageBubble({
         <TypingIndicator />
       ) : (
         <>
-          <p
-            className={
-              role === "assistant"
-                ? "text-base text-gray-700 whitespace-pre-wrap"
-                : "text-base text-gray-900 font-medium"
-            }
-          >
-            {displayContent}
-          </p>
+          {role === "assistant" ? (
+            <MarkdownContent
+              content={displayContent}
+              className="text-base text-gray-700"
+            />
+          ) : (
+            <p className="text-base text-gray-900 font-medium">
+              {displayContent}
+            </p>
+          )}
 
           {priceEstimate && <PriceCard estimate={priceEstimate} />}
 
@@ -142,6 +156,25 @@ export function MessageBubble({
                 disabled={editDisabled}
               />
             )}
+
+          {showProceedPrompt && isLatest && !isStreaming && onProceed && (
+            <button
+              onClick={onProceed}
+              className="mt-3 w-full flex items-center gap-3 px-4 py-3 text-left bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-colors"
+            >
+              <span className="shrink-0 w-8 h-8 flex items-center justify-center bg-gray-900 rounded-lg">
+                <ArrowRight size={16} className="text-white" />
+              </span>
+              <span className="flex flex-col">
+                <span className="text-sm font-medium text-gray-900">
+                  Ready to move forward
+                </span>
+                <span className="text-xs text-gray-500">
+                  We have enough information to create your project plan
+                </span>
+              </span>
+            </button>
+          )}
         </>
       )}
     </div>
