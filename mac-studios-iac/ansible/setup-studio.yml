@@ -1,0 +1,112 @@
+---
+- name: Setup Mac Studios
+  hosts: mac_studios
+  vars:
+    ansible_become_pass: "{{ lookup('env', 'SUDO_PASSWORD') }}"
+    dotfiles_src: "../dotfiles"
+    dotfiles_dest: "~/.dotfiles"
+
+  tasks:
+    - name: Ensure Homebrew is installed
+      stat:
+        path: /opt/homebrew/bin/brew
+      register: brew_check
+
+    - name: Install Homebrew if missing
+      shell: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      when: not brew_check.stat.exists
+
+    - name: Ensure Homebrew is in PATH
+      lineinfile:
+        path: ~/.zprofile
+        line: 'eval "$(/opt/homebrew/bin/brew shellenv)"'
+        create: yes
+        state: present
+
+    - name: Install required Homebrew formulas
+      community.general.homebrew:
+        name:
+          - git
+          - tmux
+          - node@20
+        state: present
+        update_homebrew: yes
+      environment:
+        PATH: "/opt/homebrew/bin:{{ ansible_env.PATH }}"
+
+    - name: Install required Homebrew casks
+      community.general.homebrew_cask:
+        name:
+          - docker
+          - tailscale
+        state: present
+        accept_external_apps: yes
+      environment:
+        PATH: "/opt/homebrew/bin:{{ ansible_env.PATH }}"
+
+    - name: Install n8n globally via npm
+      npm:
+        name: n8n
+        global: yes
+        state: present
+      environment:
+        PATH: "/opt/homebrew/opt/node@20/bin:/opt/homebrew/bin:{{ ansible_env.PATH }}"
+
+    - name: Set Hostname dynamically using scutil
+      become: yes
+      shell: |
+        current_hostname=$(scutil --get HostName)
+        if [ "$current_hostname" != "{{ desired_hostname }}" ]; then
+          scutil --set HostName {{ desired_hostname }}
+          scutil --set LocalHostName {{ desired_hostname }}
+          scutil --set ComputerName {{ desired_hostname }}
+          echo "changed"
+        else
+          echo "unchanged"
+        fi
+      register: hostname_result
+      changed_when: hostname_result.stdout == 'changed'
+
+    - name: Disable macOS auto-updates
+      become: yes
+      shell: |
+        current_status=$(softwareupdate --schedule | grep "Automatic check is off")
+        if [ -z "$current_status" ]; then
+          softwareupdate --schedule off
+          echo "changed"
+        else
+          echo "unchanged"
+        fi
+      register: softwareupdate_result
+      changed_when: softwareupdate_result.stdout == 'changed'
+
+    - name: Ensure firewall (pf) is enabled
+      become: yes
+      shell: |
+        status=$(pfctl -s info 2>&1 | grep Status | awk '{print $2}')
+        if [ "$status" != "Enabled" ]; then
+          pfctl -e
+          echo "changed"
+        else
+          echo "unchanged"
+        fi
+      register: pf_result
+      changed_when: pf_result.stdout == 'changed'
+      failed_when: pf_result.rc != 0 and 'pf enabled' not in pf_result.stderr and 'unchanged' not in pf_result.stdout
+
+    - name: Copy public SSH keys (ensure access)
+      ansible.posix.authorized_key:
+        user: "{{ ansible_user }}"
+        state: present
+        key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
+      ignore_errors: yes # Might fail if key doesn't exist on control node yet
+
+    - name: Copy dotfiles repository contents
+      copy:
+        src: "{{ dotfiles_src }}/{{ item }}"
+        dest: "~/{{ item }}"
+        mode: '0644'
+      loop:
+        - .zshrc
+        - .tmux.conf
+        - .gitconfig
