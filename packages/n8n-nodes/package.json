@@ -1,0 +1,30 @@
+{
+  "name": "n8n-nodes-mismo",
+  "version": "0.1.0",
+  "description": "Custom n8n nodes for Mismo HA orchestration",
+  "keywords": [
+    "n8n-community-node-package"
+  ],
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "n8n-workflow": "^1.39.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0"
+  },
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [],
+    "nodes": [
+      "dist/nodes/BmadValidator/BmadValidator.node.js",
+      "dist/nodes/GsdDependencyChecker/GsdDependencyChecker.node.js",
+      "dist/nodes/ContractChecker/ContractChecker.node.js"
+    ]
+  }
+}

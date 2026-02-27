@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+  n8n-worker:
+    image: docker.n8n.io/n8nio/n8n
+    restart: always
+    command: worker --concurrency=25
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=${MAIN_NODE_IP}
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+      - EXECUTIONS_MODE=queue
+      - QUEUE_BULL_REDIS_HOST=${MAIN_NODE_IP}
+      - QUEUE_BULL_REDIS_PORT=6379
+      - QUEUE_BULL_REDIS_PASSWORD=${REDIS_PASSWORD}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - NODE_ENV=production
+      - CONTRACT_CHECKER_URL=http://contract-checker:3000
+      # Auto-reconnection config for Redis BullMQ (n8n connects to bullmq via IoRedis, timeout options help with transient network drops)
+      - QUEUE_BULL_REDIS_TIMEOUT=30000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../../packages/n8n-nodes:/home/node/.n8n/custom
+    extra_hosts:
+      - "postgres:${MAIN_NODE_IP}"
+      - "redis:${MAIN_NODE_IP}"
+
+  contract-checker:
+    build:
+      context: ../../
+      dockerfile: packages/contract-checker/Dockerfile
+    restart: always
+    environment:
+      - PORT=3000
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "3003:3000"

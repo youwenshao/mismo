@@ -1,72 +1,440 @@
-# Zero-Trust Tailscale Mesh Network Setup
+# Mismo Platform
 
-This project provisions a zero-trust mesh network for 5 macOS nodes (3 Studios, 2 MacBooks) using Tailscale and macOS's built-in `pf` (Packet Filter) firewall.
+A hybrid human-AI software development platform that automates the entire lifecycle from idea to deployed application. Mismo combines AI agents with human oversight to deliver production-ready software.
 
-## Architecture & Design
+## Overview
 
-### 1. Tailscale Mesh
-- **Software**: We use the open-source CLI version of Tailscale (`tailscaled`) installed via Homebrew. This allows it to run as a background daemon, ensuring Studios auto-reconnect even if they reboot or crash.
-- **Roles**:
-  - **Admin (MacBooks)**: Have full access to all nodes and ports on the mesh network.
-  - **Studio (Studios)**: Restricted to peer-to-peer communication on specific ports (22, 5432, 5678, 6379) to minimize the attack surface.
-- **Subnet Routing**: Docker containers on Studios can reach MacBooks and vice versa because subnet routing is enabled via the `--accept-routes` flag.
-- **NAT Traversal**: MacBooks on restrictive coffee shop Wi-Fi networks will automatically establish direct UDP connections using NAT traversal (STUN/TURN via DERP relays) provided by Tailscale.
+Mismo provides a complete agency platform with:
 
-### 2. External Internet Blocking
-Tailscale ACLs only govern traffic *within* the Tailnet. To prevent Studios from accessing the general internet while allowing essential services (Supabase, Kimi, GitHub), we employ macOS's `pf` firewall.
-- **`pf` Firewall Rules**: A custom anchor (`mismo.studio`) is injected into `/etc/pf.conf`.
-- **Allowed Outbound**: 
-  - All Tailscale traffic (`utun*` interfaces)
-  - HTTPS (443) - Required for GitHub, Supabase, and Kimi APIs.
-  - DNS (53), DHCP (67, 68), NTP (123).
-- **Blocked Outbound**: Everything else is blocked.
+- **Mo (AI Interview Agent)**: Conducts structured interviews to extract project requirements
+- **Automated PRD Generation**: Creates specifications with user stories, API contracts, and data models
+- **Safety Classification**: 3-tier risk scoring for project compliance
+- **AI-Powered Development**: Cursor-based automation with human review gates
+- **Integrated Billing & Contracts**: Stripe payments with DocuSign e-signatures
+- **Zero-Trust Infrastructure**: Tailscale mesh network for secure multi-node operations
+
+## Architecture
+
+### Monorepo Structure
+
+```
+mismo/
+├── apps/
+│   ├── web/                  # Next.js 15 - client-facing app (Mo chat, PRD editor, dashboards)
+│   └── internal/             # Next.js 15 - internal dev team dashboard
+├── packages/
+│   ├── ai/                   # Mo agent logic, safety classifier, spec generator
+│   ├── db/                   # Prisma schema, migrations, seed data
+│   ├── ui/                   # Shared UI components (shadcn/ui based)
+│   ├── shared/               # Shared types, utils, constants
+│   └── templates/            # Pre-audited architectural templates
+├── docker/
+│   ├── cursor-agent/         # Dockerfile for headless Cursor CLI execution
+│   └── n8n-ha/              # n8n high-availability configuration
+├── mac-studios-iac/          # Ansible playbooks for Mac Studio provisioning
+├── docs/                     # Documentation and design systems
+└── scripts/                  # Automation scripts
+```
+
+### Technology Stack
+
+| Layer | Technology |
+|-------|------------|
+| **Monorepo** | Turborepo + pnpm workspaces |
+| **Frontend** | Next.js 15 (App Router) + Tailwind CSS + shadcn/ui |
+| **Database** | Supabase (PostgreSQL) + Prisma ORM + RLS |
+| **Auth** | Supabase Auth (OAuth, magic link, email) |
+| **Real-time** | Supabase Realtime + LiveKit (WebRTC voice) |
+| **AI** | Vercel AI SDK (OpenAI, Anthropic, DeepSeek, Kimi, MiniMax, ZAI) |
+| **Payments** | Stripe (Checkout, Subscriptions) |
+| **Contracts** | DocuSign eSignature API |
+| **CI/CD** | GitHub Actions + Vercel |
+| **Security** | StackHawk (DAST), Snyk (SCA), Playwright (E2E) |
+
+### Network Architecture
+
+The platform uses a **Zero-Trust Tailscale Mesh Network**:
+
+- **Admin Nodes** (MacBooks): Full access to all nodes and ports
+- **Studio Nodes** (Mac Studios): Restricted peer-to-peer communication on ports 22, 5432, 5678, 6379
+- **External Internet Blocking**: macOS `pf` firewall blocks general outbound traffic, allowing only HTTPS (443), DNS (53), DHCP (67,68), NTP (123)
 
 ## Prerequisites
 
-1. Homebrew installed on all machines.
-2. A Tailscale account.
-3. Two separate reusable Tailscale Auth Keys generated from the Admin Console:
-   - One for Admins (tagged `tag:admin`)
-   - One for Studios (tagged `tag:studio`)
+### Required Accounts & API Keys
+
+1. **Tailscale Account**: For mesh network setup
+2. **Supabase Project**: Database and authentication
+3. **Stripe Account**: Payment processing
+4. **DocuSign Developer Account**: Contract signatures
+5. **AI Provider API Keys** (at least one):
+   - OpenAI API Key
+   - Anthropic API Key
+   - DeepSeek API Key
+   - Kimi API Key
+   - MiniMax API Key
+   - ZAI API Key
+6. **LiveKit Account**: WebRTC voice capabilities (optional)
+7. **GitHub Token**: For repository automation
+
+### System Requirements
+
+- **Node.js**: 20.x or higher
+- **pnpm**: 10.x or higher
+- **Homebrew** (macOS): For Tailscale and dependencies
+- **Docker**: For local n8n and cursor-agent
+- **Ansible**: For Mac Studio provisioning (optional)
 
 ## Setup Instructions
 
-### Step 1: Configure Tailscale ACLs
-1. Go to the Tailscale Admin Console -> **Access Controls**.
-2. Replace the default rules with the contents of `acl.hujson`.
-3. Save the changes.
+### Step 1: Clone and Install Dependencies
 
-### Step 2: Provision Nodes
-Run the setup script on each machine. It is idempotent and safe to run multiple times.
+```bash
+# Clone the repository
+git clone <repository-url>
+cd mismo
 
-**On MacBooks (Admin):**
+# Install pnpm if not already installed
+npm install -g pnpm
+
+# Install all dependencies
+pnpm install
+```
+
+### Step 2: Environment Configuration
+
+Copy the example environment file and fill in your credentials:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your credentials:
+
+```env
+# Supabase (Required)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# Database (Required)
+# Use pooled connection (port 6543) for app queries
+DATABASE_URL=postgresql://postgres:[password]@db.your-project.supabase.co:6543/postgres?pgbouncer=true
+# Use direct connection (port 5432) for migrations
+DIRECT_URL=postgresql://postgres:[password]@db.your-project.supabase.co:5432/postgres
+
+# AI Providers (At least one required)
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+DEEPSEEK_API_KEY=sk-...
+KIMI_API_KEY=...
+MINIMAX_API_KEY=...
+ZAI_API_KEY=...
+
+# Mo defaults
+DEFAULT_MO_PROVIDER=deepseek
+DEFAULT_MO_MODEL=deepseek-chat
+
+# Stripe (Required for payments)
+STRIPE_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# DocuSign (Required for contracts)
+DOCUSIGN_INTEGRATION_KEY=...
+DOCUSIGN_SECRET_KEY=...
+DOCUSIGN_ACCOUNT_ID=...
+
+# LiveKit (Optional - for voice)
+LIVEKIT_API_KEY=...
+LIVEKIT_API_SECRET=...
+NEXT_PUBLIC_LIVEKIT_URL=wss://your-livekit-url
+
+# GitHub (Required for CI/CD automation)
+GITHUB_TOKEN=ghp_...
+GITHUB_ORG=your-org
+
+# App URLs
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+INTERNAL_APP_URL=http://localhost:3001
+```
+
+### Step 3: Database Setup
+
+#### Option A: Using Quickstart Script (Recommended)
+
+```bash
+pnpm quickstart
+```
+
+This will:
+1. Install dependencies
+2. Copy `.env.example` to `.env` (if not exists)
+3. Generate Prisma client
+4. Push schema to database
+5. Seed initial data
+6. Start development servers
+
+#### Option B: Manual Setup
+
+```bash
+# Generate Prisma client
+pnpm --filter @mismo/db db:generate
+
+# Push schema to database (creates tables)
+pnpm --filter @mismo/db db:push
+
+# Seed the database with initial data
+pnpm --filter @mismo/db db:seed
+```
+
+### Step 4: Configure Tailscale ACLs
+
+1. Go to [Tailscale Admin Console](https://login.tailscale.com/admin) → **Access Controls**
+2. Replace the default rules with the contents of `acl.hujson`:
+
+```bash
+cat acl.hujson
+```
+
+3. Save the changes
+
+4. Generate auth keys:
+   - Go to **Settings** → **Keys**
+   - Create a reusable key for **tag:admin** (MacBooks)
+   - Create a reusable key for **tag:studio** (Mac Studios)
+
+### Step 5: Provision Network Nodes
+
+#### On MacBooks (Admin):
+
 ```bash
 ./tailscale.sh admin <ts-auth-key-admin>
 ```
 
-**On Studios:**
+#### On Mac Studios (Studio):
+
 ```bash
 ./tailscale.sh studio <ts-auth-key-studio>
 ```
 
-### Step 3: Enable Subnet Routing (Optional but recommended for Docker)
-If you have Docker containers on a Studio that need to be accessed from a MacBook, you must advertise the subnet from the Studio.
-1. On the Studio, run: `sudo tailscale up --advertise-routes=10.x.x.x/24` (replace with your Docker subnet).
-2. Go to the Tailscale Admin Console -> **Machines**.
-3. Edit route settings for the Studio and approve the advertised subnet.
-4. The setup script already includes `--accept-routes`, so MacBooks will automatically route traffic to the container.
+This script will:
+- Install Tailscale via Homebrew
+- Start the tailscaled daemon
+- Authenticate with your Tailscale network
+- Configure `pf` firewall rules (on Studios) to block external internet
+
+### Step 6: Mac Studio Provisioning (Optional)
+
+If managing Mac Studios via Ansible:
+
+```bash
+cd mac-studios-iac/ansible
+
+# Update inventory.ini with your studio IPs
+vim inventory.ini
+
+# Run the playbook
+ansible-playbook setup-studio.yml -K
+```
+
+See [mac-studios-iac/README.md](mac-studios-iac/README.md) for manual setup steps.
+
+### Step 7: Start Development Servers
+
+```bash
+# Start all apps and packages in development mode
+pnpm dev
+```
+
+This will start:
+- **Web app**: http://localhost:3000 (client-facing)
+- **Internal app**: http://localhost:3001 (dev team dashboard)
+
+### Step 8: Configure Supabase Auth
+
+1. Go to your Supabase project dashboard
+2. Navigate to **Authentication** → **Providers**
+3. Enable desired providers (Email, Google OAuth, etc.)
+4. Configure redirect URLs:
+   - Development: `http://localhost:3000/auth/callback`
+   - Production: `https://your-domain.com/auth/callback`
+
+### Step 9: Configure Stripe Webhooks (Optional)
+
+For local development:
+
+```bash
+# Install Stripe CLI if not already
+brew install stripe/stripe-cli/stripe
+
+# Login to Stripe
+stripe login
+
+# Forward webhooks to local dev server
+stripe listen --forward-to localhost:3000/api/webhooks/stripe
+```
+
+Add the webhook signing secret to your `.env` file.
+
+## Project Structure Details
+
+### Apps
+
+| App | Port | Description |
+|-----|------|-------------|
+| `apps/web` | 3000 | Public-facing platform (Mo chat, PRD editor, client dashboards) |
+| `apps/internal` | 3001 | Internal dev team dashboard (review queues, monitoring) |
+
+### Packages
+
+| Package | Description |
+|---------|-------------|
+| `packages/ai` | Mo interview agent, safety classifier, spec generator, Cursor orchestrator |
+| `packages/db` | Prisma schema, migrations, database utilities |
+| `packages/ui` | Shared React components based on shadcn/ui |
+| `packages/shared` | TypeScript types, constants, utilities |
+| `packages/templates` | Pre-audited architectural templates (Serverless SaaS, Monolithic MVP, Microservices) |
+
+## Available Scripts
+
+| Script | Description |
+|--------|-------------|
+| `pnpm dev` | Start all apps in development mode |
+| `pnpm build` | Build all apps and packages |
+| `pnpm lint` | Run ESLint across the monorepo |
+| `pnpm type-check` | Run TypeScript type checking |
+| `pnpm format` | Format code with Prettier |
+| `pnpm quickstart` | Full setup and start script |
+| `pnpm --filter @mismo/db db:generate` | Generate Prisma client |
+| `pnpm --filter @mismo/db db:push` | Push schema changes to database |
+| `pnpm --filter @mismo/db db:migrate` | Run migrations |
+| `pnpm --filter @mismo/db db:seed` | Seed database with initial data |
 
 ## Verification
 
-Please refer to `verification.md` for detailed steps on verifying:
-- MagicDNS connectivity
-- Docker subnet routing
-- Zero-trust ACL port restrictions
-- `pf` firewall internet blocking
-- Headless operation
+### Network Verification
+
+After setting up Tailscale, verify the mesh network:
+
+```bash
+# Check Tailscale status
+tailscale status
+
+# Test connectivity between nodes
+ping studio-1.tailxxxxx.ts.net
+
+# Test port restrictions (from Studio, should FAIL for port 8080)
+nc -vz studio-2.tailxxxxx.ts.net 8080
+
+# Test allowed ports (should SUCCEED)
+nc -vz studio-2.tailxxxxx.ts.net 22
+```
+
+See [verification.md](verification.md) for complete verification steps.
+
+### Application Verification
+
+1. **Web App**: Visit http://localhost:3000
+   - Landing page should load
+   - "Start Building" CTA should open Mo chat
+   - Authentication should work
+
+2. **Internal Dashboard**: Visit http://localhost:3001
+   - Should require authentication
+   - Dev team features should be accessible
+
+3. **Database**: Verify connection via Prisma Studio
+   ```bash
+   pnpm --filter @mismo/db db:studio
+   ```
+
+## Deployment
+
+### Vercel Deployment
+
+1. Connect your repository to Vercel
+2. Configure environment variables in Vercel dashboard
+3. Deploy both `apps/web` and `apps/internal`
+
+```bash
+# Build locally to test
+pnpm build
+```
+
+### Database Migrations (Production)
+
+```bash
+# Generate migration file
+pnpm --filter @mismo/db db:migrate-dev --name your_migration_name
+
+# Deploy migrations
+pnpm --filter @mismo/db db:migrate-deploy
+```
 
 ## Troubleshooting
 
-- **Tailscale daemon not running**: `sudo brew services restart tailscale`
-- **Studio internet blocking not working**: Ensure `pf` is enabled by running `sudo pfctl -e` and check the rules using `sudo pfctl -s rules`.
-- **Cannot ping nodes**: Verify the nodes are online in the Tailscale Admin Console. If using MagicDNS, ensure MagicDNS is enabled in the Tailscale DNS settings.
+### Database Issues
+
+```bash
+# Reset local database
+pnpm --filter @mismo/db db:reset
+
+# View Prisma Studio
+pnpm --filter @mismo/db db:studio
+```
+
+### Tailscale Issues
+
+```bash
+# Restart Tailscale daemon
+sudo brew services restart tailscale
+
+# Check pf rules (Studios)
+sudo pfctl -s rules
+
+# Re-run setup script
+./tailscale.sh <role> <auth-key>
+```
+
+### Build Issues
+
+```bash
+# Clean and reinstall
+rm -rf node_modules pnpm-lock.yaml
+pnpm install
+pnpm build
+```
+
+### Network Connectivity
+
+- **Cannot ping nodes**: Verify nodes are online in Tailscale Admin Console
+- **MagicDNS not working**: Ensure MagicDNS is enabled in Tailscale DNS settings
+- **Studio internet blocking not working**: Run `sudo pfctl -e` to enable pf
+
+## Security Considerations
+
+1. **Never commit `.env` files**: Use `.env.example` as template
+2. **Rotate API keys regularly**: Especially Stripe and AI provider keys
+3. **Use Row-Level Security**: All database tables have RLS enabled
+4. **Service Role Key**: Only use server-side, never in client code
+5. **Tailscale Tags**: Properly tag nodes to enforce ACL policies
+6. **Studio Isolation**: Studios cannot access general internet (only HTTPS/DNS)
+
+## Documentation
+
+- [Design System](docs/mismo-design-system.md) - UI/UX guidelines
+- [Verification Steps](verification.md) - Network testing procedures
+- [Mac Studios IaC](mac-studios-iac/README.md) - Infrastructure provisioning
+- Implementation plans: `.cursor/plans/`
+
+## Contributing
+
+1. Create a feature branch
+2. Make changes following the existing code style
+3. Run tests: `pnpm lint && pnpm type-check`
+4. Submit a pull request
+
+## License
+
+[License information here]

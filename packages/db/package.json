@@ -9,6 +9,7 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx src/seed.ts",
+    "db:setup-pgsodium": "dotenv -e ../../.env -- sh -c 'psql \"$DIRECT_URL\" -f scripts/setup-pgsodium.sql'",
     "type-check": "tsc --noEmit",
     "lint": "eslint src/"
   },
@@ -16,6 +17,7 @@
     "@prisma/client": "^6.5.0"
   },
   "devDependencies": {
+    "dotenv-cli": "^7.4.2",
     "prisma": "^6.5.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0"
