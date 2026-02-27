@@ -91,6 +91,7 @@ function ChatPageInner() {
   const [isConfirming, setIsConfirming] = useState(false);
   const [confirmStatusMessage, setConfirmStatusMessage] = useState("");
   const [confirmStreamOutput, setConfirmStreamOutput] = useState("");
+  const [confirmIsDone, setConfirmIsDone] = useState(false);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -295,8 +296,9 @@ function ChatPageInner() {
   async function handleConfirm() {
     if (!sessionId || isConfirming) return;
     setIsConfirming(true);
-    setConfirmStatusMessage("Looking over our conversation...");
+    setConfirmStatusMessage("Reviewing what we discussed so far...");
     setConfirmStreamOutput("");
+    setConfirmIsDone(false);
     let shouldKeepPanel = false;
     try {
       const res = await fetch(
@@ -348,7 +350,8 @@ function ChatPageInner() {
 
           if (event.type === "done" && event.projectId) {
             doneEvent = { projectId: event.projectId };
-            setConfirmStatusMessage("All done! Taking you to your project...");
+            setConfirmIsDone(true);
+            setConfirmStatusMessage("Your project plan is ready. Taking you there now...");
           }
         }
       }
@@ -461,25 +464,31 @@ function ChatPageInner() {
 
   return (
     <div className="h-dvh flex flex-col bg-white">
-      <header className="flex items-center justify-between px-6 py-4 shrink-0">
-        <Link href="/" className="text-lg font-semibold text-gray-900">
-          Mismo
-        </Link>
-        <Link
-          href="/dashboard"
-          className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          back to dashboard
-        </Link>
-      </header>
-
-      {hasMessages && (
-        <div className="px-6 shrink-0">
-          <div className="max-w-2xl mx-auto">
-            <ReadinessBar score={readiness} />
-          </div>
+      <header className="flex items-center justify-between px-6 py-4 shrink-0 bg-white/80 backdrop-blur-md z-50"
+        style={{
+          maskImage: "linear-gradient(to bottom, black 80%, transparent 100%)",
+          WebkitMaskImage: "linear-gradient(to bottom, black 80%, transparent 100%)",
+        }}
+      >
+        <div className="w-32">
+          <Link href="/" className="text-lg font-semibold text-gray-900">
+            Mismo
+          </Link>
         </div>
-      )}
+        
+        <div className="flex-1 max-w-md px-8">
+          {hasMessages && <ReadinessBar score={readiness} />}
+        </div>
+
+        <div className="w-32 text-right">
+          <Link
+            href="/dashboard"
+            className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            back to dashboard
+          </Link>
+        </div>
+      </header>
 
       {mode === "voice" ? (
         <>
@@ -526,24 +535,27 @@ function ChatPageInner() {
             showProceedPrompt={showProceedPrompt}
             onProceed={handleProceed}
           />
-          <div className="shrink-0 border-t border-gray-100 px-4 py-3">
+          <div className="shrink-0 px-4 py-3">
             {isConfirming && confirmStatusMessage && (
               <div className="max-w-2xl mx-auto">
                 <SubmissionStatusPanel
                   statusMessage={confirmStatusMessage}
                   streamOutput={confirmStreamOutput}
+                  isDone={confirmIsDone}
                 />
               </div>
             )}
-            <ChatInput
-              value={input}
-              onChange={setInput}
-              onSubmit={handleSubmit}
-              onStop={handleStop}
-              isStreaming={isStreaming}
-              disabled={isConfirming}
-            />
-            <ModeToggle mode={mode} setMode={setMode} />
+            <div className="border-t border-gray-100 pt-3">
+              <ChatInput
+                value={input}
+                onChange={setInput}
+                onSubmit={handleSubmit}
+                onStop={handleStop}
+                isStreaming={isStreaming}
+                disabled={isConfirming}
+              />
+              <ModeToggle mode={mode} setMode={setMode} />
+            </div>
           </div>
         </>
       )}

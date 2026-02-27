@@ -31,7 +31,10 @@ const CHOICES_REGEX = /\[CHOICES\]([\s\S]*?)\[\/CHOICES\]/g;
 const META_BLOCK_REGEX = /\[META\][\s\S]*?\[\/META\]/g;
 
 function stripChoiceBlocks(text: string): string {
-  return text.replace(CHOICES_REGEX, "").trim();
+  let cleaned = text.replace(CHOICES_REGEX, "");
+  cleaned = cleaned.replace(/\[CHOICES\][\s\S]*$/i, "");
+  cleaned = cleaned.replace(/\[C(?:H(?:O(?:I(?:C(?:E(?:S)?)?)?)?)?)?$/i, "");
+  return cleaned.trim();
 }
 
 function stripMetaBlocks(text: string): string {
@@ -39,6 +42,17 @@ function stripMetaBlocks(text: string): string {
   cleaned = cleaned.replace(/\[META\][\s\S]*$/, "");
   cleaned = cleaned.replace(/\[M(?:E(?:T(?:A)?)?)?$/, "");
   return cleaned.trim();
+}
+
+function detectStreamingTag(raw: string): "meta" | "choices" | null {
+  if (/\[META\][\s\S]*$/.test(raw) || /\[M(?:E(?:T(?:A)?)?)?$/.test(raw))
+    return "meta";
+  if (
+    /\[CHOICES\][\s\S]*$/i.test(raw) ||
+    /\[C(?:H(?:O(?:I(?:C(?:E(?:S)?)?)?)?)?)?$/i.test(raw)
+  )
+    return "choices";
+  return null;
 }
 
 export function MessageBubble({
@@ -80,9 +94,13 @@ export function MessageBubble({
   }
 
   const displayContent =
-    role === "assistant" ? stripMetaBlocks(stripChoiceBlocks(content)) : content;
+    role === "assistant"
+      ? stripMetaBlocks(stripChoiceBlocks(content))
+      : content;
   const isEmptyStreaming =
     role === "assistant" && content === "" && isStreaming;
+  const streamingTag =
+    isStreaming && role === "assistant" ? detectStreamingTag(content) : null;
 
   return (
     <div className="group">
@@ -141,6 +159,21 @@ export function MessageBubble({
             <p className="text-base text-gray-900 font-medium">
               {displayContent}
             </p>
+          )}
+
+          {streamingTag && displayContent && (
+            <div className="flex items-center gap-2 mt-2">
+              <span className="flex gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+              </span>
+              <span className="text-[11px] font-mono text-gray-400">
+                {streamingTag === "choices"
+                  ? "preparing options..."
+                  : "finishing up..."}
+              </span>
+            </div>
           )}
 
           {priceEstimate && <PriceCard estimate={priceEstimate} />}

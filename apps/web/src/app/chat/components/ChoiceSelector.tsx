@@ -1,7 +1,5 @@
 "use client";
 
-import { MarkdownContent } from "./MarkdownContent";
-
 interface Choice {
   label: string;
   description: string;
@@ -30,11 +28,7 @@ export function ChoiceSelector({
           <span className="shrink-0 w-6 h-6 flex items-center justify-center bg-gray-100 rounded-md text-xs font-semibold text-gray-600">
             {choice.label}
           </span>
-          <MarkdownContent
-            content={choice.description}
-            className="text-gray-700"
-            inline
-          />
+          <span className="text-gray-700">{choice.description}</span>
         </button>
       ))}
     </div>

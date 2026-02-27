@@ -1,8 +1,77 @@
 import { prisma } from "@mismo/db";
+import type { ProjectStatus } from "@mismo/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import PRDEditor from "./prd/prd-editor";
 import type { PRDData } from "./prd/demo-data";
+
+const STATUS_ORDER: ProjectStatus[] = [
+  "DISCOVERY",
+  "REVIEW",
+  "CONTRACTED",
+  "DEVELOPMENT",
+  "VERIFICATION",
+  "DELIVERED",
+];
+
+const PIPELINE_STAGES: { label: string; activeAt: ProjectStatus }[] = [
+  { label: "Submitted",      activeAt: "REVIEW" },
+  { label: "Under Review",   activeAt: "REVIEW" },
+  { label: "Approved",       activeAt: "CONTRACTED" },
+  { label: "In Development", activeAt: "DEVELOPMENT" },
+  { label: "Final Checks",   activeAt: "VERIFICATION" },
+  { label: "Delivered",      activeAt: "DELIVERED" },
+];
+
+function statusRank(status: ProjectStatus): number {
+  const idx = STATUS_ORDER.indexOf(status);
+  return idx === -1 ? -1 : idx;
+}
+
+function ReviewPipeline({ status }: { status: ProjectStatus }) {
+  if (status === "CANCELLED") {
+    return (
+      <div className="flex items-center gap-2 py-4 px-1 text-sm text-red-500">
+        <span className="inline-block w-2 h-2 rounded-full bg-red-400" />
+        Project cancelled
+      </div>
+    );
+  }
+
+  const currentRank = statusRank(status);
+
+  return (
+    <div className="flex items-center gap-0 py-4 overflow-x-auto">
+      {PIPELINE_STAGES.map((stage, i) => {
+        const stageRank = statusRank(stage.activeAt);
+        const isComplete = currentRank > stageRank;
+        const isActive = currentRank === stageRank;
+
+        let dotClass: string;
+        let textClass: string;
+        if (isActive) {
+          dotClass = "bg-amber-400 animate-pulse";
+          textClass = "text-gray-900 font-medium";
+        } else {
+          dotClass = "bg-gray-200";
+          textClass = "text-gray-400";
+        }
+
+        return (
+          <div key={stage.label} className="flex items-center">
+            {i > 0 && (
+              <div className="w-8 h-px mx-1 bg-gray-200" />
+            )}
+            <div className="flex items-center gap-1.5 whitespace-nowrap">
+              <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${dotClass}`} />
+              <span className={`text-xs ${textClass}`}>{stage.label}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export default async function ProjectPage({
   params,
@@ -69,7 +138,12 @@ export default async function ProjectPage({
 
   return (
     <div className="min-h-dvh flex flex-col bg-white">
-      <header className="flex items-center justify-between px-6 py-4 shrink-0 border-b border-gray-100">
+      <header className="flex items-center justify-between px-6 py-4 shrink-0 bg-white/80 backdrop-blur-md z-50"
+        style={{
+          maskImage: "linear-gradient(to bottom, black 80%, transparent 100%)",
+          WebkitMaskImage: "linear-gradient(to bottom, black 80%, transparent 100%)",
+        }}
+      >
         <Link href="/" className="text-lg font-semibold text-gray-900">
           Mismo
         </Link>
@@ -82,6 +156,7 @@ export default async function ProjectPage({
       </header>
       <main className="flex-1 overflow-y-auto p-6 md:p-12">
         <div className="max-w-4xl mx-auto">
+          <ReviewPipeline status={project.status} />
           <PRDEditor prd={mappedPrd} />
         </div>
       </main>

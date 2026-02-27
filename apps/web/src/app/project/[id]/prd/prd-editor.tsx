@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Copy, Check } from "lucide-react";
 import type { PRDData, Comment } from "./demo-data";
 
 export default function PRDEditor({ prd }: { prd: PRDData }) {
@@ -9,8 +10,15 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
   );
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [newComment, setNewComment] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const ambiguityHigh = prd.ambiguityScore > 20;
+
+  async function handleCopyJson() {
+    await navigator.clipboard.writeText(JSON.stringify(prd, null, 2));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   function hasTBD(text: string): boolean {
     return /\bTBD\b/i.test(text);
@@ -135,6 +143,13 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
           <span className="text-xs font-medium text-[var(--text-secondary)]">
             v{prd.version}
           </span>
+          <button
+            onClick={handleCopyJson}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            {copied ? <Check size={14} /> : <Copy size={14} />}
+            {copied ? "Copied!" : "Copy JSON"}
+          </button>
         </div>
         <p className="mt-4 text-sm leading-relaxed text-[var(--text-secondary)]">
           Product Requirements Document &middot; Last updated{" "}
