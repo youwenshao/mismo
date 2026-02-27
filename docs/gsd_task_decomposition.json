@@ -1,0 +1,56 @@
+{
+  "decomposition_rules": [
+    {
+      "trigger": "Task estimated > 60 minutes execution time",
+      "granularity": "15-60 minutes Claude execution time per task",
+      "dependency_types": ["blocking", "parallel (waves)", "sequential"]
+    },
+    {
+      "trigger": "Task touches > 3-5 files",
+      "granularity": "Atomic file set (2-3 tasks max per plan)",
+      "dependency_types": ["blocking"]
+    },
+    {
+      "trigger": "Action description > 1 paragraph",
+      "granularity": "Specific implementation step",
+      "dependency_types": ["sequential"]
+    },
+    {
+      "trigger": "Missing Verification",
+      "granularity": "Wave 0 task (Scaffolding/Test Creation)",
+      "dependency_types": ["blocking"]
+    }
+  ],
+  "orchestration_patterns": {
+    "state_tracking": "Atomic git commits per task; Centralized state tracking (originally STATE.md, adapted to Redis+Supabase); Phase-level SUMMARY.md for rollups",
+    "failure_handling": {
+      "auto_fix": "3 attempts per task for bugs/missing features",
+      "gates": "Authentication errors treated as human-action gates (not failures)",
+      "stops": "Architectural changes require stop & human decision",
+      "deferral": "Out-of-scope issues logged to deferred-items.md (not fixed inline)"
+    },
+    "resource_allocation": {
+      "execution_model": "Solo Developer + Claude (no team overhead)",
+      "concurrency": "Wave-based execution (tasks in same wave run in parallel if supported, otherwise sequential)",
+      "agent_lifecycle": "Fresh agent spawning for context reset after checkpoints"
+    }
+  },
+  "context_management": {
+    "strategy": "Map-Reduce approach to codebase understanding",
+    "mechanisms": [
+      "Codebase Mapping: Pre-compute specialized docs (STACK.md, ARCHITECTURE.md) to avoid raw reads",
+      "Just-In-Time Loading: Agents load only relevant mapped docs based on phase type (e.g., UI phase loads CONVENTIONS.md)",
+      "Quality Curve Monitoring: Target <50% context usage for peak performance; >70% considered poor",
+      "Prompt Engineering: Plans are executable prompts, not documents"
+    ]
+  },
+  "n8n_adaptations": [
+    "Planner Logic -> n8n AI Agent Node (Reasoning): Implements the breakdown algorithm and wave assignment",
+    "Executor Logic -> n8n AI Agent Node (Tools): Implements the auto-fix loop, tool execution, and deviation handling",
+    "State Management -> Redis (Hot State) + Supabase (Persistent Logs): Replaces local STATE.md/SUMMARY.md; Supabase stores the 'Plan' and 'Task' entities",
+    "Wave Orchestration -> n8n Loop/Queue: Manages parallel execution of tasks in the same wave",
+    "Context Mapper -> Scheduled n8n Workflow: Periodically scans repo (via Docker volume) and updates context documents in Supabase/Vector Store",
+    "Git Operations -> Shell Command Node (Docker Volume): Direct file manipulation on mounted volumes; Git commits mirror task completion",
+    "Human Gates -> n8n Wait for Trigger / Form Node: Replaces 'checkpoint:human-*' tasks; sends notification to user for auth/decisions"
+  ]
+}

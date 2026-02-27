@@ -1,0 +1,88 @@
+{
+  "methodology_phases": [
+    {
+      "phase_name": "1. Analysis",
+      "purpose": "Collaborative discovery to align on vision and scope before formal planning.",
+      "input_format": "User conversation, initial ideas",
+      "output_format": "Product Brief (Markdown)",
+      "validation_criteria": [
+        "Vision clarity",
+        "Target audience definition",
+        "Core value proposition identified"
+      ],
+      "system_prompt": "You are a product-focused Business Analyst collaborating with an expert peer. This is a partnership, not a client-vendor relationship. You bring structured thinking and facilitation skills."
+    },
+    {
+      "phase_name": "2. Planning",
+      "purpose": "Create comprehensive Product Requirements Documents (PRD) through structured facilitation.",
+      "input_format": "Product Brief",
+      "output_format": "PRD (Markdown) with Frontmatter state tracking",
+      "validation_criteria": [
+        "Holistic Quality Assessment (Flow, Coherence)",
+        "Dual Audience Effectiveness (Human & LLM readable)",
+        "Measurability (Testable requirements)",
+        "Traceability",
+        "Domain Awareness"
+      ],
+      "system_prompt": "Product-focused PM facilitator. Goal: Create comprehensive PRDs. Core Principles: Micro-file Design, Just-In-Time Loading, Sequential Enforcement."
+    },
+    {
+      "phase_name": "3. Solutioning",
+      "purpose": "Define technical architecture and break down requirements into implementable units (Epics/Stories).",
+      "input_format": "PRD",
+      "output_format": "Architecture Decision Records (ADR), Epic & Story List",
+      "validation_criteria": [
+        "Implementation Readiness Check",
+        "Epic Coverage Map (Traceability to PRD)",
+        "UX Alignment",
+        "Architecture Compliance"
+      ],
+      "system_prompt": "Architect: Senior architect with expertise in distributed systems. Speaks in calm, pragmatic tones. Principles: Channel expert lean architecture wisdom; User journeys drive technical decisions."
+    },
+    {
+      "phase_name": "4. Implementation",
+      "purpose": "Execute development stories with strict adherence to specifications and testing.",
+      "input_format": "Story File (Markdown with Context)",
+      "output_format": "Source Code, Tests, Updated Story File",
+      "validation_criteria": [
+        "100% Test Pass Rate (New & Existing)",
+        "All Acceptance Criteria Met",
+        "Code Review passed"
+      ],
+      "system_prompt": "Developer: Senior Software Engineer. Communication style: Ultra-succinct. Speaks in file paths and AC IDs. Principles: All existing and new tests must pass 100% before story is ready for review."
+    }
+  ],
+  "architect_patterns": {
+    "separation_of_concerns": "Micro-file Architecture: Each workflow step is a discrete .md file. Agents never load future steps. State is tracked via Frontmatter in the output document.",
+    "contract_enforcement": "Explicit 'Implementation Patterns & Consistency Rules' step (Step 5 of Architecture) defines naming (DB, API, Code), structure, and format patterns to prevent agent conflicts.",
+    "feasibility_check": "'Check Implementation Readiness' workflow acts as a hard gate between Solutioning and Implementation, ensuring PRD, Architecture, and Stories are fully aligned.",
+    "decision_records": "Uses 'Architecture Decision Document' format: Context, Decision, Consequences to log all technical choices."
+  },
+  "integration_points": [
+    "Mo (Interview) maps to Phase 1 (Analysis) and Phase 2 (Planning) - specifically the 'create-product-brief' and 'create-prd' workflows.",
+    "Decomposer (Swarm) maps to Phase 3 (Solutioning) - specifically 'create-architecture' and 'create-epics-and-stories'.",
+    "Coding Agents map to Phase 4 (Implementation) - specifically 'dev-story' and 'code-review' workflows."
+  ],
+  "complexity_assessment": {
+    "rubric_source": "domain-complexity.csv and project-types.csv",
+    "factors": [
+      "Domain Regulation (High: Healthcare, Fintech / Low: General)",
+      "Project Type (SaaS B2B requires more sections than CLI Tool)",
+      "Required Sections (Compliance, Security, Audit for High complexity)"
+    ],
+    "sizing": {
+      "High": "Requires 'Advanced Elicitation' and deep 'Domain Research' steps.",
+      "Medium": "Standard workflow.",
+      "Low": "Can use 'Quick Flow' (bmad-quick-flow) for rapid prototyping."
+    }
+  },
+  "contract_definitions": {
+    "stories": "Gherkin Syntax (Given/When/Then) for Acceptance Criteria within Markdown Story files.",
+    "architecture": "Decision Log pattern (Context -> Decision -> Consequences).",
+    "consistency": "Explicit Pattern Definition for: Naming (DB/API/Code), Structure (Folder/Test location), Formats (JSON/Date/Error), Communication (Events/State)."
+  },
+  "flagged_dependencies": [
+    "No external database dependencies found (uses local filesystem/markdown).",
+    "Relies heavily on 'Advanced Elicitation' and 'Party Mode' sub-workflows which are internal BMAD constructs - these would need to be re-implemented using our Swarm/Mo agents."
+  ]
+}
