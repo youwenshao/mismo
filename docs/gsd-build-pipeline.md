@@ -235,6 +235,8 @@ curl -X POST http://localhost:3005/log \
 
 ## Related Documentation
 
+- [Repo Surgery Pipeline](repo-surgery-pipeline.md) — Modify existing codebases with BMAD boundaries, Qdrant vector search
+- [Mobile Build Pipeline](mobile-build-pipeline.md) — React Native + Expo iOS/Android builds with BMAD feasibility scoring
 - [Content Generation Pipeline](content-generation-pipeline.md) — Runs before Frontend agent
 - [Design DNA Enforcement](design-dna-enforcement.md) — Component library constraints
 - [n8n HA Deployment](../docker/n8n-ha/DEPLOYMENT.md) — Production deployment

@@ -1,0 +1,561 @@
+{
+  "name": "Mobile Build Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mobile-build-pipeline",
+        "responseMode": "lastNode"
+      },
+      "id": "m0b1-0001-4000-8000-000000000001",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [0, 300],
+      "webhookId": "mobile-build-pipeline"
+    },
+    {
+      "parameters": {
+        "buildId": "={{ $json.body.buildId }}",
+        "mobileConfig": "={{ JSON.stringify($json.body.prdJson.mobileConfig || {}) }}"
+      },
+      "id": "m0b1-0001-4000-8000-000000000002",
+      "name": "Mobile Feasibility Checker",
+      "type": "n8n-nodes-mismo.mobileFeasibilityChecker",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.halted }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "m0b1-0001-4000-8000-000000000003",
+      "name": "Feasibility Gate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "HALTED"
+            },
+            {
+              "name": "buildId",
+              "value": "={{ $node[\"Webhook Trigger\"].json.body.buildId }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $node[\"Mobile Feasibility Checker\"].json.haltReason }}"
+            },
+            {
+              "name": "score",
+              "value": "={{ $node[\"Mobile Feasibility Checker\"].json.score }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "m0b1-0001-4000-8000-000000000004",
+      "name": "Set Halted",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [750, 450]
+    },
+    {
+      "parameters": {
+        "operation": "parsePrd",
+        "buildId": "={{ $node[\"Webhook Trigger\"].json.body.buildId }}",
+        "prdJson": "={{ $node[\"Webhook Trigger\"].json.body.prdJson }}"
+      },
+      "id": "m0b1-0001-4000-8000-000000000005",
+      "name": "GSD Dependency Checker",
+      "type": "n8n-nodes-mismo.gsdDependencyChecker",
+      "typeVersion": 1,
+      "position": [750, 200]
+    },
+    {
+      "parameters": {
+        "serviceUrl": "http://mobile-scaffold:3020/generate",
+        "requestBody": "={{ JSON.stringify({ projectName: $node[\"Webhook Trigger\"].json.body.prdJson.projectName, bundleId: $node[\"Webhook Trigger\"].json.body.prdJson.bundleId, prd: $node[\"Webhook Trigger\"].json.body.prdJson, designDna: $node[\"Webhook Trigger\"].json.body.prdJson.designDna || {}, architectureDecision: $node[\"Mobile Feasibility Checker\"].json.architectureDecision }) }}",
+        "buildId": "={{ $node[\"Webhook Trigger\"].json.body.buildId }}",
+        "httpMethod": "POST",
+        "maxRetries": 3,
+        "initialBackoffMs": 1000
+      },
+      "id": "m0b1-0001-4000-8000-000000000006",
+      "name": "Mobile Scaffold Retry",
+      "type": "n8n-nodes-mismo.gsdRetryWrapper",
+      "typeVersion": 1,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ (process.env.CONTRACT_CHECKER_URL || 'http://contract-checker:3012') + '/check-mobile-architecture' }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "buildId",
+              "value": "={{ $node[\"Webhook Trigger\"].json.body.buildId }}"
+            },
+            {
+              "name": "architectureDecision",
+              "value": "={{ $node[\"Mobile Feasibility Checker\"].json.architectureDecision }}"
+            },
+            {
+              "name": "buildOutput",
+              "value": "={{ $node[\"Mobile Scaffold Retry\"].json.data }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "m0b1-0001-4000-8000-000000000007",
+      "name": "Contract Check (Scaffold)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1350, 200]
+    },
+    {
+      "parameters": {
+        "serviceUrl": "http://mobile-feature:3021/generate",
+        "requestBody": "={{ JSON.stringify({ scaffoldOutput: $node[\"Mobile Scaffold Retry\"].json.data, prd: $node[\"Webhook Trigger\"].json.body.prdJson, designDna: $node[\"Webhook Trigger\"].json.body.prdJson.designDna || {}, componentLibrary: $node[\"Webhook Trigger\"].json.body.prdJson.componentLibrary || 'react-native-paper' }) }}",
+        "buildId": "={{ $node[\"Webhook Trigger\"].json.body.buildId }}",
+        "httpMethod": "POST",
+        "maxRetries": 3,
+        "initialBackoffMs": 1000
+      },
+      "id": "m0b1-0001-4000-8000-000000000008",
+      "name": "Mobile Feature Retry",
+      "type": "n8n-nodes-mismo.gsdRetryWrapper",
+      "typeVersion": 1,
+      "position": [1650, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ (process.env.CONTRACT_CHECKER_URL || 'http://contract-checker:3012') + '/check-mobile-architecture' }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "buildId",
+              "value": "={{ $node[\"Webhook Trigger\"].json.body.buildId }}"
+            },
+            {
+              "name": "architectureDecision",
+              "value": "={{ $node[\"Mobile Feasibility Checker\"].json.architectureDecision }}"
+            },
+            {
+              "name": "buildOutput",
+              "value": "={{ $node[\"Mobile Feature Retry\"].json.data }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "m0b1-0001-4000-8000-000000000009",
+      "name": "Contract Check (Feature)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1950, 200]
+    },
+    {
+      "parameters": {
+        "serviceUrl": "http://mobile-build-engineer:3022/generate",
+        "requestBody": "={{ JSON.stringify({ projectPath: $node[\"Webhook Trigger\"].json.body.projectPath || '/tmp/mobile-build', platform: 'ios', buildProfile: 'production', credentials: $node[\"Webhook Trigger\"].json.body.credentials || {}, submitToStore: true }) }}",
+        "buildId": "={{ $node[\"Webhook Trigger\"].json.body.buildId }}",
+        "httpMethod": "POST",
+        "maxRetries": 2,
+        "initialBackoffMs": 5000
+      },
+      "id": "m0b1-0001-4000-8000-000000000010",
+      "name": "iOS Build Retry",
+      "type": "n8n-nodes-mismo.gsdRetryWrapper",
+      "typeVersion": 1,
+      "position": [2250, 100]
+    },
+    {
+      "parameters": {
+        "serviceUrl": "http://mobile-build-engineer:3022/generate",
+        "requestBody": "={{ JSON.stringify({ projectPath: $node[\"Webhook Trigger\"].json.body.projectPath || '/tmp/mobile-build', platform: 'android', buildProfile: 'production', credentials: $node[\"Webhook Trigger\"].json.body.credentials || {}, submitToStore: true }) }}",
+        "buildId": "={{ $node[\"Webhook Trigger\"].json.body.buildId }}",
+        "httpMethod": "POST",
+        "maxRetries": 2,
+        "initialBackoffMs": 5000
+      },
+      "id": "m0b1-0001-4000-8000-000000000011",
+      "name": "Android Build Retry",
+      "type": "n8n-nodes-mismo.gsdRetryWrapper",
+      "typeVersion": 1,
+      "position": [2250, 300]
+    },
+    {
+      "parameters": {
+        "serviceUrl": "http://store-submission:3023/generate",
+        "requestBody": "={{ JSON.stringify({ prd: $node[\"Webhook Trigger\"].json.body.prdJson, platform: 'both', appInfo: { bundleId: $node[\"Webhook Trigger\"].json.body.prdJson.bundleId, version: '1.0.0', buildNumber: '1' }, designDna: $node[\"Webhook Trigger\"].json.body.prdJson.designDna || {} }) }}",
+        "buildId": "={{ $node[\"Webhook Trigger\"].json.body.buildId }}",
+        "httpMethod": "POST",
+        "maxRetries": 3,
+        "initialBackoffMs": 1000
+      },
+      "id": "m0b1-0001-4000-8000-000000000012",
+      "name": "Store Metadata",
+      "type": "n8n-nodes-mismo.gsdRetryWrapper",
+      "typeVersion": 1,
+      "position": [2250, 500]
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "output": "waitAll",
+        "options": {}
+      },
+      "id": "m0b1-0001-4000-8000-000000000013",
+      "name": "Merge Build Branches",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [2600, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ (process.env.CONTRACT_CHECKER_URL || 'http://contract-checker:3012') + '/check-app-size' }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "buildId",
+              "value": "={{ $node[\"Webhook Trigger\"].json.body.buildId }}"
+            },
+            {
+              "name": "actualSizeMb",
+              "value": "={{ $node[\"iOS Build Retry\"].json.data?.appSizeMb || 50 }}"
+            },
+            {
+              "name": "predictedSizeMb",
+              "value": "={{ $node[\"Webhook Trigger\"].json.body.prdJson.mobileConfig?.estimated_size_mb || 50 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "m0b1-0001-4000-8000-000000000014",
+      "name": "App Size Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2900, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ (process.env.CONTRACT_CHECKER_URL || 'http://contract-checker:3012') + '/check-bundle-id' }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "buildId",
+              "value": "={{ $node[\"Webhook Trigger\"].json.body.buildId }}"
+            },
+            {
+              "name": "buildBundleId",
+              "value": "={{ $node[\"Mobile Scaffold Retry\"].json.data?.appJson?.expo?.ios?.bundleIdentifier || '' }}"
+            },
+            {
+              "name": "clientBundleId",
+              "value": "={{ $node[\"Webhook Trigger\"].json.body.prdJson.bundleId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "m0b1-0001-4000-8000-000000000015",
+      "name": "Bundle ID Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2900, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $node[\"iOS Build Retry\"].json.data?.status === 'success' && $node[\"Android Build Retry\"].json.data?.status === 'success' }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "m0b1-0001-4000-8000-000000000016",
+      "name": "All Builds Passed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [3200, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "SUCCESS"
+            },
+            {
+              "name": "buildId",
+              "value": "={{ $node[\"Webhook Trigger\"].json.body.buildId }}"
+            },
+            {
+              "name": "message",
+              "value": "Mobile build pipeline completed. iOS and Android builds submitted."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "m0b1-0001-4000-8000-000000000017",
+      "name": "Set Success",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [3500, 200]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "FAILED"
+            },
+            {
+              "name": "buildId",
+              "value": "={{ $node[\"Webhook Trigger\"].json.body.buildId }}"
+            },
+            {
+              "name": "message",
+              "value": "Mobile build pipeline failed. Check build logs."
+            },
+            {
+              "name": "iosBuildLog",
+              "value": "={{ $node[\"iOS Build Retry\"].json.data?.buildLog || 'N/A' }}"
+            },
+            {
+              "name": "androidBuildLog",
+              "value": "={{ $node[\"Android Build Retry\"].json.data?.buildLog || 'N/A' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "m0b1-0001-4000-8000-000000000018",
+      "name": "Set Failed",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [3500, 450]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Mobile Feasibility Checker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mobile Feasibility Checker": {
+      "main": [
+        [
+          {
+            "node": "Feasibility Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Feasibility Gate": {
+      "main": [
+        [
+          {
+            "node": "Set Halted",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GSD Dependency Checker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GSD Dependency Checker": {
+      "main": [
+        [
+          {
+            "node": "Mobile Scaffold Retry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mobile Scaffold Retry": {
+      "main": [
+        [
+          {
+            "node": "Contract Check (Scaffold)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contract Check (Scaffold)": {
+      "main": [
+        [
+          {
+            "node": "Mobile Feature Retry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mobile Feature Retry": {
+      "main": [
+        [
+          {
+            "node": "Contract Check (Feature)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contract Check (Feature)": {
+      "main": [
+        [
+          {
+            "node": "iOS Build Retry",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Android Build Retry",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Store Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "iOS Build Retry": {
+      "main": [
+        [
+          {
+            "node": "Merge Build Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Android Build Retry": {
+      "main": [
+        [
+          {
+            "node": "Merge Build Branches",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Store Metadata": {
+      "main": [
+        [
+          {
+            "node": "Merge Build Branches",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge Build Branches": {
+      "main": [
+        [
+          {
+            "node": "App Size Check",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Bundle ID Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "App Size Check": {
+      "main": [
+        [
+          {
+            "node": "All Builds Passed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "All Builds Passed?": {
+      "main": [
+        [
+          {
+            "node": "Set Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "staticData": null,
+  "tags": ["mobile"],
+  "triggerCount": 1,
+  "active": false
+}

@@ -79,8 +79,16 @@ The complete build pipeline adds agent microservices and error logging. See [doc
 | frontend-developer | (add Dockerfile) | — | 3003 |
 | devops | (add Dockerfile) | — | 3004 |
 | error-logger | (add Dockerfile) | — | 3005 |
+| mobile-scaffold | (add Dockerfile) | — | 3020 |
+| mobile-feature | (add Dockerfile) | — | 3021 |
+| mobile-build-engineer | (add Dockerfile) | — | 3022 |
+| store-submission | (add Dockerfile) | — | 3023 |
 
-For local development, run agents via `./scripts/start-build-pipeline.sh`. Set `GSD_DEPENDENCY_URL`, `BMAD_VALIDATOR_URL`, `CONTRACT_CHECKER_URL`, `DB_ARCHITECT_URL`, etc. in n8n environment when using external agent hosts.
+For local development:
+- **GSD (web) pipeline**: `./scripts/start-build-pipeline.sh`
+- **Mobile pipeline**: `./scripts/start-mobile-pipeline.sh`
+
+Set `GSD_DEPENDENCY_URL`, `BMAD_VALIDATOR_URL`, `CONTRACT_CHECKER_URL`, `DB_ARCHITECT_URL`, `MOBILE_SCAFFOLD_URL`, `MOBILE_FEATURE_URL`, etc. in n8n environment when using external agent hosts. See [docs/mobile-build-pipeline.md](../../docs/mobile-build-pipeline.md) for mobile pipeline details.
 
 ## Supabase Integration
 

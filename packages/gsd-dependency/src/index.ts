@@ -99,6 +99,31 @@ function topologicalSort(agents: AgentTask[]): AgentTask[] {
   return sorted
 }
 
+const MOBILE_TASK_DEFAULTS: Record<string, { dependencies: string[]; config?: Record<string, unknown> }> = {
+  'mobile-scaffold': {
+    dependencies: [],
+    config: { parallelSafe: true },
+  },
+  'mobile-feature': {
+    dependencies: ['mobile-scaffold'],
+  },
+  'mobile-native-config': {
+    dependencies: ['mobile-scaffold'],
+  },
+  'mobile-build-ios': {
+    dependencies: ['mobile-feature', 'mobile-native-config'],
+    config: { longDuration: true, requiresMac: true },
+  },
+  'mobile-build-android': {
+    dependencies: ['mobile-feature', 'mobile-native-config'],
+    config: { longDuration: true },
+  },
+  'store-metadata': {
+    dependencies: [],
+    config: { parallelSafe: true },
+  },
+}
+
 function parsePrdToAgents(prd: PrdDecomposition): AgentTask[] {
   const decomposition = prd?.gsd_decomposition
   if (!decomposition?.tasks || !Array.isArray(decomposition.tasks)) {
@@ -113,14 +138,33 @@ function parsePrdToAgents(prd: PrdDecomposition): AgentTask[] {
         `Invalid task in PRD: each task requires "id" and "type"`,
       )
     }
+
+    const mobileDefaults = MOBILE_TASK_DEFAULTS[task.type]
+    const dependencies = Array.isArray(task.dependencies) && task.dependencies.length > 0
+      ? task.dependencies
+      : mobileDefaults?.dependencies ?? []
+
     return {
       id: task.id,
       type: task.type,
-      dependencies: Array.isArray(task.dependencies) ? task.dependencies : [],
+      dependencies,
       input: task.input ?? {},
-      config: task.config,
+      config: { ...mobileDefaults?.config, ...task.config },
     }
   })
+}
+
+function parseMobilePrdToAgents(prd: PrdDecomposition): AgentTask[] {
+  const agents = parsePrdToAgents(prd)
+
+  const mobileTypes = Object.keys(MOBILE_TASK_DEFAULTS)
+  const hasMobileTasks = agents.some((a) => mobileTypes.includes(a.type))
+
+  if (!hasMobileTasks) {
+    throw new Error('No mobile task types found in PRD. Expected at least one of: ' + mobileTypes.join(', '))
+  }
+
+  return agents
 }
 
 async function logError(buildId: string | undefined, error: unknown) {
@@ -184,6 +228,35 @@ app.post('/parse-prd', async (req, res) => {
 
   try {
     const agents = parsePrdToAgents(prd as PrdDecomposition)
+    const sorted = topologicalSort(agents)
+
+    if (buildId) {
+      await prisma.build.update({
+        where: { id: buildId },
+        data: {
+          executionIds: sorted.map((a) => a.id),
+        },
+      })
+    }
+
+    return res.json({ success: true, agents: sorted })
+  } catch (error) {
+    await logError(buildId, error)
+    const message = error instanceof Error ? error.message : 'Internal Server Error'
+    const status = error instanceof CycleError ? 422 : 400
+    return res.status(status).json({ success: false, error: message })
+  }
+})
+
+app.post('/parse-mobile-prd', async (req, res) => {
+  const { buildId, prd } = req.body
+
+  if (!prd) {
+    return res.status(400).json({ success: false, error: 'prd object is required' })
+  }
+
+  try {
+    const agents = parseMobilePrdToAgents(prd as PrdDecomposition)
     const sorted = topologicalSort(agents)
 
     if (buildId) {

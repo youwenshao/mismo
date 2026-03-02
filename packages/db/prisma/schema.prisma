@@ -244,8 +244,9 @@ model Commission {
 
   user        User              @relation(fields: [userId], references: [id])
   archetype   ProjectArchetype? @relation(fields: [archetypeId], references: [id])
-  builds      Build[]
-  credentials Credential[]
+  builds         Build[]
+  credentials    Credential[]
+  repoSurgeries  RepoSurgery[]
 }
 
 model Build {
@@ -284,6 +285,43 @@ model DesignDNA {
   componentReferences String[] // URLs to approved components
 
   archetype ProjectArchetype @relation(fields: [archetypeId], references: [id])
+}
+
+enum RepoSurgeryStatus {
+  INGESTING
+  VECTORIZING
+  ANALYZING
+  MODIFYING
+  VALIDATING
+  REVIEWING
+  COMPLETED
+  FAILED
+  HALTED
+}
+
+model RepoSurgery {
+  id               String             @id @default(cuid())
+  commissionId     String?
+  repoUrl          String
+  branch           String             @default("main")
+  surgeryBranch    String?
+  status           RepoSurgeryStatus  @default(INGESTING)
+  changeRequest    String
+  boundaryMap      Json?
+  contracts        Json?
+  impactReport     Json?
+  validationGates  Json?
+  confidenceScore  Float?
+  prUrl            String?
+  cloneDir         String?
+  qdrantCollection String?
+  errorLogs        Json?
+  failureCount     Int                @default(0)
+  humanReview      Boolean            @default(false)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  commission Commission? @relation(fields: [commissionId], references: [id])
 }
 
 model Credential {

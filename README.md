@@ -11,6 +11,8 @@ Mismo provides a complete agency platform with:
 - **Safety Classification**: 3-tier risk scoring for project compliance
 - **AI-Powered Development**: Cursor-based automation with human review gates
 - **n8n Workflow Pipeline**: Generate, test, and deploy n8n automations from PRD specs (Slack, Notion, Google Sheets, etc.)
+- **Repo Surgery Pipeline**: Modify existing codebases with BMAD boundary mapping, contract extraction, semantic code search (Qdrant), and safe diff generation
+- **Mobile Build Pipeline**: React Native + Expo builds for iOS/Android with BMAD feasibility scoring, EAS builds, and store submission automation
 - **Integrated Billing & Contracts**: Stripe payments with DocuSign e-signatures
 - **Zero-Trust Infrastructure**: Tailscale mesh network for secure multi-node operations
 
@@ -155,9 +157,14 @@ NEXT_PUBLIC_LIVEKIT_URL=wss://your-livekit-url
 GITHUB_TOKEN=ghp_...
 GITHUB_ORG=your-org
 
-# Qdrant (Optional - for Design DNA reference system)
+# Qdrant (Required for Repo Surgery; optional for Design DNA reference system)
 QDRANT_URL=http://localhost:6333
 QDRANT_API_KEY=
+
+# Repo Surgery Pipeline
+REPO_SURGERY_WORKSPACE=/tmp/mismo-surgery
+# GITHUB_TOKEN=              # For PR creation (optional)
+# SONARQUBE_URL=             # Optional: enhanced static analysis
 
 # n8n Workflow Pipeline (Optional)
 SLACK_ALERT_WEBHOOK_URL=          # Forward workflow failure alerts to Slack
@@ -165,6 +172,7 @@ SANDBOX_HOST=                     # Studio 3 hostname for remote sandbox (e.g. s
 SANDBOX_PORT=5679                 # Sandbox n8n port
 N8N_MANAGED_URL=                  # For managed deployment (Option B)
 N8N_MANAGED_API_KEY=              # For managed deployment (Option B)
+N8N_MOBILE_PIPELINE_WEBHOOK_URL=  # Mobile build pipeline webhook (e.g. http://localhost:5678/webhook/mobile-build-pipeline)
 
 # App URLs
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -313,7 +321,7 @@ Add the webhook signing secret to your `.env` file.
 
 | Package              | Description                                                                          |
 | -------------------- | ------------------------------------------------------------------------------------ |
-| `packages/ai`        | Mo agent, safety classifier, spec generator, Cursor orchestrator, Design DNA enforcement, n8n workflow generator |
+| `packages/ai`        | Mo agent, safety classifier, spec generator, Cursor orchestrator, Design DNA enforcement, n8n workflow generator, Repo Surgery pipeline |
 | `packages/n8n-nodes` | Custom n8n nodes (BmadValidator, GsdDependencyChecker, ContractChecker, GsdRetryWrapper, agent nodes, ErrorLogger) |
 | `packages/db`        | Prisma schema, migrations, database utilities                                        |
 | `packages/ui`        | Shared React components (shadcn/ui + Design DNA navbars, heroes, content sections)  |
@@ -327,6 +335,10 @@ Add the webhook signing secret to your `.env` file.
 | `packages/agents/backend-engineer` | Backend Engineer agent (Next.js routes + OpenAPI)                 |
 | `packages/agents/frontend-developer` | Frontend Developer agent (React components + typed API client)    |
 | `packages/agents/devops` | DevOps agent (Vercel/Terraform config, env template, deploy script)           |
+| `packages/agents/mobile-scaffold` | Mobile Scaffold agent (Expo project structure, app.json, navigation) |
+| `packages/agents/mobile-feature` | Mobile Feature agent (React Native screens, RN Paper, native permissions) |
+| `packages/agents/mobile-build-engineer` | Mobile Build Engineer agent (EAS builds via SSH, TestFlight/Play Console) |
+| `packages/agents/store-submission` | Store Submission agent (store listings, Maestro screenshots, fastlane metadata) |
 
 ## Available Scripts
 
@@ -339,6 +351,7 @@ Add the webhook signing secret to your `.env` file.
 | `pnpm format`                         | Format code with Prettier          |
 | `pnpm quickstart`                     | Full setup and start script        |
 | `pnpm n8n:verify`                     | Verify n8n workflow pipeline (requires dev servers) |
+| `pnpm repo-surgery:cleanup`           | Remove expired Repo Surgery workspaces and Qdrant collections (30-day retention) |
 | `pnpm --filter @mismo/db db:generate` | Generate Prisma client             |
 | `pnpm --filter @mismo/db db:push`     | Push schema changes to database    |
 | `pnpm --filter @mismo/db db:migrate`  | Run migrations                     |
@@ -346,6 +359,9 @@ Add the webhook signing secret to your `.env` file.
 | `pnpm --filter @mismo/db db:setup-pgsodium` | Enable credential encryption for n8n pipeline |
 | `./scripts/start-build-pipeline.sh`  | Start GSD build pipeline microservices |
 | `./scripts/stop-build-pipeline.sh`   | Stop GSD build pipeline microservices |
+| `./scripts/start-mobile-pipeline.sh` | Start Mobile build pipeline microservices (Scaffold, Feature, Build Engineer, Store Submission) |
+| `./scripts/stop-mobile-pipeline.sh`  | Stop Mobile build pipeline microservices |
+| `./scripts/start-repo-surgery-services.sh` | Start Qdrant (Docker) for Repo Surgery pipeline |
 
 ## Verification
 
@@ -460,6 +476,8 @@ pnpm build
 ## Documentation
 
 - [GSD Build Pipeline](docs/gsd-build-pipeline.md) - BMAD-contract build orchestration, agent swarm, contract validation
+- [Repo Surgery Pipeline](docs/repo-surgery-pipeline.md) - Modify existing codebases with BMAD boundaries, Qdrant vector search, validation gates
+- [Mobile Build Pipeline](docs/mobile-build-pipeline.md) - React Native + Expo iOS/Android builds with feasibility scoring, EAS, store submission
 - [n8n Workflow Pipeline](docs/n8n-workflow-pipeline.md) - Generate, test, and deploy n8n automations from PRD specs
 - [Content Generation Pipeline](docs/content-generation-pipeline.md) - Fluff-free content validation for headlines, features, microcopy
 - [Design DNA Enforcement](docs/design-dna-enforcement.md) - Design DNA schema, component library, enforcement agent

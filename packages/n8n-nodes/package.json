@@ -33,7 +33,20 @@
       "dist/nodes/BackendEngineerAgent/BackendEngineerAgent.node.js",
       "dist/nodes/FrontendDeveloperAgent/FrontendDeveloperAgent.node.js",
       "dist/nodes/DevOpsAgent/DevOpsAgent.node.js",
-      "dist/nodes/ErrorLogger/ErrorLogger.node.js"
+      "dist/nodes/ErrorLogger/ErrorLogger.node.js",
+      "dist/nodes/MobileFeasibilityChecker/MobileFeasibilityChecker.node.js",
+      "dist/nodes/MobileScaffoldAgent/MobileScaffoldAgent.node.js",
+      "dist/nodes/MobileFeatureAgent/MobileFeatureAgent.node.js",
+      "dist/nodes/MobileBuildEngineer/MobileBuildEngineer.node.js",
+      "dist/nodes/StoreSubmissionAgent/StoreSubmissionAgent.node.js",
+      "dist/nodes/RepoIngestion/RepoIngestion.node.js",
+      "dist/nodes/CodeVectorizer/CodeVectorizer.node.js",
+      "dist/nodes/BoundaryMapper/BoundaryMapper.node.js",
+      "dist/nodes/ContractExtractor/ContractExtractor.node.js",
+      "dist/nodes/ImpactAnalysis/ImpactAnalysis.node.js",
+      "dist/nodes/DiffGenerator/DiffGenerator.node.js",
+      "dist/nodes/ValidationGate/ValidationGate.node.js",
+      "dist/nodes/ReviewGenerator/ReviewGenerator.node.js"
     ]
   }
 }

@@ -252,5 +252,173 @@ app.post('/check', async (req: Request, res: Response) => {
   }
 })
 
+// --- Mobile Pipeline Contract Checks ---
+
+interface MobileArchitectureDecision {
+  platform_strategy: 'expo-managed' | 'expo-bare' | 'fully-native'
+  native_modules_required: string[]
+}
+
+interface MobileArchitectureViolation {
+  type: 'native_code_in_managed' | 'strategy_mismatch' | 'missing_module'
+  message: string
+  severity: 'error' | 'warning'
+}
+
+function checkMobileArchitecture(
+  architectureDecision: MobileArchitectureDecision,
+  buildOutput: { files?: string[]; nativeModules?: string[]; projectType?: string },
+): { valid: boolean; violations: MobileArchitectureViolation[] } {
+  const violations: MobileArchitectureViolation[] = []
+
+  if (architectureDecision.platform_strategy === 'expo-managed') {
+    const nativeFilePatterns = [/\.m$/, /\.swift$/, /\.java$/, /\.kt$/, /\.gradle$/, /Podfile$/]
+    const files = buildOutput.files || []
+    for (const file of files) {
+      if (nativeFilePatterns.some((p) => p.test(file))) {
+        violations.push({
+          type: 'native_code_in_managed',
+          message: `Native file "${file}" found in Expo managed project — must eject or remove`,
+          severity: 'error',
+        })
+      }
+    }
+
+    if (buildOutput.projectType && buildOutput.projectType !== 'expo-managed') {
+      violations.push({
+        type: 'strategy_mismatch',
+        message: `Project type "${buildOutput.projectType}" does not match architecture decision "expo-managed"`,
+        severity: 'error',
+      })
+    }
+  }
+
+  const requiredModules = architectureDecision.native_modules_required || []
+  const presentModules = buildOutput.nativeModules || []
+  for (const mod of requiredModules) {
+    if (!presentModules.includes(mod)) {
+      violations.push({
+        type: 'missing_module',
+        message: `Required native module "${mod}" not found in build output`,
+        severity: 'warning',
+      })
+    }
+  }
+
+  return { valid: violations.filter((v) => v.severity === 'error').length === 0, violations }
+}
+
+function checkAppSize(
+  actualSizeMb: number,
+  predictedSizeMb: number,
+  maxSizeMb: number = 100,
+): { valid: boolean; message: string } {
+  if (actualSizeMb > maxSizeMb) {
+    return {
+      valid: false,
+      message: `App size ${actualSizeMb}MB exceeds ${maxSizeMb}MB limit. Re-architect to reduce bundle size.`,
+    }
+  }
+
+  const deviation = Math.abs(actualSizeMb - predictedSizeMb) / predictedSizeMb
+  if (deviation > 0.5) {
+    return {
+      valid: true,
+      message: `Warning: Actual size ${actualSizeMb}MB deviates >50% from predicted ${predictedSizeMb}MB`,
+    }
+  }
+
+  return { valid: true, message: `App size ${actualSizeMb}MB within limits` }
+}
+
+function checkBundleId(
+  buildBundleId: string,
+  clientBundleId: string,
+): { valid: boolean; message: string } {
+  if (buildBundleId !== clientBundleId) {
+    return {
+      valid: false,
+      message: `Bundle ID mismatch: build has "${buildBundleId}" but client account expects "${clientBundleId}"`,
+    }
+  }
+  return { valid: true, message: 'Bundle ID matches client account' }
+}
+
+app.post('/check-mobile-architecture', async (req: Request, res: Response) => {
+  const { buildId, architectureDecision, buildOutput } = req.body
+
+  try {
+    if (!architectureDecision || !buildOutput) {
+      return res.status(400).json({
+        success: false,
+        valid: false,
+        violations: [],
+        error: 'Missing required fields: architectureDecision and buildOutput',
+      })
+    }
+
+    const result = checkMobileArchitecture(architectureDecision, buildOutput)
+
+    if (!result.valid) {
+      await logFailureToBuild(buildId, 'contract-checker:mobile-architecture', result.violations)
+    }
+
+    return res.status(result.valid ? 200 : 400).json({ success: true, ...result })
+  } catch (error) {
+    console.error('[check-mobile-architecture]', error)
+    return res.status(500).json({ success: false, valid: false, violations: [], error: 'Internal Server Error' })
+  }
+})
+
+app.post('/check-app-size', async (req: Request, res: Response) => {
+  const { buildId, actualSizeMb, predictedSizeMb, maxSizeMb } = req.body
+
+  try {
+    if (typeof actualSizeMb !== 'number') {
+      return res.status(400).json({
+        success: false,
+        valid: false,
+        error: 'Missing required field: actualSizeMb (number)',
+      })
+    }
+
+    const result = checkAppSize(actualSizeMb, predictedSizeMb || 50, maxSizeMb)
+
+    if (!result.valid) {
+      await logFailureToBuild(buildId, 'contract-checker:app-size', [{ message: result.message }])
+    }
+
+    return res.status(result.valid ? 200 : 400).json({ success: true, ...result })
+  } catch (error) {
+    console.error('[check-app-size]', error)
+    return res.status(500).json({ success: false, valid: false, error: 'Internal Server Error' })
+  }
+})
+
+app.post('/check-bundle-id', async (req: Request, res: Response) => {
+  const { buildId, buildBundleId, clientBundleId } = req.body
+
+  try {
+    if (!buildBundleId || !clientBundleId) {
+      return res.status(400).json({
+        success: false,
+        valid: false,
+        error: 'Missing required fields: buildBundleId and clientBundleId',
+      })
+    }
+
+    const result = checkBundleId(buildBundleId, clientBundleId)
+
+    if (!result.valid) {
+      await logFailureToBuild(buildId, 'contract-checker:bundle-id', [{ message: result.message }])
+    }
+
+    return res.status(result.valid ? 200 : 400).json({ success: true, ...result })
+  } catch (error) {
+    console.error('[check-bundle-id]', error)
+    return res.status(500).json({ success: false, valid: false, error: 'Internal Server Error' })
+  }
+})
+
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => console.log(`Contract Checker listening on port ${PORT}`))

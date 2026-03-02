@@ -203,6 +203,6 @@ The Frontend Developer agent queries by intent:
 
 | Variable | Description |
 |----------|-------------|
-| `QDRANT_URL` | Qdrant server URL (default: `http://localhost:6333`) |
+| `QDRANT_URL` | Qdrant server URL (default: `http://localhost:6333`). Also used by [Repo Surgery pipeline](repo-surgery-pipeline.md) for code embeddings. |
 | `QDRANT_API_KEY` | Qdrant API key (optional for local) |
 | AI Provider keys | Required for `EnforcementAgent` when using vision/LLM (OpenAI, etc.) |

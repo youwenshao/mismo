@@ -1,5 +1,63 @@
 # Development Log
 
+## Repo Surgery + BMAD-Archaeology Pipeline
+
+**Date:** March 2, 2026
+**Status:** Completed
+
+### Overview
+
+Implemented a full pipeline for modifying existing codebases with BMAD boundary enforcement. The pipeline ingests repos, vectorizes code into Qdrant, maps boundaries (Core/Shell/Adapter/Safe to Modify), extracts contracts, performs impact analysis, generates diffs with tests, runs validation gates, and creates GitHub PRs with confidence scoring.
+
+### Components Delivered
+
+1. **Core logic** (`packages/ai/src/repo-surgery/`): RepoIngestion, ASTParser, CodeChunker, CodeEmbedder, CodeVectorStore, BoundaryMapper, ContractExtractor, ImpactAnalysisAgent, DiffGenerationAgent, ValidationGates, ReviewGenerator, RepoSurgeryPipeline
+2. **n8n nodes**: RepoIngestion, CodeVectorizer, BoundaryMapper, ContractExtractor, ImpactAnalysis, DiffGenerator, ValidationGate, ReviewGenerator
+3. **API routes** (`apps/internal/api/repo-surgery/`): ingest, vectorize, analyze, modify, validate, review, pipeline
+4. **n8n workflow**: `packages/n8n-nodes/workflows/repo-surgery-pipeline.json`
+5. **Database**: RepoSurgery model with RepoSurgeryStatus enum
+6. **Scripts**: `start-repo-surgery-services.sh` (Qdrant via Docker), `repo-surgery-cleanup.sh` (30-day retention)
+
+### Setup Notes
+
+- Start Qdrant: `./scripts/start-repo-surgery-services.sh`
+- Full pipeline: `POST /api/repo-surgery/pipeline` or n8n webhook
+- Cleanup: `pnpm repo-surgery:cleanup`
+- Documentation: [docs/repo-surgery-pipeline.md](repo-surgery-pipeline.md)
+
+---
+
+## Mobile Build Pipeline
+
+**Date:** March 2, 2026
+**Status:** Completed
+
+### Overview
+
+Implemented a React Native + Expo build pipeline for iOS/Android with BMAD feasibility scoring. The pipeline orchestrates four agent microservices (Scaffold, Feature, Build Engineer, Store Submission) via n8n, with a feasibility gate that halts builds scoring below 6/10.
+
+### Components Delivered
+
+1. **Mobile Feasibility Checker** (`packages/n8n-nodes/nodes/MobileFeasibilityChecker`): BMAD scoring node; outputs `architectureDecision` (expo-managed vs expo-bare).
+2. **Mobile Scaffold Agent** (`packages/agents/mobile-scaffold`, port 3020): Expo SDK 52 structure, app.json, Expo Router, NativeWind, Zustand/RTK auto-selection.
+3. **Mobile Feature Agent** (`packages/agents/mobile-feature`, port 3021): Screens, React Native Paper, native permissions (camera, location, notifications).
+4. **Mobile Build Engineer Agent** (`packages/agents/mobile-build-engineer`, port 3022): SSH to Studio 2/3, EAS build, TestFlight/Play Console submission.
+5. **Store Submission Agent** (`packages/agents/store-submission`, port 3023): Store listings, Maestro flows, fastlane metadata.
+
+### Integration Notes
+
+- Run agents locally: `./scripts/start-mobile-pipeline.sh`
+- Trigger build: `POST /api/mobile/build` with `{ buildId, prdJson, credentials }`
+- n8n workflow: `packages/n8n-nodes/workflows/mobile-build-pipeline.json`
+- Contract checker extended with `/check-mobile-architecture`, `/check-app-size`, `/check-bundle-id`
+- GSD dependency parser supports mobile task types via `/parse-mobile-prd`
+
+### Documentation
+
+- [Mobile Build Pipeline](mobile-build-pipeline.md) — Full reference documentation.
+
+---
+
 ## Content Generation Pipeline
 
 **Date:** March 2, 2026
