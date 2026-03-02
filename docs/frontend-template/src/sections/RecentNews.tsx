@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react'
 
 interface NewsItem {
-  id: string;
-  title: string;
-  category: string;
-  date: string;
-  image: string;
-  gradient?: string;
+  id: string
+  title: string
+  category: string
+  date: string
+  image: string
+  gradient?: string
 }
 
 const newsItems: NewsItem[] = [
@@ -58,29 +58,29 @@ const newsItems: NewsItem[] = [
     image: '/images/science.jpg',
     gradient: 'linear-gradient(135deg, #f87171 0%, #fb923c 100%)',
   },
-];
+]
 
 export default function RecentNews() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
+          setIsVisible(true)
+          observer.disconnect()
         }
       },
-      { threshold: 0.1 }
-    );
+      { threshold: 0.1 },
+    )
 
     if (sectionRef.current) {
-      observer.observe(sectionRef.current);
+      observer.observe(sectionRef.current)
     }
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <section ref={sectionRef} className="px-4 md:px-8 lg:px-12 py-12" id="news">
@@ -88,10 +88,7 @@ export default function RecentNews() {
         {/* Section Header */}
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-xl font-semibold text-gray-900">Recent news</h2>
-          <a
-            href="#"
-            className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-          >
+          <a href="#" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
             View more
           </a>
         </div>
@@ -105,9 +102,7 @@ export default function RecentNews() {
                 key={item.id}
                 href="#"
                 className={`flex gap-4 group transition-all duration-700 ${
-                  isVisible
-                    ? 'opacity-100 translate-y-0'
-                    : 'opacity-0 translate-y-8'
+                  isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
                 }`}
                 style={{ transitionDelay: `${index * 100}ms` }}
               >
@@ -123,20 +118,8 @@ export default function RecentNews() {
                       stroke="currentColor"
                       strokeWidth="1.5"
                     >
-                      <rect
-                        x="5"
-                        y="11"
-                        width="14"
-                        height="10"
-                        rx="2"
-                        fill="white"
-                        stroke="none"
-                      />
-                      <path
-                        d="M7 11V7a5 5 0 0 1 10 0v4"
-                        stroke="white"
-                        strokeLinecap="round"
-                      />
+                      <rect x="5" y="11" width="14" height="10" rx="2" fill="white" stroke="none" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="white" strokeLinecap="round" />
                     </svg>
                   )}
                   {item.id === '2' && (
@@ -147,15 +130,7 @@ export default function RecentNews() {
                       stroke="currentColor"
                       strokeWidth="1.5"
                     >
-                      <rect
-                        x="3"
-                        y="4"
-                        width="18"
-                        height="16"
-                        rx="2"
-                        fill="white"
-                        stroke="none"
-                      />
+                      <rect x="3" y="4" width="18" height="16" rx="2" fill="white" stroke="none" />
                       <line x1="7" y1="8" x2="17" y2="8" stroke="#a78bfa" strokeWidth="2" />
                       <line x1="7" y1="12" x2="17" y2="12" stroke="#a78bfa" strokeWidth="2" />
                       <line x1="7" y1="16" x2="12" y2="16" stroke="#a78bfa" strokeWidth="2" />
@@ -199,9 +174,7 @@ export default function RecentNews() {
                 key={item.id}
                 href="#"
                 className={`flex gap-4 group transition-all duration-700 ${
-                  isVisible
-                    ? 'opacity-100 translate-y-0'
-                    : 'opacity-0 translate-y-8'
+                  isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
                 }`}
                 style={{ transitionDelay: `${(index + 3) * 100}ms` }}
               >
@@ -241,5 +214,5 @@ export default function RecentNews() {
         </div>
       </div>
     </section>
-  );
+  )
 }

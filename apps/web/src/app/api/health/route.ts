@@ -24,9 +24,7 @@ function checkStripe(): ServiceStatus {
 
 function checkAi(): ServiceStatus {
   const hasAny =
-    process.env.OPENAI_API_KEY ||
-    process.env.ANTHROPIC_API_KEY ||
-    process.env.DEEPSEEK_API_KEY
+    process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY || process.env.DEEPSEEK_API_KEY
   return hasAny ? 'configured' : 'not_configured'
 }
 

@@ -66,7 +66,10 @@ export async function GET(request: NextRequest) {
   const projectId = request.nextUrl.searchParams.get('projectId')
 
   if (!projectId) {
-    return NextResponse.json({ error: 'Missing required query parameter: projectId' }, { status: 400 })
+    return NextResponse.json(
+      { error: 'Missing required query parameter: projectId' },
+      { status: 400 },
+    )
   }
 
   const response: PipelineStatus = {

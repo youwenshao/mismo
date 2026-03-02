@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react'
 
 interface BusinessItem {
-  id: string;
-  title: string;
-  category: string;
-  image: string;
-  gradient?: string;
-  logo?: string;
+  id: string
+  title: string
+  category: string
+  image: string
+  gradient?: string
+  logo?: string
 }
 
 const businessItems: BusinessItem[] = [
@@ -34,29 +34,29 @@ const businessItems: BusinessItem[] = [
     gradient: 'linear-gradient(135deg, #ec4899 0%, #7c3aed 100%)',
     logo: 'Higgsfield',
   },
-];
+]
 
 export default function BusinessSection() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
+          setIsVisible(true)
+          observer.disconnect()
         }
       },
-      { threshold: 0.1 }
-    );
+      { threshold: 0.1 },
+    )
 
     if (sectionRef.current) {
-      observer.observe(sectionRef.current);
+      observer.observe(sectionRef.current)
     }
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <section ref={sectionRef} className="px-4 md:px-8 lg:px-12 py-12" id="business">
@@ -64,10 +64,7 @@ export default function BusinessSection() {
         {/* Section Header */}
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-xl font-semibold text-gray-900">Mismo for business</h2>
-          <a
-            href="#"
-            className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-          >
+          <a href="#" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
             View all
           </a>
         </div>
@@ -79,9 +76,7 @@ export default function BusinessSection() {
               key={item.id}
               href="#"
               className={`block group transition-all duration-700 ${
-                isVisible
-                  ? 'opacity-100 translate-y-0'
-                  : 'opacity-0 translate-y-8'
+                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
               style={{ transitionDelay: `${index * 100}ms` }}
             >
@@ -92,11 +87,7 @@ export default function BusinessSection() {
                 <div className="absolute inset-0 flex items-center justify-center">
                   {item.id === '1' && (
                     <div className="text-center">
-                      <svg
-                        viewBox="0 0 120 80"
-                        fill="none"
-                        className="w-24 h-16 mx-auto"
-                      >
+                      <svg viewBox="0 0 120 80" fill="none" className="w-24 h-16 mx-auto">
                         <path
                           d="M60 10L20 30v20l40 20 40-20V30L60 10z"
                           fill="white"
@@ -111,9 +102,7 @@ export default function BusinessSection() {
                         />
                         <circle cx="60" cy="42" r="8" fill="white" />
                       </svg>
-                      <div className="text-white text-lg font-bold mt-2 tracking-wider">
-                        TAISEI
-                      </div>
+                      <div className="text-white text-lg font-bold mt-2 tracking-wider">TAISEI</div>
                     </div>
                   )}
                   {item.id === '2' && (
@@ -121,9 +110,7 @@ export default function BusinessSection() {
                       <div className="w-16 h-16 border-2 border-white rounded-lg mx-auto mb-2 flex items-center justify-center">
                         <div className="w-10 h-10 border-2 border-white rounded-sm" />
                       </div>
-                      <div className="text-white text-lg font-bold tracking-wider">
-                        TRUST BANK
-                      </div>
+                      <div className="text-white text-lg font-bold tracking-wider">TRUST BANK</div>
                     </div>
                   )}
                   {item.id === '3' && (
@@ -157,5 +144,5 @@ export default function BusinessSection() {
         </div>
       </div>
     </section>
-  );
+  )
 }

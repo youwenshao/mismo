@@ -1,37 +1,36 @@
-import { prisma } from "@mismo/db";
+import { prisma } from '@mismo/db'
 
 function timeAgo(date: Date): string {
-  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (seconds < 60) return "just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
+  if (seconds < 60) return 'just now'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
 }
 
 export default async function OverviewPage() {
-  const [activeProjects, pendingReviews, totalClients, reviews] =
-    await Promise.all([
-      prisma.project.count({
-        where: { status: { notIn: ["DELIVERED", "CANCELLED"] } },
-      }),
-      prisma.reviewTask.count({ where: { status: "PENDING" } }),
-      prisma.user.count({ where: { role: "CLIENT" } }),
-      prisma.reviewTask.findMany({
-        where: { status: "PENDING" },
-        include: { project: true },
-        orderBy: { slaDeadline: "asc" },
-        take: 10,
-      }),
-    ]);
+  const [activeProjects, pendingReviews, totalClients, reviews] = await Promise.all([
+    prisma.project.count({
+      where: { status: { notIn: ['DELIVERED', 'CANCELLED'] } },
+    }),
+    prisma.reviewTask.count({ where: { status: 'PENDING' } }),
+    prisma.user.count({ where: { role: 'CLIENT' } }),
+    prisma.reviewTask.findMany({
+      where: { status: 'PENDING' },
+      include: { project: true },
+      orderBy: { slaDeadline: 'asc' },
+      take: 10,
+    }),
+  ])
 
   const stats = [
-    { label: "Active Projects", value: activeProjects },
-    { label: "Pending Reviews", value: pendingReviews },
-    { label: "Total Clients", value: totalClients },
-  ];
+    { label: 'Active Projects', value: activeProjects },
+    { label: 'Pending Reviews', value: pendingReviews },
+    { label: 'Total Clients', value: totalClients },
+  ]
 
   return (
     <div>
@@ -65,9 +64,7 @@ export default async function OverviewPage() {
                 <tr key={review.id} className="border-b border-gray-100">
                   <td className="py-3 text-sm">{review.project.name}</td>
                   <td className="py-3 text-sm">{review.type}</td>
-                  <td className="py-3 text-sm text-gray-500">
-                    {timeAgo(review.slaDeadline)}
-                  </td>
+                  <td className="py-3 text-sm text-gray-500">{timeAgo(review.slaDeadline)}</td>
                   <td className="py-3">
                     <button className="text-sm font-medium text-black hover:underline">
                       Claim
@@ -80,5 +77,5 @@ export default async function OverviewPage() {
         )}
       </div>
     </div>
-  );
+  )
 }

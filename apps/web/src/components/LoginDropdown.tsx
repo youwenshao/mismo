@@ -1,32 +1,29 @@
-"use client";
+'use client'
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from 'react'
 
 interface LoginDropdownProps {
-  onClose: () => void;
+  onClose: () => void
 }
 
 export default function LoginDropdown({ onClose }: LoginDropdownProps) {
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        onClose();
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        onClose()
       }
-    };
+    }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [onClose]);
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [onClose])
 
   const loginOptions = [
-    { label: "Client Portal", href: "/chat" },
-    { label: "Internal", href: "http://localhost:3001" },
-  ];
+    { label: 'Client Portal', href: '/chat' },
+    { label: 'Internal', href: 'http://localhost:3001' },
+  ]
 
   return (
     <div
@@ -43,5 +40,5 @@ export default function LoginDropdown({ onClose }: LoginDropdownProps) {
         </a>
       ))}
     </div>
-  );
+  )
 }

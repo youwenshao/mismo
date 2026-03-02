@@ -3,7 +3,7 @@ name: Chat UI fixes round 3
 overview: Fix the broken gradient in SubmissionStatusPanel, strip [CHOICES] blocks during streaming (same pattern as META), add streaming status indicators, make status text lighter/monospaced, and convert ChatInput to an auto-expanding textarea.
 todos:
   - id: fix-gradient-mask
-    content: "Fix SubmissionStatusPanel: replace broken overlay gradient with CSS mask-image, lighter/smaller stream text, monospaced status label"
+    content: 'Fix SubmissionStatusPanel: replace broken overlay gradient with CSS mask-image, lighter/smaller stream text, monospaced status label'
     status: completed
   - id: strip-choices-streaming
     content: Fix stripChoiceBlocks in MessageBubble to handle partial [CHOICES] blocks during streaming
@@ -63,10 +63,10 @@ Also in this file:
 
 ```typescript
 function stripChoiceBlocks(text: string): string {
-  let cleaned = text.replace(CHOICES_REGEX, "");
-  cleaned = cleaned.replace(/\[CHOICES\][\s\S]*$/i, "");
-  cleaned = cleaned.replace(/\[C(?:H(?:O(?:I(?:C(?:E(?:S)?)?)?)?)?)?$/i, "");
-  return cleaned.trim();
+  let cleaned = text.replace(CHOICES_REGEX, '')
+  cleaned = cleaned.replace(/\[CHOICES\][\s\S]*$/i, '')
+  cleaned = cleaned.replace(/\[C(?:H(?:O(?:I(?:C(?:E(?:S)?)?)?)?)?)?$/i, '')
+  return cleaned.trim()
 }
 ```
 
@@ -85,24 +85,27 @@ This handles: (a) complete blocks, (b) unclosed `[CHOICES]...` at the end, (c) p
 Add a detection function:
 
 ```typescript
-function detectStreamingTag(raw: string): "meta" | "choices" | null {
-  if (/\[META\][\s\S]*$/.test(raw) || /\[M(?:E(?:T(?:A)?)?)?$/.test(raw)) return "meta";
-  if (/\[CHOICES\][\s\S]*$/i.test(raw) || /\[C(?:H(?:O(?:I(?:C(?:E(?:S)?)?)?)?)?)?$/i.test(raw)) return "choices";
-  return null;
+function detectStreamingTag(raw: string): 'meta' | 'choices' | null {
+  if (/\[META\][\s\S]*$/.test(raw) || /\[M(?:E(?:T(?:A)?)?)?$/.test(raw)) return 'meta'
+  if (/\[CHOICES\][\s\S]*$/i.test(raw) || /\[C(?:H(?:O(?:I(?:C(?:E(?:S)?)?)?)?)?)?$/i.test(raw))
+    return 'choices'
+  return null
 }
 ```
 
 In the render, after the `MarkdownContent` block and before the choices/proceed sections, when streaming:
 
 ```tsx
-{isStreaming && role === "assistant" && displayContent && detectStreamingTag(content) && (
-  <div className="flex items-center gap-2 mt-1.5">
-    <span className="w-1 h-1 rounded-full bg-gray-300 animate-pulse" />
-    <span className="text-[10px] font-mono text-gray-300">
-      {detectStreamingTag(content) === "choices" ? "preparing options..." : "finishing up..."}
-    </span>
-  </div>
-)}
+{
+  isStreaming && role === 'assistant' && displayContent && detectStreamingTag(content) && (
+    <div className="flex items-center gap-2 mt-1.5">
+      <span className="w-1 h-1 rounded-full bg-gray-300 animate-pulse" />
+      <span className="text-[10px] font-mono text-gray-300">
+        {detectStreamingTag(content) === 'choices' ? 'preparing options...' : 'finishing up...'}
+      </span>
+    </div>
+  )
+}
 ```
 
 This shows a minimal pulsing dot + label in very light monospaced text. Labels:
@@ -134,25 +137,25 @@ Key changes:
 - Add `useEffect` that auto-sizes on every `value` change:
 
 ```typescript
-const textareaRef = useRef<HTMLTextAreaElement>(null);
-const MAX_HEIGHT = 180;
+const textareaRef = useRef<HTMLTextAreaElement>(null)
+const MAX_HEIGHT = 180
 
 useEffect(() => {
-  const el = textareaRef.current;
-  if (!el) return;
-  el.style.height = "auto";
-  el.style.height = `${Math.min(el.scrollHeight, MAX_HEIGHT)}px`;
-  el.style.overflowY = el.scrollHeight > MAX_HEIGHT ? "auto" : "hidden";
-}, [value]);
+  const el = textareaRef.current
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = `${Math.min(el.scrollHeight, MAX_HEIGHT)}px`
+  el.style.overflowY = el.scrollHeight > MAX_HEIGHT ? 'auto' : 'hidden'
+}, [value])
 ```
 
 - Add `onKeyDown` handler for Enter/Shift+Enter:
 
 ```typescript
 function handleKeyDown(e: React.KeyboardEvent) {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    handleSubmit(e as unknown as FormEvent);
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault()
+    handleSubmit(e as unknown as FormEvent)
   }
 }
 ```
@@ -167,4 +170,3 @@ function handleKeyDown(e: React.KeyboardEvent) {
 - `[apps/web/src/app/chat/components/SubmissionStatusPanel.tsx](apps/web/src/app/chat/components/SubmissionStatusPanel.tsx)` -- mask-image gradient, lighter/smaller stream text, monospaced status label
 - `[apps/web/src/app/chat/components/MessageBubble.tsx](apps/web/src/app/chat/components/MessageBubble.tsx)` -- fix `stripChoiceBlocks` for streaming, add streaming tag indicator
 - `[apps/web/src/app/chat/components/ChatInput.tsx](apps/web/src/app/chat/components/ChatInput.tsx)` -- convert to auto-expanding textarea
-

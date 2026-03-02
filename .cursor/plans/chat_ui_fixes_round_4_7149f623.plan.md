@@ -3,7 +3,7 @@ name: Chat UI fixes round 4
 overview: Fix the broken "Proceed to summary" button prop passing, improve streaming tag indicator visibility, move the divider line below the status panel, and add green dot state when generation completes.
 todos:
   - id: fix-proceed-button-chain
-    content: "Fix Proceed to summary: remove old finalChoices push, add showProceedPrompt/handleProceed in page.tsx, forward through MessageList"
+    content: 'Fix Proceed to summary: remove old finalChoices push, add showProceedPrompt/handleProceed in page.tsx, forward through MessageList'
     status: completed
   - id: fix-streaming-indicator
     content: Replace single pulsing dot with three bouncing dots in streaming tag indicator for visibility
@@ -38,11 +38,13 @@ Remove the old approach at lines 254-258 (the `finalChoices.push` for "Proceed t
 Add, just before `const hasMessages`, the computed flag and handler:
 
 ```typescript
-const isEarlyPhase = !["SUMMARY", "FEASIBILITY_AND_PRICING", "CONFIRMATION", "COMPLETE"].includes(interviewState);
-const showProceedPrompt = readiness >= 85 && isEarlyPhase && !isStreaming && !isConfirming;
+const isEarlyPhase = !['SUMMARY', 'FEASIBILITY_AND_PRICING', 'CONFIRMATION', 'COMPLETE'].includes(
+  interviewState,
+)
+const showProceedPrompt = readiness >= 85 && isEarlyPhase && !isStreaming && !isConfirming
 
 function handleProceed() {
-  void sendMessage("Proceed to summary: We have enough information to wrap up");
+  void sendMessage('Proceed to summary: We have enough information to wrap up')
 }
 ```
 
@@ -82,18 +84,20 @@ The current indicator is nearly invisible: a `w-1 h-1` dot (4px) and `text-gray-
 Replace the indicator block with:
 
 ```tsx
-{streamingTag && displayContent && (
-  <div className="flex items-center gap-2 mt-1.5">
-    <span className="flex gap-0.5">
-      <span className="w-1 h-1 rounded-full bg-gray-300 animate-bounce [animation-delay:0ms]" />
-      <span className="w-1 h-1 rounded-full bg-gray-300 animate-bounce [animation-delay:150ms]" />
-      <span className="w-1 h-1 rounded-full bg-gray-300 animate-bounce [animation-delay:300ms]" />
-    </span>
-    <span className="text-[10px] font-mono text-gray-300">
-      {streamingTag === "choices" ? "preparing options..." : "finishing up..."}
-    </span>
-  </div>
-)}
+{
+  streamingTag && displayContent && (
+    <div className="flex items-center gap-2 mt-1.5">
+      <span className="flex gap-0.5">
+        <span className="w-1 h-1 rounded-full bg-gray-300 animate-bounce [animation-delay:0ms]" />
+        <span className="w-1 h-1 rounded-full bg-gray-300 animate-bounce [animation-delay:150ms]" />
+        <span className="w-1 h-1 rounded-full bg-gray-300 animate-bounce [animation-delay:300ms]" />
+      </span>
+      <span className="text-[10px] font-mono text-gray-300">
+        {streamingTag === 'choices' ? 'preparing options...' : 'finishing up...'}
+      </span>
+    </div>
+  )
+}
 ```
 
 Three small bouncing dots are much more noticeable than a single pulsing 4px dot, and visually consistent with the existing `TypingIndicator`.
@@ -140,15 +144,17 @@ The divider now sits between the status panel and the input. The panel appears t
 
 ```tsx
 interface SubmissionStatusPanelProps {
-  statusMessage: string;
-  streamOutput: string;
-  isDone?: boolean;
+  statusMessage: string
+  streamOutput: string
+  isDone?: boolean
 }
 
 // In the render:
-<span className={`shrink-0 w-1.5 h-1.5 rounded-full ${
-  isDone ? "bg-green-400" : "bg-gray-300 animate-pulse"
-}`} />
+;<span
+  className={`shrink-0 w-1.5 h-1.5 rounded-full ${
+    isDone ? 'bg-green-400' : 'bg-gray-300 animate-pulse'
+  }`}
+/>
 ```
 
 In `page.tsx`, pass `isDone` based on the status message content. The done event sets the message to `"Your project plan is ready. Taking you there now..."`, so detect it with a simple check (or use a dedicated boolean state `confirmIsDone`).
@@ -163,4 +169,3 @@ Cleanest approach: add `const [confirmIsDone, setConfirmIsDone] = useState(false
 - `[apps/web/src/app/chat/components/MessageList.tsx](apps/web/src/app/chat/components/MessageList.tsx)` -- accept and forward showProceedPrompt/onProceed props
 - `[apps/web/src/app/chat/components/MessageBubble.tsx](apps/web/src/app/chat/components/MessageBubble.tsx)` -- replace single pulsing dot with three bouncing dots in streaming indicator
 - `[apps/web/src/app/chat/components/SubmissionStatusPanel.tsx](apps/web/src/app/chat/components/SubmissionStatusPanel.tsx)` -- add isDone prop, green dot when complete
-

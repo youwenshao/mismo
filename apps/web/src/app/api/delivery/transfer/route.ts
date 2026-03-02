@@ -20,10 +20,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing or invalid "repoName"' }, { status: 400 })
   }
   if (!body.ageTier || !VALID_AGE_TIERS.includes(body.ageTier)) {
-    return NextResponse.json(
-      { error: '"ageTier" must be "MINOR" or "ADULT"' },
-      { status: 400 },
-    )
+    return NextResponse.json({ error: '"ageTier" must be "MINOR" or "ADULT"' }, { status: 400 })
   }
   if (!body.tier || !VALID_TIERS.includes(body.tier)) {
     return NextResponse.json(

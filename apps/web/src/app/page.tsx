@@ -1,31 +1,31 @@
-"use client";
+'use client'
 
-import { useState, useEffect, useCallback } from "react";
-import { ArrowUp, Menu, X } from "lucide-react";
-import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
-import HeroSection from "@/sections/HeroSection";
-import FeaturedCards from "@/sections/FeaturedCards";
-import HowItWorks from "@/sections/HowItWorks";
-import TestimonialsSection from "@/sections/TestimonialsSection";
-import CTASection from "@/sections/CTASection";
-import Footer from "@/sections/Footer";
+import { useState, useEffect, useCallback } from 'react'
+import { ArrowUp, Menu, X } from 'lucide-react'
+import Header from '@/components/Header'
+import Sidebar from '@/components/Sidebar'
+import HeroSection from '@/sections/HeroSection'
+import FeaturedCards from '@/sections/FeaturedCards'
+import HowItWorks from '@/sections/HowItWorks'
+import TestimonialsSection from '@/sections/TestimonialsSection'
+import CTASection from '@/sections/CTASection'
+import Footer from '@/sections/Footer'
 
 export default function Home() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [scrolled, setScrolled] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+      setScrolled(window.scrollY > 50)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const toggleSidebar = useCallback(() => {
-    setIsSidebarOpen((prev) => !prev);
-  }, []);
+    setIsSidebarOpen((prev) => !prev)
+  }, [])
 
   return (
     <div className="min-h-screen-safe bg-white">
@@ -36,7 +36,7 @@ export default function Home() {
         onClick={toggleSidebar}
         className="fixed top-4 left-4 z-[60] p-2 bg-white hover:bg-gray-100 rounded-full transition-colors shadow-sm cursor-pointer select-none"
         role="button"
-        aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+        aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
       >
         {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
       </div>
@@ -45,7 +45,7 @@ export default function Home() {
 
       <main
         className={`pt-20 transition-all duration-300 ease-in-out ${
-          isSidebarOpen ? "ml-64" : "ml-0"
+          isSidebarOpen ? 'ml-64' : 'ml-0'
         }`}
       >
         <HeroSection />
@@ -69,5 +69,5 @@ export default function Home() {
         </a>
       </div>
     </div>
-  );
+  )
 }

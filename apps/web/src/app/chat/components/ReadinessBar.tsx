@@ -1,19 +1,19 @@
-"use client";
+'use client'
 
 interface ReadinessBarProps {
-  score: number;
+  score: number
 }
 
 export function ReadinessBar({ score }: ReadinessBarProps) {
-  const clampedScore = Math.max(0, Math.min(100, score));
+  const clampedScore = Math.max(0, Math.min(100, score))
 
-  let colorClass: string;
+  let colorClass: string
   if (clampedScore < 30) {
-    colorClass = "bg-gray-300";
+    colorClass = 'bg-gray-300'
   } else if (clampedScore < 70) {
-    colorClass = "bg-gradient-to-r from-amber-400 to-green-400";
+    colorClass = 'bg-gradient-to-r from-amber-400 to-green-400'
   } else {
-    colorClass = "bg-green-500";
+    colorClass = 'bg-green-500'
   }
 
   return (
@@ -26,5 +26,5 @@ export function ReadinessBar({ score }: ReadinessBarProps) {
         Mo is {clampedScore}% confident in understanding your project
       </div>
     </div>
-  );
+  )
 }

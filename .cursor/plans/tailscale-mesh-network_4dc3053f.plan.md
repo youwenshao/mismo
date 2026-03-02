@@ -39,12 +39,12 @@ We will write a bash script that takes a role (`admin` or `studio`) and a Tailsc
 
 ### 3. Studio External Internet Blocking (`pf` Firewall)
 
-Because Tailscale ACLs only govern traffic *inside* the VPN, we will configure the macOS built-in Packet Filter (`pf`) on the Studios. 
+Because Tailscale ACLs only govern traffic _inside_ the VPN, we will configure the macOS built-in Packet Filter (`pf`) on the Studios.
 The script will inject a custom anchor into `/etc/pf.conf` that:
 
-- Allows all traffic on the `utun`* (Tailscale) interfaces.
+- Allows all traffic on the `utun`\* (Tailscale) interfaces.
 - Blocks general outbound traffic on physical interfaces (Wi-Fi/Ethernet).
-- Allows outbound HTTPS (port 443) traffic. *Note: Since GitHub, Supabase, and Kimi use dynamic CDN IP addresses, standard `pf` cannot block by domain name effectively. Restricting external traffic to strictly HTTPS (443) and DNS (53) while blocking other ports is the most robust host-level approach without installing a third-party application firewall like Little Snitch.*
+- Allows outbound HTTPS (port 443) traffic. _Note: Since GitHub, Supabase, and Kimi use dynamic CDN IP addresses, standard `pf` cannot block by domain name effectively. Restricting external traffic to strictly HTTPS (443) and DNS (53) while blocking other ports is the most robust host-level approach without installing a third-party application firewall like Little Snitch._
 
 ### 4. Verification
 

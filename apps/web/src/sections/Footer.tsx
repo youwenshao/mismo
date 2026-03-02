@@ -1,33 +1,33 @@
 interface FooterColumn {
-  title: string;
-  links: { label: string; href: string }[];
+  title: string
+  links: { label: string; href: string }[]
 }
 
 const footerColumns: FooterColumn[] = [
   {
-    title: "Product",
+    title: 'Product',
     links: [
-      { label: "Mo", href: "/chat" },
-      { label: "Pricing", href: "#pricing" },
-      { label: "How It Works", href: "#how-it-works" },
+      { label: 'Mo', href: '/chat' },
+      { label: 'Pricing', href: '#pricing' },
+      { label: 'How It Works', href: '#how-it-works' },
     ],
   },
   {
-    title: "Company",
+    title: 'Company',
     links: [
-      { label: "About", href: "#about" },
-      { label: "Support", href: "#support" },
-      { label: "Contact", href: "mailto:hello@mismo.dev" },
+      { label: 'About', href: '#about' },
+      { label: 'Support', href: '#support' },
+      { label: 'Contact', href: 'mailto:hello@mismo.dev' },
     ],
   },
   {
-    title: "Legal",
+    title: 'Legal',
     links: [
-      { label: "Terms of Use", href: "#" },
-      { label: "Privacy Policy", href: "#" },
+      { label: 'Terms of Use', href: '#' },
+      { label: 'Privacy Policy', href: '#' },
     ],
   },
-];
+]
 
 export default function Footer() {
   return (
@@ -36,9 +36,7 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-3 gap-8 mb-12">
           {footerColumns.map((col) => (
             <div key={col.title}>
-              <h3 className="text-sm font-medium text-gray-900 mb-4">
-                {col.title}
-              </h3>
+              <h3 className="text-sm font-medium text-gray-900 mb-4">{col.title}</h3>
               <ul className="space-y-3">
                 {col.links.map((link) => (
                   <li key={link.label}>
@@ -115,9 +113,7 @@ export default function Footer() {
             </a>
           </div>
 
-          <div className="text-sm text-gray-500">
-            Mismo &copy; 2026
-          </div>
+          <div className="text-sm text-gray-500">Mismo &copy; 2026</div>
 
           <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full text-sm text-gray-600">
             <svg
@@ -140,5 +136,5 @@ export default function Footer() {
         </div>
       </div>
     </footer>
-  );
+  )
 }

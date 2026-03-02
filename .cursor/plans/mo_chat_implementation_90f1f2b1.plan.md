@@ -15,16 +15,16 @@ todos:
     content: Implement price estimation engine with feature complexity, architecture multiplier, and compliance add-ons
     status: completed
   - id: chat-ui-components
-    content: "Build chat component architecture: MessageList, MessageBubble, ChatInput (with stop), ChoiceSelector, ReadinessBar, PriceCard"
+    content: 'Build chat component architecture: MessageList, MessageBubble, ChatInput (with stop), ChoiceSelector, ReadinessBar, PriceCard'
     status: completed
   - id: api-persistence
     content: Rewrite interview API routes for DB persistence with checkpointing, rewind (message edit), stop, and confirm endpoints
     status: completed
   - id: internal-dashboard
-    content: "Add Mo Configuration section to internal dashboard settings: provider/model selector, status indicators, test button"
+    content: 'Add Mo Configuration section to internal dashboard settings: provider/model selector, status indicators, test button'
     status: completed
   - id: spec-handoff
-    content: "Wire up confirmation flow: spec generation, Project + PRD + ReviewTask creation, review queue integration"
+    content: 'Wire up confirmation flow: spec generation, Project + PRD + ReviewTask creation, review queue integration'
     status: completed
 isProject: false
 ---
@@ -70,8 +70,8 @@ const PROVIDERS = {
       { id: 'deepseek-reasoner', name: 'DeepSeek Reasoner' },
     ],
     createModel: (modelId, apiKey) => {
-      const provider = createDeepSeek({ apiKey });
-      return provider(modelId);
+      const provider = createDeepSeek({ apiKey })
+      return provider(modelId)
     },
   },
   kimi: {
@@ -83,8 +83,8 @@ const PROVIDERS = {
         name: 'kimi',
         apiKey,
         baseURL: 'https://api.moonshot.ai/v1',
-      });
-      return provider(modelId);
+      })
+      return provider(modelId)
     },
   },
   // ... MiniMax, Z.ai similarly
@@ -140,12 +140,12 @@ The existing `InterviewSession.state` (Json) already stores the interview contex
 
 ```typescript
 interface PersistedSessionState {
-  context: InterviewContext;
+  context: InterviewContext
   checkpoints: Array<{
-    messageIndex: number;
-    context: InterviewContext;
-    timestamp: string;
-  }>;
+    messageIndex: number
+    context: InterviewContext
+    timestamp: string
+  }>
 }
 ```
 
@@ -164,34 +164,34 @@ Run `prisma migrate dev` to add the `SystemConfig` table.
 Replace the terse per-state prompts in [packages/ai/src/interview/states.ts](packages/ai/src/interview/states.ts) with a comprehensive persona prompt. The base prompt (prepended to all state-specific prompts):
 
 ```
-You are Mo, Mismo's AI project consultant. Your role is to help people 
-turn their ideas into real software products — whether that's a web 
-page, a startup app, a custom internal tool, an agentic AI pipeline, 
+You are Mo, Mismo's AI project consultant. Your role is to help people
+turn their ideas into real software products — whether that's a web
+page, a startup app, a custom internal tool, an agentic AI pipeline,
 or a modification to an existing system.
 
 PERSONALITY:
-- Warmly professional — like a knowledgeable friend who happens to be 
+- Warmly professional — like a knowledgeable friend who happens to be
   a tech expert
-- Patient and encouraging — the person you're talking to may have zero 
+- Patient and encouraging — the person you're talking to may have zero
   technical knowledge
-- Concise but thorough — respect their time while gathering everything 
+- Concise but thorough — respect their time while gathering everything
   you need
 
 COMMUNICATION STYLE:
 - Ask qualitative, easy-to-answer questions
-- When presenting choices, use labeled options (A, B, C, D) that the 
+- When presenting choices, use labeled options (A, B, C, D) that the
   user can click or type
 - Never use jargon without explaining it in plain language
 - Frame technical trade-offs as real-world analogies
 - Acknowledge and validate the user's ideas before probing deeper
 
 INTERNAL SCORING:
-After each exchange, silently assess your readiness score (0-100) — 
-your confidence that you have enough information to generate a complete 
-technical specification. Include this as a JSON block at the end of 
+After each exchange, silently assess your readiness score (0-100) —
+your confidence that you have enough information to generate a complete
+technical specification. Include this as a JSON block at the end of
 your response: {"readiness": <number>, "missing": ["list of gaps"]}
 
-You will NOT show this JSON to the user. It will be parsed and removed 
+You will NOT show this JSON to the user. It will be parsed and removed
 before display.
 ```
 
@@ -204,7 +204,7 @@ Define a convention where Mo's responses can include structured choice blocks th
 ```
 [CHOICES]
 A: Individual consumers — everyday people using your app
-B: Small businesses — teams of 5-50 people  
+B: Small businesses — teams of 5-50 people
 C: Enterprise companies — large organizations with complex needs
 D: I'm not sure yet — let's figure it out together
 [/CHOICES]
@@ -228,9 +228,9 @@ Modify the state machine to:
 Update the state flow to include price/feasibility:
 
 ```
-GREETING -> PROBLEM_DEFINITION -> TARGET_USERS -> 
-FEATURE_EXTRACTION -> TECHNICAL_TRADEOFFS -> 
-MONETIZATION -> COMPLIANCE_CHECK -> SUMMARY -> 
+GREETING -> PROBLEM_DEFINITION -> TARGET_USERS ->
+FEATURE_EXTRACTION -> TECHNICAL_TRADEOFFS ->
+MONETIZATION -> COMPLIANCE_CHECK -> SUMMARY ->
 FEASIBILITY_AND_PRICING -> CONFIRMATION -> COMPLETE
 ```
 
@@ -243,18 +243,18 @@ New file `packages/ai/src/interview/pricing.ts`:
 
 ```typescript
 interface PriceEstimate {
-  tierRecommendation: ServiceTier;
-  priceRange: { min: number; max: number };
+  tierRecommendation: ServiceTier
+  priceRange: { min: number; max: number }
   breakdown: {
-    basePrice: number;
-    featureComplexity: number;
-    architectureMultiplier: number;
-    complianceAddon: number;
-    hostingMonthly: { min: number; max: number };
-  };
-  estimatedTimeline: { min: number; max: number }; // weeks
-  difficultyScore: number; // 1-5
-  feasibilityNotes: string[];
+    basePrice: number
+    featureComplexity: number
+    architectureMultiplier: number
+    complianceAddon: number
+    hostingMonthly: { min: number; max: number }
+  }
+  estimatedTimeline: { min: number; max: number } // weeks
+  difficultyScore: number // 1-5
+  feasibilityNotes: string[]
 }
 ```
 
@@ -292,7 +292,7 @@ After each successful message exchange (user message + complete assistant respon
 
 When user edits message N:
 
-1. Load checkpoint at message index N (the state *before* that user message)
+1. Load checkpoint at message index N (the state _before_ that user message)
 2. Discard messages from index N onward
 3. Send the edited message as if it were new
 4. New checkpoints are created from that point forward (branching)
@@ -413,8 +413,6 @@ sequenceDiagram
     Note over IDash: Review queue shows new task
 ```
 
-
-
 ### 7b. Enhanced spec generator
 
 Update [packages/ai/src/spec-generator/generator.ts](packages/ai/src/spec-generator/generator.ts) to include:
@@ -490,10 +488,7 @@ gantt
     Integration testing                  :s3, 8, 9
 ```
 
-
-
 - **Phase A (serial):** DB migration for SystemConfig
 - **Phase B (parallel):** Provider registry, enhanced prompts + pricing logic, chat UI components -- all independent
 - **Phase C (parallel):** API routes (depends on providers + prompts), internal dashboard settings (depends on provider registry)
 - **Phase D (serial):** Spec handoff wiring, integration testing
-

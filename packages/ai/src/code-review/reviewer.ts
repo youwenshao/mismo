@@ -59,9 +59,7 @@ function buildSummary(
   return `Risk: ${risk}. Found: ${parts.join('; ')}.`
 }
 
-export function runAutomatedReview(
-  files: { path: string; content: string }[],
-): CodeReviewResult {
+export function runAutomatedReview(files: { path: string; content: string }[]): CodeReviewResult {
   const secrets = scanForSecrets(files)
   const nPlusOneQueries = detectNPlusOneQueries(files)
   const raceConditions = detectRaceConditions(files)
@@ -69,8 +67,7 @@ export function runAutomatedReview(
   const overallRisk = computeOverallRisk(secrets, nPlusOneQueries, raceConditions)
   const summary = buildSummary(secrets, nPlusOneQueries, raceConditions, overallRisk)
 
-  const passesAutomatedChecks =
-    overallRisk === 'low' && secrets.length === 0
+  const passesAutomatedChecks = overallRisk === 'low' && secrets.length === 0
 
   return {
     secrets,

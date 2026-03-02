@@ -1,8 +1,6 @@
-
-
 interface FooterColumn {
-  title: string;
-  links: { label: string; href: string; external?: boolean }[];
+  title: string
+  links: { label: string; href: string; external?: boolean }[]
 }
 
 const footerColumns: FooterColumn[] = [
@@ -66,9 +64,7 @@ const footerColumns: FooterColumn[] = [
   },
   {
     title: 'Support',
-    links: [
-      { label: 'Help Center', href: '#', external: true },
-    ],
+    links: [{ label: 'Help Center', href: '#', external: true }],
   },
   {
     title: 'More',
@@ -88,7 +84,7 @@ const footerColumns: FooterColumn[] = [
       { label: 'Other Policies', href: '#' },
     ],
   },
-];
+]
 
 const latestAdvancements = [
   { label: 'GPT-5', href: '#' },
@@ -98,16 +94,16 @@ const latestAdvancements = [
   { label: 'GPT-4o', href: '#' },
   { label: 'GPT-4o mini', href: '#' },
   { label: 'Sora', href: '#' },
-];
+]
 
 const safetyLinks = [
   { label: 'Safety Approach', href: '#' },
   { label: 'Security & Privacy', href: '#' },
   { label: 'Trust & Transparency', href: '#' },
-];
+]
 
 export default function Footer() {
-  const language = 'English (United States)';
+  const language = 'English (United States)'
 
   return (
     <footer className="px-4 md:px-8 lg:px-12 py-12 border-t border-gray-100">
@@ -463,5 +459,5 @@ export default function Footer() {
         </div>
       </div>
     </footer>
-  );
+  )
 }

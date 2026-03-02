@@ -43,8 +43,6 @@ flowchart TD
   doneEvent --> redirectProject[RedirectToProjectPage]
 ```
 
-
-
 ## Implementation Steps
 
 ### 1) Make provider/model selection runtime-correct
@@ -109,4 +107,3 @@ flowchart TD
 - Streaming panel has the requested bottom-transparent to top-opaque gradient effect.
 - On success, project/PRD/review task/session updates complete atomically and redirect occurs.
 - On failure, user receives actionable, calm messaging with retry path (no silent hang).
-

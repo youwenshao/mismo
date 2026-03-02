@@ -7,7 +7,5 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Missing session id' }, { status: 400 })
   }
 
-  return NextResponse.redirect(
-    new URL(`/api/interview/session/${sessionId}`, req.url),
-  )
+  return NextResponse.redirect(new URL(`/api/interview/session/${sessionId}`, req.url))
 }

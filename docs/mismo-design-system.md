@@ -8,15 +8,15 @@ Reference documentation for the Mismo frontend UI. All client-facing and interna
 
 ### Base Colors
 
-| Token              | Value     | Usage                        |
-|--------------------|-----------|------------------------------|
-| `--background`     | `#FFFFFF` | Page background              |
-| `--foreground`     | `#000000` | Primary text                 |
-| `--muted`          | `#f5f5f4` | Muted backgrounds (CTA, cards) |
-| `--muted-fg`       | `#737373` | Secondary/muted text         |
-| `--border`         | `#e5e5e5` | Borders, dividers            |
-| `--input`          | `#e5e5e5` | Input borders                |
-| `--ring`           | `#000000` | Focus rings                  |
+| Token          | Value     | Usage                          |
+| -------------- | --------- | ------------------------------ |
+| `--background` | `#FFFFFF` | Page background                |
+| `--foreground` | `#000000` | Primary text                   |
+| `--muted`      | `#f5f5f4` | Muted backgrounds (CTA, cards) |
+| `--muted-fg`   | `#737373` | Secondary/muted text           |
+| `--border`     | `#e5e5e5` | Borders, dividers              |
+| `--input`      | `#e5e5e5` | Input borders                  |
+| `--ring`       | `#000000` | Focus rings                    |
 
 ### Gray Scale (Tailwind)
 
@@ -33,16 +33,16 @@ Use Tailwind's neutral gray scale for hierarchy:
 
 Gradients are used for featured cards and decorative elements only -- never for text or UI chrome.
 
-| Name           | Value                                                    |
-|----------------|----------------------------------------------------------|
-| Blue-Purple    | `linear-gradient(135deg, #667eea 0%, #764ba2 100%)`     |
-| Indigo-Violet  | `linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)`     |
-| Orange-Red     | `linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)`     |
-| Blue-Cyan      | `linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%)`     |
-| Green-Cyan     | `linear-gradient(135deg, #34d399 0%, #06b6d4 100%)`     |
-| Yellow-Orange  | `linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)`     |
-| Pink-Purple    | `linear-gradient(135deg, #f472b6 0%, #a78bfa 100%)`     |
-| Red-Orange     | `linear-gradient(135deg, #f87171 0%, #fb923c 100%)`     |
+| Name          | Value                                               |
+| ------------- | --------------------------------------------------- |
+| Blue-Purple   | `linear-gradient(135deg, #667eea 0%, #764ba2 100%)` |
+| Indigo-Violet | `linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)` |
+| Orange-Red    | `linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)` |
+| Blue-Cyan     | `linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%)` |
+| Green-Cyan    | `linear-gradient(135deg, #34d399 0%, #06b6d4 100%)` |
+| Yellow-Orange | `linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)` |
+| Pink-Purple   | `linear-gradient(135deg, #f472b6 0%, #a78bfa 100%)` |
+| Red-Orange    | `linear-gradient(135deg, #f87171 0%, #fb923c 100%)` |
 
 ---
 
@@ -59,15 +59,15 @@ Single sans-serif stack for all text. No serif fonts.
 
 ### Scale
 
-| Element           | Size                    | Weight       | Tracking        |
-|-------------------|-------------------------|--------------|-----------------|
-| Hero heading      | `text-3xl` / `text-4xl` | `semibold`   | default          |
-| Section heading   | `text-xl`               | `semibold`   | default          |
-| Card title (lg)   | `text-2xl` / `text-3xl` | `semibold`   | default          |
-| Card title (sm)   | `text-lg`               | `semibold`   | default          |
-| Body              | `text-base`             | `normal`     | default          |
-| Small / metadata  | `text-sm`               | `medium`     | default          |
-| Extra small       | `text-xs`               | `medium`     | default          |
+| Element          | Size                    | Weight     | Tracking |
+| ---------------- | ----------------------- | ---------- | -------- |
+| Hero heading     | `text-3xl` / `text-4xl` | `semibold` | default  |
+| Section heading  | `text-xl`               | `semibold` | default  |
+| Card title (lg)  | `text-2xl` / `text-3xl` | `semibold` | default  |
+| Card title (sm)  | `text-lg`               | `semibold` | default  |
+| Body             | `text-base`             | `normal`   | default  |
+| Small / metadata | `text-sm`               | `medium`   | default  |
+| Extra small      | `text-xs`               | `medium`   | default  |
 
 ### Rules
 
@@ -106,13 +106,13 @@ max-w-7xl mx-auto
 
 ## Border Radius
 
-| Context          | Class         | Value  |
-|------------------|---------------|--------|
-| Cards            | `rounded-xl`  | 12px   |
-| CTA container    | `rounded-2xl` | 16px   |
-| Hero input       | `rounded-2xl` | 16px   |
-| Pill buttons     | `rounded-full`| full   |
-| Small elements   | `rounded-lg`  | 8px    |
+| Context        | Class          | Value |
+| -------------- | -------------- | ----- |
+| Cards          | `rounded-xl`   | 12px  |
+| CTA container  | `rounded-2xl`  | 16px  |
+| Hero input     | `rounded-2xl`  | 16px  |
+| Pill buttons   | `rounded-full` | full  |
+| Small elements | `rounded-lg`   | 8px   |
 
 ---
 
@@ -189,13 +189,13 @@ transition-all duration-300
 
 ### Hover Effects
 
-| Element       | Effect                                   |
-|---------------|------------------------------------------|
-| Card titles   | `group-hover:opacity-70 transition-opacity` |
-| Buttons       | `hover:bg-gray-100 transition-colors`    |
+| Element       | Effect                                              |
+| ------------- | --------------------------------------------------- |
+| Card titles   | `group-hover:opacity-70 transition-opacity`         |
+| Buttons       | `hover:bg-gray-100 transition-colors`               |
 | Card images   | `hover:scale-105 transition-transform duration-500` |
-| Links         | `hover:text-gray-900 transition-colors`  |
-| Sidebar links | `hover:opacity-70 transition-opacity`    |
+| Links         | `hover:text-gray-900 transition-colors`             |
+| Sidebar links | `hover:opacity-70 transition-opacity`               |
 
 ---
 
@@ -224,8 +224,10 @@ transition-all duration-300
 ### Pill Button
 
 ```html
-<a class="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-full
-          hover:bg-gray-100 transition-colors">
+<a
+  class="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-full
+          hover:bg-gray-100 transition-colors"
+>
   Label
 </a>
 ```
@@ -235,9 +237,7 @@ transition-all duration-300
 ```html
 <div class="flex items-center justify-between mb-8">
   <h2 class="text-xl font-semibold text-gray-900">Section Title</h2>
-  <a class="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-    View all
-  </a>
+  <a class="text-sm text-gray-600 hover:text-gray-900 transition-colors"> View all </a>
 </div>
 ```
 
@@ -245,13 +245,13 @@ transition-all duration-300
 
 ## Z-Index Layers
 
-| Layer            | Z-Index  |
-|------------------|----------|
-| Sidebar toggle   | `z-[60]` |
-| Header           | `z-[55]` |
-| Sidebar          | `z-50`   |
-| Sidebar overlay  | `z-[45]` |
-| Floating button  | `z-40`   |
+| Layer           | Z-Index  |
+| --------------- | -------- |
+| Sidebar toggle  | `z-[60]` |
+| Header          | `z-[55]` |
+| Sidebar         | `z-50`   |
+| Sidebar overlay | `z-[45]` |
+| Floating button | `z-40`   |
 
 ---
 
@@ -260,7 +260,7 @@ transition-all duration-300
 Standard Tailwind breakpoints:
 
 | Prefix | Min-width |
-|--------|-----------|
+| ------ | --------- |
 | `sm`   | 640px     |
 | `md`   | 768px     |
 | `lg`   | 1024px    |

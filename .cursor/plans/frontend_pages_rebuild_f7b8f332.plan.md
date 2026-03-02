@@ -46,7 +46,7 @@ The design reference is `docs/frontend-template/`, a Vite+React site modeled aft
 
 Delete every `page.tsx` file in both apps, plus their layout files (except root layouts which we will rewrite):
 
-`**apps/web/src/app/`:**
+`**apps/web/src/app/`:\*\*
 
 - `page.tsx` (landing page)
 - `chat/page.tsx`
@@ -57,7 +57,7 @@ Delete every `page.tsx` file in both apps, plus their layout files (except root 
 - `project/[id]/checkout/page.tsx`
 - `project/[id]/layout.tsx` (nested layout)
 
-`**apps/internal/src/app/`:**
+`**apps/internal/src/app/`:\*\*
 
 - `page.tsx`
 - `projects/page.tsx`
@@ -104,27 +104,27 @@ The landing page at `apps/web/src/app/page.tsx` will be rebuilt as a multi-secti
 
 ### Layout Components
 
-`**apps/web/src/components/Header.tsx`**
+`**apps/web/src/components/Header.tsx`\*\*
 
 - Fixed header, scroll-aware: transparent -> white/90 with backdrop-blur
 - Left side: Sidebar toggle button (hamburger/X), text wordmark "Mismo" (no SVG logo)
 - Right side: "Log in" pill button (links to `/chat` or Supabase auth)
 - Responsive left offset based on sidebar state
 
-`**apps/web/src/components/Sidebar.tsx`**
+`**apps/web/src/components/Sidebar.tsx`\*\*
 
 - Fixed left sidebar, w-64, slides in/out with `translate-x` animation
 - Nav links adapted for Mismo: How It Works, Pricing, Mo (chat), About, Support
 - **Critical change**: On desktop (full-screen), NO dark overlay (`bg-black/20`) when sidebar is open. Only the slide animation + content margin shift. On mobile, the overlay remains for usability.
 - Uses `useIsMobile()` hook or media query to conditionally render overlay
 
-`**apps/web/src/components/LoginDropdown.tsx`**
+`**apps/web/src/components/LoginDropdown.tsx`\*\*
 
 - Dropdown under "Log in" button with options: "Client Portal", "Internal" (or just a single link to auth)
 
 ### Page Sections
 
-`**apps/web/src/sections/HeroSection.tsx`**
+`**apps/web/src/sections/HeroSection.tsx`\*\*
 
 - Centered hero: "What can I help you build?" heading
 - Search-style input with rotating placeholder: "A marketplace for vintage cameras", "An AI-powered fitness tracker", etc.
@@ -202,4 +202,3 @@ Create minimal placeholder pages for `apps/internal` so the app still builds:
 - **Rewritten**: `apps/web/src/app/globals.css`, `apps/web/src/app/page.tsx`, `apps/web/src/app/layout.tsx`
 - **Created**: ~8 new component/section files in `apps/web/src/components/` and `apps/web/src/sections/`
 - **Created**: 1 placeholder page in `apps/internal/src/app/page.tsx`
-

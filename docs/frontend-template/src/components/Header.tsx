@@ -1,14 +1,14 @@
-import { useState } from 'react';
-import { Search } from 'lucide-react';
-import LoginDropdown from './LoginDropdown';
+import { useState } from 'react'
+import { Search } from 'lucide-react'
+import LoginDropdown from './LoginDropdown'
 
 interface HeaderProps {
-  scrolled: boolean;
-  isSidebarOpen?: boolean;
+  scrolled: boolean
+  isSidebarOpen?: boolean
 }
 
 export default function Header({ scrolled, isSidebarOpen = true }: HeaderProps) {
-  const [showLoginDropdown, setShowLoginDropdown] = useState(false);
+  const [showLoginDropdown, setShowLoginDropdown] = useState(false)
 
   return (
     <header
@@ -52,12 +52,10 @@ export default function Header({ scrolled, isSidebarOpen = true }: HeaderProps) 
             >
               Log in
             </button>
-            {showLoginDropdown && (
-              <LoginDropdown onClose={() => setShowLoginDropdown(false)} />
-            )}
+            {showLoginDropdown && <LoginDropdown onClose={() => setShowLoginDropdown(false)} />}
           </div>
         </div>
       </div>
     </header>
-  );
+  )
 }

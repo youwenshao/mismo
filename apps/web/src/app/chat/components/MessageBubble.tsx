@@ -1,58 +1,54 @@
-"use client";
+'use client'
 
-import { useState, useRef, useEffect, type FormEvent } from "react";
-import { Pencil, Check, X, ArrowRight } from "lucide-react";
-import { ChoiceSelector } from "./ChoiceSelector";
-import { TypingIndicator } from "./TypingIndicator";
-import { PriceCard } from "./PriceCard";
-import { MarkdownContent } from "./MarkdownContent";
-import type { PriceEstimate } from "@mismo/shared";
+import { useState, useRef, useEffect, type FormEvent } from 'react'
+import { Pencil, Check, X, ArrowRight } from 'lucide-react'
+import { ChoiceSelector } from './ChoiceSelector'
+import { TypingIndicator } from './TypingIndicator'
+import { PriceCard } from './PriceCard'
+import { MarkdownContent } from './MarkdownContent'
+import type { PriceEstimate } from '@mismo/shared'
 
 interface Choice {
-  label: string;
-  description: string;
+  label: string
+  description: string
 }
 
 interface MessageBubbleProps {
-  role: "user" | "assistant";
-  content: string;
-  isStreaming?: boolean;
-  isLatest?: boolean;
-  choices?: Choice[] | null;
-  priceEstimate?: PriceEstimate | null;
-  onEdit?: (newContent: string) => void;
-  onChoiceSelect?: (choice: Choice) => void;
-  editDisabled?: boolean;
-  showProceedPrompt?: boolean;
-  onProceed?: () => void;
+  role: 'user' | 'assistant'
+  content: string
+  isStreaming?: boolean
+  isLatest?: boolean
+  choices?: Choice[] | null
+  priceEstimate?: PriceEstimate | null
+  onEdit?: (newContent: string) => void
+  onChoiceSelect?: (choice: Choice) => void
+  editDisabled?: boolean
+  showProceedPrompt?: boolean
+  onProceed?: () => void
 }
 
-const CHOICES_REGEX = /\[CHOICES\]([\s\S]*?)\[\/CHOICES\]/g;
-const META_BLOCK_REGEX = /\[META\][\s\S]*?\[\/META\]/g;
+const CHOICES_REGEX = /\[CHOICES\]([\s\S]*?)\[\/CHOICES\]/g
+const META_BLOCK_REGEX = /\[META\][\s\S]*?\[\/META\]/g
 
 function stripChoiceBlocks(text: string): string {
-  let cleaned = text.replace(CHOICES_REGEX, "");
-  cleaned = cleaned.replace(/\[CHOICES\][\s\S]*$/i, "");
-  cleaned = cleaned.replace(/\[C(?:H(?:O(?:I(?:C(?:E(?:S)?)?)?)?)?)?$/i, "");
-  return cleaned.trim();
+  let cleaned = text.replace(CHOICES_REGEX, '')
+  cleaned = cleaned.replace(/\[CHOICES\][\s\S]*$/i, '')
+  cleaned = cleaned.replace(/\[C(?:H(?:O(?:I(?:C(?:E(?:S)?)?)?)?)?)?$/i, '')
+  return cleaned.trim()
 }
 
 function stripMetaBlocks(text: string): string {
-  let cleaned = text.replace(META_BLOCK_REGEX, "");
-  cleaned = cleaned.replace(/\[META\][\s\S]*$/, "");
-  cleaned = cleaned.replace(/\[M(?:E(?:T(?:A)?)?)?$/, "");
-  return cleaned.trim();
+  let cleaned = text.replace(META_BLOCK_REGEX, '')
+  cleaned = cleaned.replace(/\[META\][\s\S]*$/, '')
+  cleaned = cleaned.replace(/\[M(?:E(?:T(?:A)?)?)?$/, '')
+  return cleaned.trim()
 }
 
-function detectStreamingTag(raw: string): "meta" | "choices" | null {
-  if (/\[META\][\s\S]*$/.test(raw) || /\[M(?:E(?:T(?:A)?)?)?$/.test(raw))
-    return "meta";
-  if (
-    /\[CHOICES\][\s\S]*$/i.test(raw) ||
-    /\[C(?:H(?:O(?:I(?:C(?:E(?:S)?)?)?)?)?)?$/i.test(raw)
-  )
-    return "choices";
-  return null;
+function detectStreamingTag(raw: string): 'meta' | 'choices' | null {
+  if (/\[META\][\s\S]*$/.test(raw) || /\[M(?:E(?:T(?:A)?)?)?$/.test(raw)) return 'meta'
+  if (/\[CHOICES\][\s\S]*$/i.test(raw) || /\[C(?:H(?:O(?:I(?:C(?:E(?:S)?)?)?)?)?)?$/i.test(raw))
+    return 'choices'
+  return null
 }
 
 export function MessageBubble({
@@ -68,47 +64,41 @@ export function MessageBubble({
   showProceedPrompt,
   onProceed,
 }: MessageBubbleProps) {
-  const [editing, setEditing] = useState(false);
-  const [editValue, setEditValue] = useState(content);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [editing, setEditing] = useState(false)
+  const [editValue, setEditValue] = useState(content)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     if (editing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.selectionStart = inputRef.current.value.length;
+      inputRef.current.focus()
+      inputRef.current.selectionStart = inputRef.current.value.length
     }
-  }, [editing]);
+  }, [editing])
 
   function handleEditSubmit(e: FormEvent) {
-    e.preventDefault();
-    const trimmed = editValue.trim();
+    e.preventDefault()
+    const trimmed = editValue.trim()
     if (trimmed && trimmed !== content && onEdit) {
-      onEdit(trimmed);
+      onEdit(trimmed)
     }
-    setEditing(false);
+    setEditing(false)
   }
 
   function handleCancel() {
-    setEditValue(content);
-    setEditing(false);
+    setEditValue(content)
+    setEditing(false)
   }
 
   const displayContent =
-    role === "assistant"
-      ? stripMetaBlocks(stripChoiceBlocks(content))
-      : content;
-  const isEmptyStreaming =
-    role === "assistant" && content === "" && isStreaming;
-  const streamingTag =
-    isStreaming && role === "assistant" ? detectStreamingTag(content) : null;
+    role === 'assistant' ? stripMetaBlocks(stripChoiceBlocks(content)) : content
+  const isEmptyStreaming = role === 'assistant' && content === '' && isStreaming
+  const streamingTag = isStreaming && role === 'assistant' ? detectStreamingTag(content) : null
 
   return (
     <div className="group">
       <div className="flex items-center gap-2 mb-1">
-        <p className="text-xs text-gray-400">
-          {role === "assistant" ? "Mo" : "You"}
-        </p>
-        {role === "user" && onEdit && !editDisabled && !editing && (
+        <p className="text-xs text-gray-400">{role === 'assistant' ? 'Mo' : 'You'}</p>
+        {role === 'user' && onEdit && !editDisabled && !editing && (
           <button
             onClick={() => setEditing(true)}
             className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-gray-100"
@@ -150,45 +140,39 @@ export function MessageBubble({
         <TypingIndicator />
       ) : (
         <>
-          {role === "assistant" ? (
-            <MarkdownContent
-              content={displayContent}
-              className="text-base text-gray-700"
-            />
+          {role === 'assistant' ? (
+            <MarkdownContent content={displayContent} className="text-base text-gray-700" />
           ) : (
-            <p className="text-base text-gray-900 font-medium">
-              {displayContent}
-            </p>
+            <p className="text-base text-gray-900 font-medium">{displayContent}</p>
           )}
 
           {streamingTag && displayContent && (
             <div className="flex items-center gap-2 mt-2">
               <span className="flex gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-                <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-                <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+                <span
+                  className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce"
+                  style={{ animationDelay: '0ms' }}
+                />
+                <span
+                  className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce"
+                  style={{ animationDelay: '150ms' }}
+                />
+                <span
+                  className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce"
+                  style={{ animationDelay: '300ms' }}
+                />
               </span>
               <span className="text-[11px] font-mono text-gray-400">
-                {streamingTag === "choices"
-                  ? "preparing options..."
-                  : "finishing up..."}
+                {streamingTag === 'choices' ? 'preparing options...' : 'finishing up...'}
               </span>
             </div>
           )}
 
           {priceEstimate && <PriceCard estimate={priceEstimate} />}
 
-          {choices &&
-            choices.length > 0 &&
-            isLatest &&
-            !isStreaming &&
-            onChoiceSelect && (
-              <ChoiceSelector
-                choices={choices}
-                onSelect={onChoiceSelect}
-                disabled={editDisabled}
-              />
-            )}
+          {choices && choices.length > 0 && isLatest && !isStreaming && onChoiceSelect && (
+            <ChoiceSelector choices={choices} onSelect={onChoiceSelect} disabled={editDisabled} />
+          )}
 
           {showProceedPrompt && isLatest && !isStreaming && onProceed && (
             <button
@@ -199,9 +183,7 @@ export function MessageBubble({
                 <ArrowRight size={16} className="text-white" />
               </span>
               <span className="flex flex-col">
-                <span className="text-sm font-medium text-gray-900">
-                  Ready to move forward
-                </span>
+                <span className="text-sm font-medium text-gray-900">Ready to move forward</span>
                 <span className="text-xs text-gray-500">
                   We have enough information to create your project plan
                 </span>
@@ -211,5 +193,5 @@ export function MessageBubble({
         </>
       )}
     </div>
-  );
+  )
 }

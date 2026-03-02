@@ -1,37 +1,37 @@
-import Link from "next/link";
-import { prisma } from "@mismo/db";
+import Link from 'next/link'
+import { prisma } from '@mismo/db'
 
 function timeAgo(date: Date): string {
-  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (seconds < 60) return "just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
+  if (seconds < 60) return 'just now'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
 }
 
 function sentenceCase(str: string): string {
-  return str.charAt(0) + str.slice(1).toLowerCase();
+  return str.charAt(0) + str.slice(1).toLowerCase()
 }
 
 function safetyColor(safety: string): string {
   switch (safety) {
-    case "YELLOW":
-      return "text-amber-600";
-    case "RED":
-      return "text-red-600";
+    case 'YELLOW':
+      return 'text-amber-600'
+    case 'RED':
+      return 'text-red-600'
     default:
-      return "text-gray-500";
+      return 'text-gray-500'
   }
 }
 
 export default async function ProjectsPage() {
   const projects = await prisma.project.findMany({
     include: { user: true },
-    orderBy: { updatedAt: "desc" },
-  });
+    orderBy: { updatedAt: 'desc' },
+  })
 
   return (
     <div>
@@ -55,10 +55,7 @@ export default async function ProjectsPage() {
             {projects.map((project) => (
               <tr key={project.id} className="border-b border-gray-100">
                 <td className="py-3 text-sm">
-                  <Link
-                    href={`/projects/${project.id}`}
-                    className="hover:underline"
-                  >
+                  <Link href={`/projects/${project.id}`} className="hover:underline">
                     {project.name}
                   </Link>
                 </td>
@@ -70,14 +67,12 @@ export default async function ProjectsPage() {
                 <td className={`py-3 text-sm ${safetyColor(project.safetyScore)}`}>
                   {project.safetyScore}
                 </td>
-                <td className="py-3 text-sm text-gray-500">
-                  {timeAgo(project.updatedAt)}
-                </td>
+                <td className="py-3 text-sm text-gray-500">{timeAgo(project.updatedAt)}</td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
     </div>
-  );
+  )
 }

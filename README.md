@@ -38,18 +38,18 @@ mismo/
 
 ### Technology Stack
 
-| Layer | Technology |
-|-------|------------|
-| **Monorepo** | Turborepo + pnpm workspaces |
-| **Frontend** | Next.js 15 (App Router) + Tailwind CSS + shadcn/ui |
-| **Database** | Supabase (PostgreSQL) + Prisma ORM + RLS |
-| **Auth** | Supabase Auth (OAuth, magic link, email) |
-| **Real-time** | Supabase Realtime + LiveKit (WebRTC voice) |
-| **AI** | Vercel AI SDK (OpenAI, Anthropic, DeepSeek, Kimi, MiniMax, ZAI) |
-| **Payments** | Stripe (Checkout, Subscriptions) |
-| **Contracts** | DocuSign eSignature API |
-| **CI/CD** | GitHub Actions + Vercel |
-| **Security** | StackHawk (DAST), Snyk (SCA), Playwright (E2E) |
+| Layer         | Technology                                                      |
+| ------------- | --------------------------------------------------------------- |
+| **Monorepo**  | Turborepo + pnpm workspaces                                     |
+| **Frontend**  | Next.js 15 (App Router) + Tailwind CSS + shadcn/ui              |
+| **Database**  | Supabase (PostgreSQL) + Prisma ORM + RLS                        |
+| **Auth**      | Supabase Auth (OAuth, magic link, email)                        |
+| **Real-time** | Supabase Realtime + LiveKit (WebRTC voice)                      |
+| **AI**        | Vercel AI SDK (OpenAI, Anthropic, DeepSeek, Kimi, MiniMax, ZAI) |
+| **Payments**  | Stripe (Checkout, Subscriptions)                                |
+| **Contracts** | DocuSign eSignature API                                         |
+| **CI/CD**     | GitHub Actions + Vercel                                         |
+| **Security**  | StackHawk (DAST), Snyk (SCA), Playwright (E2E)                  |
 
 ### Network Architecture
 
@@ -168,6 +168,7 @@ pnpm quickstart
 ```
 
 This will:
+
 1. Install dependencies
 2. Copy `.env.example` to `.env` (if not exists)
 3. Generate Prisma client
@@ -219,6 +220,7 @@ cat acl.hujson
 ```
 
 This script will:
+
 - Install Tailscale via Homebrew
 - Start the tailscaled daemon
 - Authenticate with your Tailscale network
@@ -248,6 +250,7 @@ pnpm dev
 ```
 
 This will start:
+
 - **Web app**: http://localhost:3000 (client-facing)
 - **Internal app**: http://localhost:3001 (dev team dashboard)
 
@@ -281,35 +284,35 @@ Add the webhook signing secret to your `.env` file.
 
 ### Apps
 
-| App | Port | Description |
-|-----|------|-------------|
-| `apps/web` | 3000 | Public-facing platform (Mo chat, PRD editor, client dashboards) |
-| `apps/internal` | 3001 | Internal dev team dashboard (review queues, monitoring) |
+| App             | Port | Description                                                     |
+| --------------- | ---- | --------------------------------------------------------------- |
+| `apps/web`      | 3000 | Public-facing platform (Mo chat, PRD editor, client dashboards) |
+| `apps/internal` | 3001 | Internal dev team dashboard (review queues, monitoring)         |
 
 ### Packages
 
-| Package | Description |
-|---------|-------------|
-| `packages/ai` | Mo interview agent, safety classifier, spec generator, Cursor orchestrator |
-| `packages/db` | Prisma schema, migrations, database utilities |
-| `packages/ui` | Shared React components based on shadcn/ui |
-| `packages/shared` | TypeScript types, constants, utilities |
+| Package              | Description                                                                          |
+| -------------------- | ------------------------------------------------------------------------------------ |
+| `packages/ai`        | Mo interview agent, safety classifier, spec generator, Cursor orchestrator           |
+| `packages/db`        | Prisma schema, migrations, database utilities                                        |
+| `packages/ui`        | Shared React components based on shadcn/ui                                           |
+| `packages/shared`    | TypeScript types, constants, utilities                                               |
 | `packages/templates` | Pre-audited architectural templates (Serverless SaaS, Monolithic MVP, Microservices) |
 
 ## Available Scripts
 
-| Script | Description |
-|--------|-------------|
-| `pnpm dev` | Start all apps in development mode |
-| `pnpm build` | Build all apps and packages |
-| `pnpm lint` | Run ESLint across the monorepo |
-| `pnpm type-check` | Run TypeScript type checking |
-| `pnpm format` | Format code with Prettier |
-| `pnpm quickstart` | Full setup and start script |
-| `pnpm --filter @mismo/db db:generate` | Generate Prisma client |
-| `pnpm --filter @mismo/db db:push` | Push schema changes to database |
-| `pnpm --filter @mismo/db db:migrate` | Run migrations |
-| `pnpm --filter @mismo/db db:seed` | Seed database with initial data |
+| Script                                | Description                        |
+| ------------------------------------- | ---------------------------------- |
+| `pnpm dev`                            | Start all apps in development mode |
+| `pnpm build`                          | Build all apps and packages        |
+| `pnpm lint`                           | Run ESLint across the monorepo     |
+| `pnpm type-check`                     | Run TypeScript type checking       |
+| `pnpm format`                         | Format code with Prettier          |
+| `pnpm quickstart`                     | Full setup and start script        |
+| `pnpm --filter @mismo/db db:generate` | Generate Prisma client             |
+| `pnpm --filter @mismo/db db:push`     | Push schema changes to database    |
+| `pnpm --filter @mismo/db db:migrate`  | Run migrations                     |
+| `pnpm --filter @mismo/db db:seed`     | Seed database with initial data    |
 
 ## Verification
 

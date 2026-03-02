@@ -1,13 +1,13 @@
-"use client";
+'use client'
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from 'react'
 
 const steps = [
   {
-    step: "01",
-    title: "Talk to Mo",
+    step: '01',
+    title: 'Talk to Mo',
     description:
-      "Describe your product idea in plain language. Mo, your AI consultant, asks the right questions to understand your vision.",
+      'Describe your product idea in plain language. Mo, your AI consultant, asks the right questions to understand your vision.',
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -26,8 +26,8 @@ const steps = [
     ),
   },
   {
-    step: "02",
-    title: "Review Your Spec",
+    step: '02',
+    title: 'Review Your Spec',
     description:
       "Mo generates a detailed product requirements document. Review it, tweak it, and approve when you're ready.",
     icon: (
@@ -48,10 +48,10 @@ const steps = [
     ),
   },
   {
-    step: "03",
-    title: "We Build It",
+    step: '03',
+    title: 'We Build It',
     description:
-      "Our AI-powered pipeline builds your application with human expert review and quality assurance at every step.",
+      'Our AI-powered pipeline builds your application with human expert review and quality assurance at every step.',
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -70,10 +70,10 @@ const steps = [
     ),
   },
   {
-    step: "04",
-    title: "Launch",
+    step: '04',
+    title: 'Launch',
     description:
-      "Your production-ready application is deployed and delivered. You own the code, the infrastructure, and the future.",
+      'Your production-ready application is deployed and delivered. You own the code, the infrastructure, and the future.',
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -91,36 +91,32 @@ const steps = [
       </svg>
     ),
   },
-];
+]
 
 export default function HowItWorks() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
+          setIsVisible(true)
+          observer.disconnect()
         }
       },
       { threshold: 0.1 },
-    );
+    )
 
     if (sectionRef.current) {
-      observer.observe(sectionRef.current);
+      observer.observe(sectionRef.current)
     }
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
   return (
-    <section
-      ref={sectionRef}
-      id="how-it-works"
-      className="px-4 md:px-8 lg:px-12 py-12"
-    >
+    <section ref={sectionRef} id="how-it-works" className="px-4 md:px-8 lg:px-12 py-12">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-xl font-semibold text-gray-900">How it works</h2>
@@ -131,9 +127,7 @@ export default function HowItWorks() {
             <div
               key={s.step}
               className={`transition-all duration-700 ${
-                isVisible
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-8"
+                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
               style={{ transitionDelay: `${index * 100}ms` }}
             >
@@ -141,16 +135,12 @@ export default function HowItWorks() {
               <span className="text-xs font-medium text-gray-500 tracking-wide uppercase">
                 Step {s.step}
               </span>
-              <h3 className="mt-2 text-lg font-semibold text-gray-900">
-                {s.title}
-              </h3>
-              <p className="mt-3 text-sm text-gray-500 leading-relaxed">
-                {s.description}
-              </p>
+              <h3 className="mt-2 text-lg font-semibold text-gray-900">{s.title}</h3>
+              <p className="mt-3 text-sm text-gray-500 leading-relaxed">{s.description}</p>
             </div>
           ))}
         </div>
       </div>
     </section>
-  );
+  )
 }

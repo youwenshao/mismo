@@ -1,21 +1,17 @@
-"use client";
+'use client'
 
 interface Choice {
-  label: string;
-  description: string;
+  label: string
+  description: string
 }
 
 interface ChoiceSelectorProps {
-  choices: Choice[];
-  onSelect: (choice: Choice) => void;
-  disabled?: boolean;
+  choices: Choice[]
+  onSelect: (choice: Choice) => void
+  disabled?: boolean
 }
 
-export function ChoiceSelector({
-  choices,
-  onSelect,
-  disabled,
-}: ChoiceSelectorProps) {
+export function ChoiceSelector({ choices, onSelect, disabled }: ChoiceSelectorProps) {
   return (
     <div className="flex flex-wrap gap-2 mt-3">
       {choices.map((choice) => (
@@ -32,5 +28,5 @@ export function ChoiceSelector({
         </button>
       ))}
     </div>
-  );
+  )
 }

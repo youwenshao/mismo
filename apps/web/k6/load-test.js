@@ -43,11 +43,9 @@ export const options = {
 }
 
 export function interviewStart() {
-  const res = http.post(
-    `${BASE_URL}/api/interview/start`,
-    JSON.stringify({}),
-    { headers: { 'Content-Type': 'application/json' } },
-  )
+  const res = http.post(`${BASE_URL}/api/interview/start`, JSON.stringify({}), {
+    headers: { 'Content-Type': 'application/json' },
+  })
 
   interviewDuration.add(res.timings.duration)
   const ok = check(res, {
@@ -66,7 +64,8 @@ export function interviewStart() {
 
 export function safetyClassify() {
   const payload = JSON.stringify({
-    description: 'A simple task management application with user authentication and real-time updates',
+    description:
+      'A simple task management application with user authentication and real-time updates',
   })
 
   const res = http.post(`${BASE_URL}/api/safety/classify`, payload, {

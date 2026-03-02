@@ -1,26 +1,26 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react'
 
 export default function Stories() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
+          setIsVisible(true)
+          observer.disconnect()
         }
       },
-      { threshold: 0.1 }
-    );
+      { threshold: 0.1 },
+    )
 
     if (sectionRef.current) {
-      observer.observe(sectionRef.current);
+      observer.observe(sectionRef.current)
     }
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <section ref={sectionRef} className="px-4 md:px-8 lg:px-12 py-12" id="stories">
@@ -28,10 +28,7 @@ export default function Stories() {
         {/* Section Header */}
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-xl font-semibold text-gray-900">Stories</h2>
-          <a
-            href="#"
-            className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-          >
+          <a href="#" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
             View all
           </a>
         </div>
@@ -134,5 +131,5 @@ export default function Stories() {
         </div>
       </div>
     </section>
-  );
+  )
 }

@@ -3,22 +3,22 @@ name: Auth and Dashboards
 overview: Implement Supabase Auth with anonymous-first SSO (Google, GitHub), build client and internal dashboards with minimalist design, and create the Mo chat/voice interview interface.
 todos:
   - id: auth-infra
-    content: "Phase 1: Install Supabase packages, create Supabase client utils (browser + server + middleware helper) for both apps, update Prisma schema (remove email/name, add supabaseAuthId + hasCompletedOnboarding), run migration"
+    content: 'Phase 1: Install Supabase packages, create Supabase client utils (browser + server + middleware helper) for both apps, update Prisma schema (remove email/name, add supabaseAuthId + hasCompletedOnboarding), run migration'
     status: completed
   - id: auth-middleware
-    content: "Phase 1: Update apps/web middleware for Supabase session refresh + route protection. Create apps/internal middleware with role-based access control (ENGINEER/ADMIN only)"
+    content: 'Phase 1: Update apps/web middleware for Supabase session refresh + route protection. Create apps/internal middleware with role-based access control (ENGINEER/ADMIN only)'
     status: completed
   - id: auth-pages
-    content: "Phase 2: Build /auth page with Google+GitHub SSO buttons, build /auth/callback route handler with email hashing + whitelist check + role assignment + redirect logic, update Header.tsx to link to /auth"
+    content: 'Phase 2: Build /auth page with Google+GitHub SSO buttons, build /auth/callback route handler with email hashing + whitelist check + role assignment + redirect logic, update Header.tsx to link to /auth'
     status: completed
   - id: client-dashboard
-    content: "Phase 3 (parallel): Build /dashboard page (empty state for new users, project list for returning), dashboard layout with clean header, project detail page"
+    content: 'Phase 3 (parallel): Build /dashboard page (empty state for new users, project list for returning), dashboard layout with clean header, project detail page'
     status: completed
   - id: mo-chat
-    content: "Phase 3 (parallel): Build /chat page with minimalist text interface mirroring hero section, integrate with existing /api/interview/* endpoints, add voice mode toggle with LiveKit room token endpoint"
+    content: 'Phase 3 (parallel): Build /chat page with minimalist text interface mirroring hero section, integrate with existing /api/interview/* endpoints, add voice mode toggle with LiveKit room token endpoint'
     status: completed
   - id: internal-dashboard
-    content: "Phase 3 (parallel): Build internal dashboard shell (sidebar, layout), overview page (stats + review queue), projects list page, project detail page, settings page"
+    content: 'Phase 3 (parallel): Build internal dashboard shell (sidebar, layout), overview page (stats + review queue), projects list page, project detail page, settings page'
     status: completed
 isProject: false
 ---
@@ -52,8 +52,6 @@ flowchart TD
     FirstTime -->|"No"| ClientDash["/dashboard -- Project Overview"]
     MoChat -->|"Complete"| ClientDash
 ```
-
-
 
 ### Privacy-First Data Model
 
@@ -146,8 +144,8 @@ Mirror the Supabase client files in `apps/internal/src/lib/supabase/` (same Supa
 Update [apps/web/src/middleware.ts](apps/web/src/middleware.ts):
 
 - Add Supabase session refresh on every request (per Supabase SSR docs)
-- Protect `/dashboard`, `/chat`, `/project/`* routes -- redirect to `/auth` if not authenticated
-- Allow `/`, `/auth`, `/auth/callback`, `/api/`* without auth
+- Protect `/dashboard`, `/chat`, `/project/`\* routes -- redirect to `/auth` if not authenticated
+- Allow `/`, `/auth`, `/auth/callback`, `/api/`\* without auth
 
 Create `apps/internal/src/middleware.ts`:
 
@@ -181,9 +179,10 @@ Server-side route handler:
 4. Upsert `User` in Prisma (by `supabaseAuthId`) with appropriate role
 5. If new client user: set `hasCompletedOnboarding = false`
 6. Redirect:
-  - `ADMIN`/`ENGINEER` role -> `http://localhost:3001` (internal app)
-  - `CLIENT` role + `!hasCompletedOnboarding` -> `/chat` (Mo interview)
-  - `CLIENT` role + `hasCompletedOnboarding` -> `/dashboard`
+
+- `ADMIN`/`ENGINEER` role -> `http://localhost:3001` (internal app)
+- `CLIENT` role + `!hasCompletedOnboarding` -> `/chat` (Mo interview)
+- `CLIENT` role + `hasCompletedOnboarding` -> `/dashboard`
 
 ### 2c. Update Header and Login Flow
 
@@ -355,8 +354,6 @@ gantt
     Mo chat and voice         :a5, 4, 8
 ```
 
-
-
 - **Phase 1** (serial): Auth infrastructure must come first (Supabase setup, schema migration, auth utilities, middleware)
 - **Phase 2** (serial): Auth pages depend on Phase 1
 - **Phase 3-5** (parallel): Once auth is working, client dashboard, internal dashboard, and Mo chat interface can all be built concurrently by parallel agents
@@ -390,4 +387,3 @@ gantt
 - `apps/web/src/components/Header.tsx`
 - `apps/web/src/app/layout.tsx` (add auth provider context)
 - `.env` (add `ADMIN_EMAIL_HASHES`)
-

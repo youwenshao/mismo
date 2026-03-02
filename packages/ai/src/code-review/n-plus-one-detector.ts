@@ -150,9 +150,7 @@ const MISSING_INCLUDE: DetectionRule = {
 
 const RULES: DetectionRule[] = [PRISMA_FINDMANY_IN_LOOP, AWAIT_IN_LOOP, MISSING_INCLUDE]
 
-export function detectNPlusOneQueries(
-  files: { path: string; content: string }[],
-): N1QueryMatch[] {
+export function detectNPlusOneQueries(files: { path: string; content: string }[]): N1QueryMatch[] {
   const matches: N1QueryMatch[] = []
 
   for (const file of files) {

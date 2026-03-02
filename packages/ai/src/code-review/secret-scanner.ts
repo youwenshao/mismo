@@ -130,9 +130,7 @@ function extractSnippet(line: string, maxLen = 120): string {
   return line.trim().slice(0, maxLen) + '...'
 }
 
-export function scanForSecrets(
-  files: { path: string; content: string }[],
-): SecretMatch[] {
+export function scanForSecrets(files: { path: string; content: string }[]): SecretMatch[] {
   const matches: SecretMatch[] = []
 
   for (const file of files) {

@@ -1,6 +1,7 @@
 import { createDeepSeek } from '@ai-sdk/deepseek'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { MODEL_PROVIDERS } from '@mismo/shared'
+import { LanguageModel } from 'ai'
 
 type ProviderId = keyof typeof MODEL_PROVIDERS
 
@@ -9,7 +10,10 @@ interface ActiveModelConfig {
   modelId: string
 }
 
-const providerFactories: Record<ProviderId, (modelId: string, apiKey: string) => ReturnType<ReturnType<typeof createDeepSeek>>> = {
+const providerFactories: Record<
+  ProviderId,
+  (modelId: string, apiKey: string) => ReturnType<ReturnType<typeof createDeepSeek>>
+> = {
   deepseek: (modelId, apiKey) => {
     const provider = createDeepSeek({ apiKey })
     return provider(modelId)
@@ -61,7 +65,7 @@ function getDefaultConfig(): ActiveModelConfig {
   }
 }
 
-export function getActiveModel(config?: Partial<ActiveModelConfig>) {
+export function getActiveModel(config?: Partial<ActiveModelConfig>): LanguageModel {
   const defaults = getDefaultConfig()
   const providerId = (config?.providerId || defaults.providerId) as ProviderId
   const modelId = config?.modelId || defaults.modelId
@@ -88,14 +92,20 @@ export function getProviderList() {
   }))
 }
 
-export async function checkProviderHealth(providerId: string): Promise<{ ok: boolean; error?: string }> {
+export async function checkProviderHealth(
+  providerId: string,
+): Promise<{ ok: boolean; error?: string }> {
   try {
     const pid = providerId as ProviderId
     const apiKey = getApiKey(pid)
     if (!apiKey) {
       return { ok: false, error: `No API key set (${MODEL_PROVIDERS[pid].envKey})` }
     }
-    const models = MODEL_PROVIDERS[pid].models as ReadonlyArray<{ id: string; name: string; default?: boolean }>
+    const models = MODEL_PROVIDERS[pid].models as ReadonlyArray<{
+      id: string
+      name: string
+      default?: boolean
+    }>
     const defaultModel = models.find((m) => m.default) || models[0]
     getActiveModel({ providerId, modelId: defaultModel.id })
     return { ok: true }

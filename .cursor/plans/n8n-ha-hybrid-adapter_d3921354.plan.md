@@ -12,13 +12,13 @@ todos:
     content: Build custom n8n nodes (Hybrid Adapters) to act as clients to the microservices.
     status: pending
   - id: gate-1-bmad
-    content: "Implement Gate 1: BMAD PRD completeness validation logic and routing."
+    content: 'Implement Gate 1: BMAD PRD completeness validation logic and routing.'
     status: pending
   - id: gate-2-gsd
-    content: "Implement Gate 2: GSD topological sorting logic adhering to n8n Queue Mode constraints."
+    content: 'Implement Gate 2: GSD topological sorting logic adhering to n8n Queue Mode constraints.'
     status: pending
   - id: gate-3-contract
-    content: "Implement Gate 3: AST-based Contract Checker logic for worker nodes."
+    content: 'Implement Gate 3: AST-based Contract Checker logic for worker nodes.'
     status: pending
   - id: supabase-audit
     content: Integrate Supabase logging to record all gate decisions to the existing `BuildLog` table via Prisma.
@@ -61,24 +61,28 @@ To log all validation gate decisions without altering the existing schema, we wi
 ## Validation Gates & Workflows
 
 1. **Gate 1: BMAD Validator (Pre-flight)**
-  - **Trigger:** Webhook receives PRD.
-  - **Action:** n8n Custom Node calls `bmad-validator-service`.
-  - **Validation:** Checks for `tech_stack`, `api_contracts`, `data_boundaries`, and `feasibility_score`.
-  - **Result:** If fail, routes back to "Mo" agent with missing fields. Logs to `BuildLog`.
+
+- **Trigger:** Webhook receives PRD.
+- **Action:** n8n Custom Node calls `bmad-validator-service`.
+- **Validation:** Checks for `tech_stack`, `api_contracts`, `data_boundaries`, and `feasibility_score`.
+- **Result:** If fail, routes back to "Mo" agent with missing fields. Logs to `BuildLog`.
+
 2. **Gate 2: GSD Dependency Checker (Planning)**
-  - **Trigger:** Decomposer agent generates a swarm plan.
-  - **Action:** n8n Custom Node calls `gsd-dependency-service`.
-  - **Validation:** Performs topological sort to ensure blocking dependencies (e.g., Database before Frontend) are queued sequentially in n8n Queue Mode, while safe tasks run in parallel.
-  - **Result:** Outputs sorted queue payload. Logs to `BuildLog`.
+
+- **Trigger:** Decomposer agent generates a swarm plan.
+- **Action:** n8n Custom Node calls `gsd-dependency-service`.
+- **Validation:** Performs topological sort to ensure blocking dependencies (e.g., Database before Frontend) are queued sequentially in n8n Queue Mode, while safe tasks run in parallel.
+- **Result:** Outputs sorted queue payload. Logs to `BuildLog`.
+
 3. **Gate 3: Contract Checker (Execution)**
-  - **Trigger:** Coding agents complete their tasks.
-  - **Action:** n8n Custom Node calls `contract-checker-service` on the worker node.
-  - **Validation:** Performs AST analysis to verify interface compatibility against the architecture ADRs.
-  - **Result:** Approves for merge or rejects back to coding agent. Logs to `BuildLog`.
+
+- **Trigger:** Coding agents complete their tasks.
+- **Action:** n8n Custom Node calls `contract-checker-service` on the worker node.
+- **Validation:** Performs AST analysis to verify interface compatibility against the architecture ADRs.
+- **Result:** Approves for merge or rejects back to coding agent. Logs to `BuildLog`.
 
 ## Configuration & Resiliency
 
 - Shared `N8N_ENCRYPTION_KEY` across all Studio nodes.
 - Environment templates mapped for main and worker nodes.
 - Auto-reconnection for Redis explicitly configured to handle intermittent drops between Studios.
-

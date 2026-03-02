@@ -13,6 +13,7 @@
 ### Task 1: Update Landing Page (apps/web/src/app/page.tsx)
 
 **Files:**
+
 - Modify: `apps/web/src/app/page.tsx`
 
 **Step 1: Replace SVGs with Lucide Icons**
@@ -28,6 +29,7 @@ Change `max-w-4xl` to `max-w-3xl`. Change `py-40 pb-24` to `pt-48 pb-32`. Change
 Change `max-w-5xl` to `max-w-4xl`. Change `py-24 sm:py-32` to `py-32 sm:py-48`. Update grid gaps from `gap-12` to `gap-16`.
 
 **Step 5: Verify & Commit**
+
 ```bash
 git add apps/web/src/app/page.tsx
 git commit -m "style: refine landing page layout and icons"
@@ -36,6 +38,7 @@ git commit -m "style: refine landing page layout and icons"
 ### Task 2: Update Chat Page (apps/web/src/app/chat/page.tsx)
 
 **Files:**
+
 - Modify: `apps/web/src/app/chat/page.tsx`
 
 **Step 1: Replace SVGs with Lucide Icons**
@@ -48,6 +51,7 @@ Change `max-w-[680px]` to `max-w-xl` for both messages container and input form.
 Change message padding from `py-6` to `py-8`.
 
 **Step 4: Verify & Commit**
+
 ```bash
 git add apps/web/src/app/chat/page.tsx
 git commit -m "style: refine chat page container width and icons"
@@ -56,6 +60,7 @@ git commit -m "style: refine chat page container width and icons"
 ### Task 3: Update Project Layout (apps/web/src/app/project/[id]/layout.tsx)
 
 **Files:**
+
 - Modify: `apps/web/src/app/project/[id]/layout.tsx`
 
 **Step 1: Update Max-Widths**
@@ -65,6 +70,7 @@ Change `max-w-5xl` to `max-w-4xl` in the header container, tab container, and ma
 Change main padding from `py-8` to `py-12`.
 
 **Step 3: Verify & Commit**
+
 ```bash
 git add apps/web/src/app/project/[id]/layout.tsx
 git commit -m "style: refine project layout max-width and padding"
@@ -73,6 +79,7 @@ git commit -m "style: refine project layout max-width and padding"
 ### Task 4: Update Project Overview (apps/web/src/app/project/[id]/page.tsx)
 
 **Files:**
+
 - Modify: `apps/web/src/app/project/[id]/page.tsx`
 
 **Step 1: Replace SVGs with Lucide Icons**
@@ -82,6 +89,7 @@ Import `FileText`, `CreditCard`, `Code`, `Rocket` from `lucide-react`. Replace i
 Change stats grid gap from `gap-4` to `gap-6`. Change section top margins from `mt-10` to `mt-16`.
 
 **Step 3: Verify & Commit**
+
 ```bash
 git add apps/web/src/app/project/[id]/page.tsx
 git commit -m "style: refine project dashboard spacing and icons"
@@ -90,6 +98,7 @@ git commit -m "style: refine project dashboard spacing and icons"
 ### Task 5: Update PRD Editor (apps/web/src/app/project/[id]/prd/prd-editor.tsx)
 
 **Files:**
+
 - Modify: `apps/web/src/app/project/[id]/prd/prd-editor.tsx`
 
 **Step 1: Replace SVGs with Lucide Icons**
@@ -99,6 +108,7 @@ Import `AlertCircle`, `MessageSquare`, `CheckCircle` from `lucide-react`. Replac
 Change section margins from `mb-16` to `mb-24`. Change padding from `pb-12` to `pb-16`. Update persona grid gap from `gap-4` to `gap-6`.
 
 **Step 3: Verify & Commit**
+
 ```bash
 git add apps/web/src/app/project/[id]/prd/prd-editor.tsx
 git commit -m "style: refine PRD editor spacing and icons"
@@ -107,6 +117,7 @@ git commit -m "style: refine PRD editor spacing and icons"
 ### Task 6: Update Status Page (apps/web/src/app/project/[id]/status/page.tsx)
 
 **Files:**
+
 - Modify: `apps/web/src/app/project/[id]/status/page.tsx`
 
 **Step 1: Replace SVGs with Lucide Icons**
@@ -116,6 +127,7 @@ Import `Check`, `ExternalLink`, `CheckCircle` from `lucide-react`. Replace inlin
 Change section margins (Live Preview, Request Changes) from `mt-12` and `mt-8` to `mt-16`.
 
 **Step 3: Verify & Commit**
+
 ```bash
 git add apps/web/src/app/project/[id]/status/page.tsx
 git commit -m "style: refine status page spacing and icons"
@@ -124,6 +136,7 @@ git commit -m "style: refine status page spacing and icons"
 ### Task 7: Update Checkout Page (apps/web/src/app/project/[id]/checkout/page.tsx)
 
 **Files:**
+
 - Modify: `apps/web/src/app/project/[id]/checkout/page.tsx`
 
 **Step 1: Replace SVGs with Lucide Icons**
@@ -133,6 +146,7 @@ Import `Check`, `CheckCircle` from `lucide-react`. Replace inline SVGs in `Check
 Change nav `max-w-5xl` to `max-w-4xl`.
 
 **Step 3: Verify & Commit**
+
 ```bash
 git add apps/web/src/app/project/[id]/checkout/page.tsx
 git commit -m "style: refine checkout page layout and icons"

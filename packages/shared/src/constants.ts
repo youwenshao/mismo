@@ -67,9 +67,7 @@ export const MODEL_PROVIDERS = {
   kimi: {
     id: 'kimi',
     name: 'Kimi (Moonshot)',
-    models: [
-      { id: 'kimi-k2', name: 'Kimi K2', default: true },
-    ],
+    models: [{ id: 'kimi-k2', name: 'Kimi K2', default: true }],
     envKey: 'KIMI_API_KEY',
   },
   minimax: {

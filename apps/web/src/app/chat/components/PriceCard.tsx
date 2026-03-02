@@ -1,9 +1,9 @@
-"use client";
+'use client'
 
-import type { PriceEstimate } from "@mismo/shared";
+import type { PriceEstimate } from '@mismo/shared'
 
 interface PriceCardProps {
-  estimate: PriceEstimate;
+  estimate: PriceEstimate
 }
 
 function DifficultyDots({ score }: { score: number }) {
@@ -12,31 +12,27 @@ function DifficultyDots({ score }: { score: number }) {
       {[1, 2, 3, 4, 5].map((i) => (
         <span
           key={i}
-          className={`w-2 h-2 rounded-full ${
-            i <= score ? "bg-gray-900" : "bg-gray-200"
-          }`}
+          className={`w-2 h-2 rounded-full ${i <= score ? 'bg-gray-900' : 'bg-gray-200'}`}
         />
       ))}
     </div>
-  );
+  )
 }
 
 function formatPrice(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount);
+  }).format(amount)
 }
 
 export function PriceCard({ estimate }: PriceCardProps) {
   return (
     <div className="mt-4 p-5 rounded-2xl border border-gray-200 bg-gradient-to-br from-white to-gray-50/50">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-gray-900">
-          Project Estimate
-        </h3>
+        <h3 className="text-sm font-semibold text-gray-900">Project Estimate</h3>
         <span className="px-2 py-0.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-full">
           {estimate.tierRecommendation}
         </span>
@@ -46,8 +42,7 @@ export function PriceCard({ estimate }: PriceCardProps) {
         <div className="flex items-baseline justify-between">
           <span className="text-sm text-gray-500">Investment</span>
           <span className="text-lg font-semibold text-gray-900">
-            {formatPrice(estimate.priceRange.min)} &ndash;{" "}
-            {formatPrice(estimate.priceRange.max)}
+            {formatPrice(estimate.priceRange.min)} &ndash; {formatPrice(estimate.priceRange.max)}
           </span>
         </div>
 
@@ -88,5 +83,5 @@ export function PriceCard({ estimate }: PriceCardProps) {
         </div>
       )}
     </div>
-  );
+  )
 }

@@ -29,7 +29,7 @@ function generateTestBody(story: UserStory): string {
   lines.push('')
   lines.push('  // TODO: implement once the application UI is available')
   lines.push("  await page.goto('/');")
-  lines.push("  await expect(page).toHaveTitle(/.*/);")
+  lines.push('  await expect(page).toHaveTitle(/.*/);')
   return lines.join('\n')
 }
 

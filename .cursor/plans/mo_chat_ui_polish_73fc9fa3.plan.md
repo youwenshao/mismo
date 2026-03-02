@@ -48,7 +48,7 @@ isProject: false
 
 Add a `FORMATTING` section to `MO_BASE_PROMPT` (after COMMUNICATION STYLE, ~line 19):
 
-```
+````
 FORMATTING:
 - Use **bold** to emphasize key terms or labels only
 - Write plain prose — no headings (#), no code blocks (
@@ -56,7 +56,7 @@ FORMATTING:
 ```), no horizontal rules (---)
 - Separate ideas with short paragraphs and line breaks
 - Avoid bullet lists in conversational messages; only use them when presenting structured summaries (like in the project summary step)
-```
+````
 
 This keeps conversational messages clean while still allowing the structured SUMMARY/FEASIBILITY state templates to use their existing bullet formats.
 
@@ -113,7 +113,6 @@ Keep the panel in its current position (above the chat input in the footer area)
 
 ## Files changed
 
-
 | File                                                           | Change                                                 |
 | -------------------------------------------------------------- | ------------------------------------------------------ |
 | `apps/web/package.json`                                        | Add `react-markdown` dependency                        |
@@ -124,5 +123,3 @@ Keep the panel in its current position (above the chat input in the footer area)
 | `apps/web/src/app/chat/page.tsx`                               | Separate proceed-to-summary from choices, pass as prop |
 | `packages/ai/src/interview/prompts.ts`                         | Add FORMATTING rules to MO_BASE_PROMPT                 |
 | `apps/web/src/app/api/interview/session/[id]/confirm/route.ts` | Friendlier status messages                             |
-
-

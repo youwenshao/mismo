@@ -6,11 +6,13 @@
 ## Blocker Details
 
 ### Primary Blocker: OAuth Authentication
+
 - **Issue:** Cannot proceed with live walkthrough without valid GitHub OAuth credentials
 - **Location:** App redirects unauthenticated users from `/chat` to `/auth`
 - **Impact:** Cannot access chat interface or trigger confirm flow
 
 ### Environment State
+
 - Dev servers running on ports 3000 (web) and 3001 (internal)
 - Browser tab already open but stuck at `/auth` page
 - No development bypass or mock authentication available in codebase
@@ -24,16 +26,19 @@ Based on detailed code review of the confirm implementation, I can document the 
 #### Frontend (`apps/web/src/app/chat/page.tsx`)
 
 **T+0ms: User clicks "Submit" choice**
+
 - `handleChoiceSelect()` called for choice with "submit my project" in description
 - Sends user message first: `sendMessage(\`\${choice.label}: \${choice.description}\`)`
 - After send completes, calls `handleConfirm()`
 
 **T+~500ms: Confirm POST initiated**
+
 ```typescript
 POST /api/interview/session/${sessionId}/confirm
 ```
 
 **Initial UI State:**
+
 - `isConfirming` set to `true`
 - `SubmissionStatusPanel` appears with:
   - Status: "Reviewing what we discussed so far..."
@@ -43,36 +48,45 @@ POST /api/interview/session/${sessionId}/confirm
 #### Backend Stream Events (`apps/web/src/app/api/interview/session/[id]/confirm/route.ts`)
 
 **Event 1 - T+0ms (backend start):**
+
 ```json
-{"type": "status", "message": "Reviewing what we discussed so far…"}
+{ "type": "status", "message": "Reviewing what we discussed so far…" }
 ```
+
 - Frontend: Updates `confirmStatusMessage`
 - UI: Status text updates immediately
 
 **Event 2 - T+~200ms:**
+
 ```json
-{"type": "status", "message": "Drafting your project plan…"}
+{ "type": "status", "message": "Drafting your project plan…" }
 ```
+
 - Frontend: Updates `confirmStatusMessage` again
 - UI: Status text changes
 
 **Event 3-N - T+~500ms onwards (streaming):**
+
 ```json
-{"type": "delta", "text": "..."}
+{ "type": "delta", "text": "..." }
 ```
+
 - Multiple delta events as LLM generates PRD JSON
 - Frontend: Appends each `text` to `confirmStreamOutput`
 - UI: Stream output box fills with incremental text
 - Gradient overlay remains visible throughout
 
 **Event N+1 - T+~10s (varies by LLM speed):**
+
 ```json
-{"type": "status", "message": "Finalizing and preparing your workspace…"}
+{ "type": "status", "message": "Finalizing and preparing your workspace…" }
 ```
+
 - Frontend: Updates `confirmStatusMessage`
 - UI: Status changes to finalization message
 
 **Event N+2 - T+~11s (after DB transaction):**
+
 ```json
 {
   "type": "done",
@@ -82,21 +96,25 @@ POST /api/interview/session/${sessionId}/confirm
   "usedLlm": true
 }
 ```
+
 - Frontend: Updates status to "Your project plan is ready. Taking you there now..."
 - Appends assistant message: "Your project has been submitted! Our engineering team will review..."
 - Sets `shouldKeepPanel = true` to keep panel visible
 - Starts 1200ms timer before redirect
 
 **T+~12.2s: Redirect**
+
 ```typescript
 window.location.href = `/project/${projectId}`
 ```
+
 - Panel still visible during redirect
 - User navigates to project page
 
 ### Visual Component Details
 
 **SubmissionStatusPanel** (`apps/web/src/app/chat/components/SubmissionStatusPanel.tsx`):
+
 ```tsx
 <div className="mt-3 rounded-xl border border-gray-200 bg-white p-4">
   <p className="text-sm text-gray-700">{statusMessage}</p>
@@ -112,6 +130,7 @@ window.location.href = `/project/${projectId}`
 ```
 
 **Key UX Elements:**
+
 1. White rounded card with border
 2. Status message at top (gray-700, sm size)
 3. Stream output in scrollable gray box (max-h-28, gray-50 bg)
@@ -121,38 +140,38 @@ window.location.href = `/project/${projectId}`
 ### Failure Path Analysis (Code-Based)
 
 #### Network Failure During Confirm
+
 **Scenario:** POST to `/api/interview/session/${sessionId}/confirm` fails
 
 **Code Path:**
+
 ```typescript
 try {
-  const res = await fetch(
-    `/api/interview/session/${sessionId}/confirm`,
-    { method: "POST" },
-  );
-  if (!res.ok || !res.body) throw new Error("Confirmation failed");
+  const res = await fetch(`/api/interview/session/${sessionId}/confirm`, { method: 'POST' })
+  if (!res.ok || !res.body) throw new Error('Confirmation failed')
   // ... streaming logic
 } catch (err) {
-  console.error("Confirm error:", err);
+  console.error('Confirm error:', err)
   setMessages((prev) => [
     ...prev,
     {
-      role: "assistant",
-      content: "Something went wrong submitting your project. Please try again.",
+      role: 'assistant',
+      content: 'Something went wrong submitting your project. Please try again.',
     },
-  ]);
-  setConfirmStatusMessage("");
-  setConfirmStreamOutput("");
+  ])
+  setConfirmStatusMessage('')
+  setConfirmStreamOutput('')
 } finally {
   if (!shouldKeepPanel) {
-    setIsConfirming(false);
+    setIsConfirming(false)
   }
 }
 ```
 
 **Expected UX:**
+
 1. **Initial state:** Panel visible with last status message and partial stream output
-2. **On error:** 
+2. **On error:**
    - Panel disappears (`setConfirmStatusMessage("")` removes content)
    - Error message appears as assistant message in chat
    - `isConfirming` set back to `false`
@@ -161,35 +180,42 @@ try {
 **Issue Found:** If fetch fails immediately (network error, 404, 500), there's no intermediate feedback. Panel just disappears and error message appears.
 
 #### Stream Parsing Error
+
 **Scenario:** Malformed JSON in stream
 
 **Code Path:**
+
 ```typescript
 const event = JSON.parse(line) as {
-  type?: string;
-  message?: string;
-  text?: string;
-  projectId?: string;
-};
+  type?: string
+  message?: string
+  text?: string
+  projectId?: string
+}
 ```
 
 **Issue:** No try-catch around `JSON.parse()` - would throw and trigger outer catch block
 
 #### Backend Error During Generation
+
 **Scenario:** LLM fails, database transaction fails, etc.
 
 **Backend sends:**
+
 ```json
-{"type": "error", "message": "I hit a snag while preparing your project plan. Please try again in a moment."}
+{
+  "type": "error",
+  "message": "I hit a snag while preparing your project plan. Please try again in a moment."
+}
 ```
 
 **Frontend handling:**
+
 ```typescript
-if (event.type === "error") {
+if (event.type === 'error') {
   throw new Error(
-    event.message ||
-      "I hit a snag while preparing your project plan. Please try again.",
-  );
+    event.message || 'I hit a snag while preparing your project plan. Please try again.',
+  )
 }
 ```
 
@@ -243,7 +269,9 @@ Since live browser testing is blocked, recommended alternatives:
 ## Recommendations
 
 ### Immediate Actions
+
 1. **Add Development Auth Bypass** - Most practical solution:
+
    ```typescript
    // In middleware or auth check
    if (process.env.NODE_ENV === 'development' && process.env.DEV_BYPASS_AUTH === 'true') {
@@ -259,13 +287,14 @@ Since live browser testing is blocked, recommended alternatives:
      // Mock authenticated session
      await page.addInitScript(() => {
        // Set auth cookies
-     });
-     await page.goto('/chat');
+     })
+     await page.goto('/chat')
      // Test flow
-   });
+   })
    ```
 
 ### For Future Testing
+
 1. **Component-Level Tests** - Test `SubmissionStatusPanel` in isolation
 2. **API Tests** - Test confirm endpoint with mock sessions
 3. **Storybook** - Visual testing for submission states
@@ -275,6 +304,7 @@ Since live browser testing is blocked, recommended alternatives:
 **Blocker:** OAuth authentication prevents browser access to chat interface
 
 **Deliverables:**
+
 - ✅ Comprehensive code analysis of happy and failure paths
 - ✅ Detailed UX flow documentation with timing expectations
 - ✅ Component structure and visual hierarchy analysis

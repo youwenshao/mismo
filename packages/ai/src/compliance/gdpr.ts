@@ -18,9 +18,7 @@ export interface GDPRComplianceStatus {
   dataProcessingAgreement: boolean
 }
 
-export function checkGDPRCompliance(
-  appConfig: Record<string, unknown>,
-): GDPRComplianceStatus {
+export function checkGDPRCompliance(appConfig: Record<string, unknown>): GDPRComplianceStatus {
   return {
     dataExportEndpoint: Boolean(appConfig['dataExportEndpoint']),
     dataDeletionEndpoint: Boolean(appConfig['dataDeletionEndpoint']),
@@ -30,10 +28,7 @@ export function checkGDPRCompliance(
   }
 }
 
-export function generatePrivacyPolicyTemplate(
-  appName: string,
-  dataTypes: string[],
-): string {
+export function generatePrivacyPolicyTemplate(appName: string, dataTypes: string[]): string {
   const dataList = dataTypes.map((t) => `- ${t}`).join('\n')
 
   return `# Privacy Policy for ${appName}

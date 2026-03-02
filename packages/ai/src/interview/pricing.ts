@@ -11,16 +11,30 @@ interface PricingInput {
 
 function resolveArchTemplate(pref: string): ArchTemplate {
   const lower = pref?.toLowerCase() || ''
-  if (lower.includes('speed') || lower.includes('fast') || lower.includes('simple') || lower.includes('monolith')) {
+  if (
+    lower.includes('speed') ||
+    lower.includes('fast') ||
+    lower.includes('simple') ||
+    lower.includes('monolith')
+  ) {
     return ArchTemplate.MONOLITHIC_MVP
   }
-  if (lower.includes('custom') || lower.includes('complex') || lower.includes('micro') || lower.includes('flexible')) {
+  if (
+    lower.includes('custom') ||
+    lower.includes('complex') ||
+    lower.includes('micro') ||
+    lower.includes('flexible')
+  ) {
     return ArchTemplate.MICROSERVICES_SCALE
   }
   return ArchTemplate.SERVERLESS_SAAS
 }
 
-function resolveTier(featureCount: number, arch: ArchTemplate, hasCompliance: boolean): ServiceTier {
+function resolveTier(
+  featureCount: number,
+  arch: ArchTemplate,
+  hasCompliance: boolean,
+): ServiceTier {
   if (arch === ArchTemplate.MICROSERVICES_SCALE || featureCount > 6 || hasCompliance) {
     return ServiceTier.FOUNDRY
   }
@@ -37,7 +51,11 @@ function estimateTimeline(tier: ServiceTier, featureCount: number): { min: numbe
   return { min: Math.ceil(min + featureAddon), max: Math.ceil(min * 1.5 + featureAddon) }
 }
 
-function assessDifficulty(featureCount: number, arch: ArchTemplate, hasCompliance: boolean): number {
+function assessDifficulty(
+  featureCount: number,
+  arch: ArchTemplate,
+  hasCompliance: boolean,
+): number {
   let score = 1
   if (featureCount > 3) score += 1
   if (featureCount > 6) score += 1
@@ -87,13 +105,19 @@ export function calculatePriceEstimate(input: PricingInput): PriceEstimate {
     feasibilityNotes.push('This is a complex project that will benefit from phased delivery')
   }
   if (hasCompliance) {
-    feasibilityNotes.push('Regulatory compliance requirements add development time for security and audit measures')
+    feasibilityNotes.push(
+      'Regulatory compliance requirements add development time for security and audit measures',
+    )
   }
   if (input.featureCount > 6) {
-    feasibilityNotes.push('Consider prioritizing a smaller feature set for an initial launch, then iterating')
+    feasibilityNotes.push(
+      'Consider prioritizing a smaller feature set for an initial launch, then iterating',
+    )
   }
   if (arch === ArchTemplate.MICROSERVICES_SCALE) {
-    feasibilityNotes.push('Microservices architecture provides flexibility but requires more upfront infrastructure work')
+    feasibilityNotes.push(
+      'Microservices architecture provides flexibility but requires more upfront infrastructure work',
+    )
   }
 
   return {

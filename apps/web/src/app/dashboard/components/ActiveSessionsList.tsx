@@ -1,9 +1,9 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { timeAgo } from "@/lib/format";
+import { useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { timeAgo } from '@/lib/format'
 
 function TrashIcon({ className }: { className?: string }) {
   return (
@@ -26,60 +26,60 @@ function TrashIcon({ className }: { className?: string }) {
       <line x1="10" y1="11" x2="10" y2="17" />
       <line x1="14" y1="11" x2="14" y2="17" />
     </svg>
-  );
+  )
 }
 
-const SKIP_DELETE_CONFIRM_KEY = "skipDeleteConfirm";
+const SKIP_DELETE_CONFIRM_KEY = 'skipDeleteConfirm'
 
 type Session = {
-  id: string;
-  startedAt: Date | string;
-};
+  id: string
+  startedAt: Date | string
+}
 
 export function ActiveSessionsList({ sessions }: { sessions: Session[] }) {
-  const router = useRouter();
-  const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
-  const [dontRemind, setDontRemind] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const router = useRouter()
+  const [sessionToDelete, setSessionToDelete] = useState<string | null>(null)
+  const [dontRemind, setDontRemind] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   function handleTrashClick(e: React.MouseEvent, sessionId: string) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (typeof window !== "undefined" && localStorage.getItem(SKIP_DELETE_CONFIRM_KEY) === "true") {
-      performDelete(sessionId);
-      return;
+    e.preventDefault()
+    e.stopPropagation()
+    if (typeof window !== 'undefined' && localStorage.getItem(SKIP_DELETE_CONFIRM_KEY) === 'true') {
+      performDelete(sessionId)
+      return
     }
-    setSessionToDelete(sessionId);
-    setDontRemind(false);
+    setSessionToDelete(sessionId)
+    setDontRemind(false)
   }
 
   async function performDelete(sessionId: string) {
-    setIsDeleting(true);
+    setIsDeleting(true)
     try {
-      const res = await fetch(`/api/interview/session/${sessionId}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
-      setSessionToDelete(null);
-      router.refresh();
+      const res = await fetch(`/api/interview/session/${sessionId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Delete failed')
+      setSessionToDelete(null)
+      router.refresh()
     } finally {
-      setIsDeleting(false);
+      setIsDeleting(false)
     }
   }
 
   function handleConfirm() {
-    if (!sessionToDelete) return;
-    if (dontRemind && typeof window !== "undefined") {
-      localStorage.setItem(SKIP_DELETE_CONFIRM_KEY, "true");
+    if (!sessionToDelete) return
+    if (dontRemind && typeof window !== 'undefined') {
+      localStorage.setItem(SKIP_DELETE_CONFIRM_KEY, 'true')
     }
-    performDelete(sessionToDelete);
+    performDelete(sessionToDelete)
   }
 
   function handleCancel() {
-    setSessionToDelete(null);
-    setDontRemind(false);
+    setSessionToDelete(null)
+    setDontRemind(false)
   }
 
   const startedAt = (s: Session) =>
-    typeof s.startedAt === "string" ? new Date(s.startedAt) : s.startedAt;
+    typeof s.startedAt === 'string' ? new Date(s.startedAt) : s.startedAt
 
   return (
     <>
@@ -101,9 +101,7 @@ export function ActiveSessionsList({ sessions }: { sessions: Session[] }) {
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-xs text-gray-400">
-                  Started {timeAgo(startedAt(session))}
-                </span>
+                <span className="text-xs text-gray-400">Started {timeAgo(startedAt(session))}</span>
                 <button
                   type="button"
                   aria-label="Delete chat"
@@ -129,9 +127,7 @@ export function ActiveSessionsList({ sessions }: { sessions: Session[] }) {
             <h2 id="delete-modal-title" className="text-lg font-semibold text-gray-900">
               Delete this chat?
             </h2>
-            <p className="mt-2 text-sm text-gray-500">
-              This action cannot be undone.
-            </p>
+            <p className="mt-2 text-sm text-gray-500">This action cannot be undone.</p>
             <label className="mt-4 flex cursor-pointer items-center gap-2">
               <input
                 type="checkbox"
@@ -156,12 +152,12 @@ export function ActiveSessionsList({ sessions }: { sessions: Session[] }) {
                 disabled={isDeleting}
                 className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
               >
-                {isDeleting ? "Deleting…" : "I understand"}
+                {isDeleting ? 'Deleting…' : 'I understand'}
               </button>
             </div>
           </div>
         </div>
       )}
     </>
-  );
+  )
 }

@@ -77,12 +77,14 @@ function planAdultVibeTransfer(config: TransferConfig): TransferResult {
       {
         step: 'Vercel project transfer',
         status: 'skipped',
-        details: 'VIBE tier does not include Vercel project transfer. Client deploys independently.',
+        details:
+          'VIBE tier does not include Vercel project transfer. Client deploys independently.',
       },
       {
         step: 'Hosting handoff',
         status: 'completed',
-        details: 'Client assumes hosting responsibility. Mismo support ends after 30-day grace period.',
+        details:
+          'Client assumes hosting responsibility. Mismo support ends after 30-day grace period.',
       },
     ],
   }

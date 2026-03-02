@@ -1,31 +1,31 @@
-import { useState, useEffect, useCallback } from 'react';
-import { ArrowUp, Menu, X } from 'lucide-react';
-import Header from './components/Header';
-import Sidebar from './components/Sidebar';
-import HeroSection from './sections/HeroSection';
-import FeaturedCards from './sections/FeaturedCards';
-import RecentNews from './sections/RecentNews';
-import Stories from './sections/Stories';
-import LatestResearch from './sections/LatestResearch';
-import BusinessSection from './sections/BusinessSection';
-import CTASection from './sections/CTASection';
-import Footer from './sections/Footer';
+import { useState, useEffect, useCallback } from 'react'
+import { ArrowUp, Menu, X } from 'lucide-react'
+import Header from './components/Header'
+import Sidebar from './components/Sidebar'
+import HeroSection from './sections/HeroSection'
+import FeaturedCards from './sections/FeaturedCards'
+import RecentNews from './sections/RecentNews'
+import Stories from './sections/Stories'
+import LatestResearch from './sections/LatestResearch'
+import BusinessSection from './sections/BusinessSection'
+import CTASection from './sections/CTASection'
+import Footer from './sections/Footer'
 
 function App() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [scrolled, setScrolled] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+      setScrolled(window.scrollY > 50)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const toggleSidebar = useCallback(() => {
-    setIsSidebarOpen(prev => !prev);
-  }, []);
+    setIsSidebarOpen((prev) => !prev)
+  }, [])
 
   return (
     <div className="min-h-dvh bg-white">
@@ -46,7 +46,7 @@ function App() {
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       {/* Main Content - Animates margin based on sidebar state */}
-      <main 
+      <main
         className={`pt-20 transition-all duration-300 ease-in-out ${
           isSidebarOpen ? 'ml-64' : 'ml-0'
         }`}
@@ -86,7 +86,7 @@ function App() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App

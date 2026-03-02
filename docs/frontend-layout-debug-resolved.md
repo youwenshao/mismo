@@ -11,6 +11,7 @@
 Body content was always vertically squashed and sometimes misaligned, even after a complete redesign. The layout felt cramped, with elements compressed vertically. The reference template (`docs/frontend-template`) displayed correctly under the same conditions.
 
 **Symptoms:**
+
 - Page content appeared vertically compressed
 - Layout felt "squashed" compared to the working template
 - Inconsistent vertical rhythm between sections
@@ -23,13 +24,14 @@ Body content was always vertically squashed and sometimes misaligned, even after
 
 We compared the web app with the working template and identified structural differences:
 
-| Aspect | Template (works) | Web app (broken) |
-|--------|------------------|------------------|
-| Tailwind | v3 (@tailwind base/components/utilities) | v4 (@import tailwindcss/index.css) |
-| Build | Vite (client-only) | Next.js (SSR + hydration) |
-| html/body height | Explicit in index.css | Layout className + globals.css |
+| Aspect           | Template (works)                         | Web app (broken)                   |
+| ---------------- | ---------------------------------------- | ---------------------------------- |
+| Tailwind         | v3 (@tailwind base/components/utilities) | v4 (@import tailwindcss/index.css) |
+| Build            | Vite (client-only)                       | Next.js (SSR + hydration)          |
+| html/body height | Explicit in index.css                    | Layout className + globals.css     |
 
 **Initial fixes applied:**
+
 - Added explicit `min-height: 100%` to html and body in globals.css
 - Replaced `min-h-screen` with `min-h-dvh` on root div
 - Added `pt-20` to `<main>` for header offset
@@ -58,16 +60,17 @@ We compared the web app with the working template and identified structural diff
 
 We generated hypotheses based on why the template worked but the web app did not:
 
-| Hypothesis | Theory | Fix |
-|------------|--------|-----|
-| **H1** | Tailwind v4 preflight in `@layer base` may override unlayered html/body rules | Put html/body in `@layer base` |
-| **H2** | v4 sets `html { line-height: 1.5 }`, making content feel cramped | Add `line-height: 1.6` to html |
-| **H3** | `min-h-dvh` may resolve poorly in Next.js/Turbopack | Use `min-h-screen-safe` with 100vh/100dvh fallback |
-| **H5** | Our `* { margin: 0; box-sizing }` may conflict with v4 preflight | Simplify to `* { border-color }` only |
+| Hypothesis | Theory                                                                        | Fix                                                |
+| ---------- | ----------------------------------------------------------------------------- | -------------------------------------------------- |
+| **H1**     | Tailwind v4 preflight in `@layer base` may override unlayered html/body rules | Put html/body in `@layer base`                     |
+| **H2**     | v4 sets `html { line-height: 1.5 }`, making content feel cramped              | Add `line-height: 1.6` to html                     |
+| **H3**     | `min-h-dvh` may resolve poorly in Next.js/Turbopack                           | Use `min-h-screen-safe` with 100vh/100dvh fallback |
+| **H5**     | Our `* { margin: 0; box-sizing }` may conflict with v4 preflight              | Simplify to `* { border-color }` only              |
 
 ### Phase 5: Instrumentation (Debug Mode)
 
 We added runtime instrumentation to log layout dimensions:
+
 - `innerHeight`, `innerWidth`
 - `htmlHeight`, `htmlMinHeight`, `bodyHeight`, `bodyMinHeight`
 - `rootHeight`, `rootMinHeight`, `mainPaddingTop`, `heroHeight`
@@ -104,7 +107,7 @@ The vertical squash was caused by a **combination of factors**:
 @layer base {
   html {
     min-height: 100%;
-    line-height: 1.6;   /* H2: Override v4's 1.5 */
+    line-height: 1.6; /* H2: Override v4's 1.5 */
     scroll-behavior: smooth;
   }
 
@@ -112,7 +115,8 @@ The vertical squash was caused by a **combination of factors**:
     min-height: 100%;
     background: var(--background);
     color: var(--foreground);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family:
+      -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -171,21 +175,21 @@ To log layout dimensions at runtime:
 ```tsx
 useEffect(() => {
   const log = () => {
-    const html = document.documentElement;
-    const body = document.body;
-    const root = document.querySelector('[class*="min-h-screen-safe"]');
+    const html = document.documentElement
+    const body = document.body
+    const root = document.querySelector('[class*="min-h-screen-safe"]')
     console.log({
       innerHeight: window.innerHeight,
       htmlHeight: html.offsetHeight,
       bodyHeight: body.offsetHeight,
       rootMinHeight: root ? getComputedStyle(root).minHeight : null,
-    });
-  };
-  log();
-  const ro = new ResizeObserver(log);
-  if (rootRef.current) ro.observe(rootRef.current);
-  return () => ro.disconnect();
-}, []);
+    })
+  }
+  log()
+  const ro = new ResizeObserver(log)
+  if (rootRef.current) ro.observe(rootRef.current)
+  return () => ro.disconnect()
+}, [])
 ```
 
 ---

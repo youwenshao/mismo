@@ -1,46 +1,41 @@
-"use client";
+'use client'
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import type { User } from "@supabase/supabase-js";
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import type { User } from '@supabase/supabase-js'
 
 interface HeaderProps {
-  scrolled: boolean;
-  isSidebarOpen?: boolean;
+  scrolled: boolean
+  isSidebarOpen?: boolean
 }
 
-export default function Header({
-  scrolled,
-  isSidebarOpen = true,
-}: HeaderProps) {
-  const [user, setUser] = useState<User | null>(null);
-  const [showMenu, setShowMenu] = useState(false);
+export default function Header({ scrolled, isSidebarOpen = true }: HeaderProps) {
+  const [user, setUser] = useState<User | null>(null)
+  const [showMenu, setShowMenu] = useState(false)
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
-  }, []);
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data }) => setUser(data.user))
+  }, [])
 
   async function handleSignOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    window.location.href = "/";
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    window.location.href = '/'
   }
 
-  const initials = user?.id ? user.id.slice(0, 2).toUpperCase() : "";
+  const initials = user?.id ? user.id.slice(0, 2).toUpperCase() : ''
 
   return (
     <header
       className={`fixed top-0 right-0 z-[55] transition-all duration-300 ease-in-out ${
-        scrolled ? "bg-white/90 backdrop-blur-sm" : "bg-transparent"
-      } ${isSidebarOpen ? "left-64" : "left-0"}`}
+        scrolled ? 'bg-white/90 backdrop-blur-sm' : 'bg-transparent'
+      } ${isSidebarOpen ? 'left-64' : 'left-0'}`}
     >
       <div className="flex items-center justify-between px-4 py-3 lg:px-8">
         <div className="flex items-center gap-4 pl-10">
           <a href="/" className="flex items-center gap-2">
-            <span className="text-xl font-semibold hidden sm:inline">
-              Mismo
-            </span>
+            <span className="text-xl font-semibold hidden sm:inline">Mismo</span>
           </a>
         </div>
 
@@ -81,5 +76,5 @@ export default function Header({
         </div>
       </div>
     </header>
-  );
+  )
 }

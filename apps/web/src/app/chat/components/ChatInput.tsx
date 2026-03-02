@@ -1,19 +1,19 @@
-"use client";
+'use client'
 
-import { useRef, useEffect, type FormEvent, type KeyboardEvent } from "react";
-import { ArrowUp, Square } from "lucide-react";
+import { useRef, useEffect, type FormEvent, type KeyboardEvent } from 'react'
+import { ArrowUp, Square } from 'lucide-react'
 
 interface ChatInputProps {
-  value: string;
-  onChange: (value: string) => void;
-  onSubmit: () => void;
-  onStop?: () => void;
-  isStreaming: boolean;
-  disabled?: boolean;
-  placeholder?: string;
+  value: string
+  onChange: (value: string) => void
+  onSubmit: () => void
+  onStop?: () => void
+  isStreaming: boolean
+  disabled?: boolean
+  placeholder?: string
 }
 
-const MAX_HEIGHT = 180;
+const MAX_HEIGHT = 180
 
 export function ChatInput({
   value,
@@ -22,38 +22,38 @@ export function ChatInput({
   onStop,
   isStreaming,
   disabled,
-  placeholder = "Type a message...",
+  placeholder = 'Type a message...',
 }: ChatInputProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    const clamped = Math.min(el.scrollHeight, MAX_HEIGHT);
-    el.style.height = `${clamped}px`;
-    el.style.overflowY = el.scrollHeight > MAX_HEIGHT ? "auto" : "hidden";
-  }, [value]);
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    const clamped = Math.min(el.scrollHeight, MAX_HEIGHT)
+    el.style.height = `${clamped}px`
+    el.style.overflowY = el.scrollHeight > MAX_HEIGHT ? 'auto' : 'hidden'
+  }, [value])
 
   function handleSubmit(e: FormEvent) {
-    e.preventDefault();
+    e.preventDefault()
     if (isStreaming && onStop) {
-      onStop();
-      return;
+      onStop()
+      return
     }
-    if (!value.trim() || disabled) return;
-    onSubmit();
+    if (!value.trim() || disabled) return
+    onSubmit()
   }
 
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
       if (isStreaming && onStop) {
-        onStop();
-        return;
+        onStop()
+        return
       }
-      if (!value.trim() || disabled) return;
-      onSubmit();
+      if (!value.trim() || disabled) return
+      onSubmit()
     }
   }
 
@@ -88,5 +88,5 @@ export function ChatInput({
         </button>
       )}
     </form>
-  );
+  )
 }

@@ -14,7 +14,13 @@ import { getMoRuntimeConfig } from '@/lib/mo-config'
 type ConfirmStreamEvent =
   | { type: 'status'; message: string }
   | { type: 'delta'; text: string }
-  | { type: 'done'; projectId: string; tierRecommendation: string; priceRange: PriceEstimate['priceRange']; usedLlm: boolean }
+  | {
+      type: 'done'
+      projectId: string
+      tierRecommendation: string
+      priceRange: PriceEstimate['priceRange']
+      usedLlm: boolean
+    }
   | { type: 'error'; message: string }
 
 function encodeEvent(event: ConfirmStreamEvent): string {
@@ -34,10 +40,7 @@ function extractJsonPayload(text: string): unknown | null {
   }
 }
 
-export async function POST(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
   const session = await prisma.interviewSession.findUnique({
@@ -54,10 +57,7 @@ export async function POST(
     savedContext.currentState !== InterviewState.CONFIRMATION &&
     savedContext.currentState !== InterviewState.COMPLETE
   ) {
-    return NextResponse.json(
-      { error: 'Interview is not in confirmation state' },
-      { status: 400 },
-    )
+    return NextResponse.json({ error: 'Interview is not in confirmation state' }, { status: 400 })
   }
 
   const data = savedContext.extractedData
@@ -66,8 +66,11 @@ export async function POST(
   const estimate: PriceEstimate = calculatePriceEstimate({
     featureCount,
     archPreference: typeof data.archPreference === 'string' ? data.archPreference : 'balanced',
-    regulatoryDomains: Array.isArray(data.regulatoryDomains) ? data.regulatoryDomains as string[] : [],
-    complexityTolerance: typeof data.complexityTolerance === 'string' ? data.complexityTolerance : 'moderate',
+    regulatoryDomains: Array.isArray(data.regulatoryDomains)
+      ? (data.regulatoryDomains as string[])
+      : [],
+    complexityTolerance:
+      typeof data.complexityTolerance === 'string' ? data.complexityTolerance : 'moderate',
     expectedVolume: typeof data.expectedVolume === 'string' ? data.expectedVolume : 'medium',
   })
 
@@ -132,12 +135,14 @@ export async function POST(
             await tx.pRD.create({
               data: {
                 projectId: project.id,
-                content: JSON.parse(JSON.stringify({
-                  ...generatedPRD.content,
-                  priceEstimate: estimate,
-                  difficultyScore: estimate.difficultyScore,
-                  feasibilityNotes: estimate.feasibilityNotes,
-                })),
+                content: JSON.parse(
+                  JSON.stringify({
+                    ...generatedPRD.content,
+                    priceEstimate: estimate,
+                    difficultyScore: estimate.difficultyScore,
+                    feasibilityNotes: estimate.feasibilityNotes,
+                  }),
+                ),
                 userStories: JSON.parse(JSON.stringify(generatedPRD.userStories)),
                 dataModel: generatedPRD.mermaidDataModel,
                 archTemplate: generatedPRD.archTemplate,
@@ -167,10 +172,12 @@ export async function POST(
               data: {
                 projectId: project.id,
                 completedAt: new Date(),
-                state: JSON.parse(JSON.stringify({
-                  ...savedContext,
-                  currentState: InterviewState.COMPLETE,
-                })),
+                state: JSON.parse(
+                  JSON.stringify({
+                    ...savedContext,
+                    currentState: InterviewState.COMPLETE,
+                  }),
+                ),
               },
             })
 
@@ -196,7 +203,8 @@ export async function POST(
           })
           push({
             type: 'error',
-            message: 'I hit a snag while preparing your project plan. Please try again in a moment.',
+            message:
+              'I hit a snag while preparing your project plan. Please try again in a moment.',
           })
         } finally {
           controller.close()

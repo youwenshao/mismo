@@ -61,11 +61,11 @@ The playbook will be idempotent and target the 3 Mac Studios.
 
 ## 3. Dotfiles Repository
 
-- `**.zshrc`**: Will include your requested aliases:
+- `**.zshrc`\*\*: Will include your requested aliases:
   - `n8n-logs`: Alias to tail n8n docker or pm2 logs.
   - `studio-ssh`: Helper function to quickly SSH into a specific studio.
   - `docker-clean`: Alias for `docker system prune -af`.
-- `**.tmux.conf`**: Configured with `set -g mouse on` and a customized status bar displaying CPU and RAM usage.
+- `**.tmux.conf`\*\*: Configured with `set -g mouse on` and a customized status bar displaying CPU and RAM usage.
 - `**.gitconfig**`: Configured for commit signing (`commit.gpgsign = true`) and standard aliases (`co`, `br`, `st`).
 
 ## 4. Monitoring Scripts
@@ -82,7 +82,7 @@ Runnable from the control node (MacBook Pro):
 
 ## 6. Documentation of Manual Steps (`README.md`)
 
-I will thoroughly document the steps that *cannot* be automated via Ansible:
+I will thoroughly document the steps that _cannot_ be automated via Ansible:
 
 1. Initial macOS setup (creating the initial admin user, enabling "Remote Login" in System Settings for initial SSH access).
 2. Generating the initial SSH key on the MacBook Pro and using `ssh-copy-id` to bootstrap access.
@@ -91,4 +91,4 @@ I will thoroughly document the steps that *cannot* be automated via Ansible:
 
 ---
 
-*Does this architecture look good to you? Once confirmed, I will proceed with creating the files.*
+_Does this architecture look good to you? Once confirmed, I will proceed with creating the files._

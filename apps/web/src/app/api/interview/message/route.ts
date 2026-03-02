@@ -18,10 +18,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (!sessionId || !message) {
-      return new Response(
-        JSON.stringify({ error: 'Missing sessionId or message' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } },
-      )
+      return new Response(JSON.stringify({ error: 'Missing sessionId or message' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      })
     }
 
     const session = await prisma.interviewSession.findUnique({
@@ -29,10 +29,10 @@ export async function POST(req: NextRequest) {
     })
 
     if (!session) {
-      return new Response(
-        JSON.stringify({ error: 'Session not found' }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } },
-      )
+      return new Response(JSON.stringify({ error: 'Session not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      })
     }
 
     const savedContext = session.state as unknown as InterviewContext
@@ -68,8 +68,11 @@ export async function POST(req: NextRequest) {
       const estimate = calculatePriceEstimate({
         featureCount,
         archPreference: typeof data.archPreference === 'string' ? data.archPreference : 'balanced',
-        regulatoryDomains: Array.isArray(data.regulatoryDomains) ? data.regulatoryDomains as string[] : [],
-        complexityTolerance: typeof data.complexityTolerance === 'string' ? data.complexityTolerance : 'moderate',
+        regulatoryDomains: Array.isArray(data.regulatoryDomains)
+          ? (data.regulatoryDomains as string[])
+          : [],
+        complexityTolerance:
+          typeof data.complexityTolerance === 'string' ? data.complexityTolerance : 'moderate',
         expectedVolume: typeof data.expectedVolume === 'string' ? data.expectedVolume : 'medium',
       })
       priceEstimateJson = JSON.stringify(estimate, null, 2)
@@ -83,7 +86,12 @@ export async function POST(req: NextRequest) {
       model: getActiveModel(runtimeConfig) as unknown as LanguageModel,
       system: systemPrompt,
       messages: machine.getContext().messages.map((m) => ({
-        role: m.role === 'system' ? ('system' as const) : m.role === 'user' ? ('user' as const) : ('assistant' as const),
+        role:
+          m.role === 'system'
+            ? ('system' as const)
+            : m.role === 'user'
+              ? ('user' as const)
+              : ('assistant' as const),
         content: m.content,
       })),
       onFinish: async ({ text }) => {
@@ -124,7 +132,10 @@ export async function POST(req: NextRequest) {
 
     const currentContext = machine.getContext()
     response.headers.set('X-Interview-Session-Id', sessionId)
-    response.headers.set('X-Interview-State', isAutoCompleting ? InterviewState.COMPLETE : currentContext.currentState)
+    response.headers.set(
+      'X-Interview-State',
+      isAutoCompleting ? InterviewState.COMPLETE : currentContext.currentState,
+    )
     response.headers.set('X-Interview-Readiness', String(currentContext.readinessScore))
     if (priceEstimateData) {
       response.headers.set('X-Price-Estimate', priceEstimateData)

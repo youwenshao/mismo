@@ -3,10 +3,7 @@ import { prisma } from '@mismo/db'
 import type { InterviewContext } from '@mismo/ai'
 import { getSessionUser } from '@/lib/auth'
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
   const session = await prisma.interviewSession.findUnique({
@@ -31,10 +28,7 @@ export async function GET(
   })
 }
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getSessionUser()
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

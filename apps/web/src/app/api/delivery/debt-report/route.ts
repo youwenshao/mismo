@@ -5,10 +5,7 @@ export async function GET(req: NextRequest) {
   const projectId = req.nextUrl.searchParams.get('projectId')
 
   if (!projectId) {
-    return NextResponse.json(
-      { error: 'Missing "projectId" query parameter' },
-      { status: 400 },
-    )
+    return NextResponse.json({ error: 'Missing "projectId" query parameter' }, { status: 400 })
   }
 
   const ledger = generateDebtLedger(projectId)

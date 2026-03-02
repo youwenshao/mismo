@@ -1,9 +1,9 @@
 ---
 name: Fix status panel and metadata
-overview: "Fix three issues: redesign the SubmissionStatusPanel streaming box to use a full-height gradient overlay with no distinct background, fix the live display of [META] blocks during streaming, and ensure the stream box has a fixed height with auto-scroll."
+overview: 'Fix three issues: redesign the SubmissionStatusPanel streaming box to use a full-height gradient overlay with no distinct background, fix the live display of [META] blocks during streaming, and ensure the stream box has a fixed height with auto-scroll.'
 todos:
   - id: redesign-stream-box
-    content: "Redesign SubmissionStatusPanel stream box: remove bg/border, full-height white-to-transparent gradient, fixed h-32, lighter text"
+    content: 'Redesign SubmissionStatusPanel stream box: remove bg/border, full-height white-to-transparent gradient, fixed h-32, lighter text'
     status: completed
   - id: strip-meta-live
     content: Add stripMetaBlocks() to MessageBubble and apply to displayContent for live streaming metadata stripping
@@ -34,10 +34,7 @@ Three distinct issues to address in the Mo chat UI.
 ```tsx
 <div className="relative h-32 overflow-hidden">
   <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-b from-white via-white/50 to-transparent" />
-  <div
-    ref={scrollRef}
-    className="h-full overflow-y-auto px-4 py-3"
-  >
+  <div ref={scrollRef} className="h-full overflow-y-auto px-4 py-3">
     <pre className="whitespace-pre-wrap text-[11px] leading-relaxed text-gray-300 font-mono">
       {streamOutput}
     </pre>
@@ -72,15 +69,15 @@ Add a `stripMetaBlocks()` function to `MessageBubble.tsx` that handles:
 3. A partial opening tag at the very end of the text (`[M`, `[ME`, `[MET`, `[META`)
 
 ```typescript
-const META_BLOCK_REGEX = /\[META\][\s\S]*?\[\/META\]/g;
+const META_BLOCK_REGEX = /\[META\][\s\S]*?\[\/META\]/g
 
 function stripMetaBlocks(text: string): string {
-  let cleaned = text.replace(META_BLOCK_REGEX, "");
+  let cleaned = text.replace(META_BLOCK_REGEX, '')
   // Strip unclosed [META]... at end of streaming content
-  cleaned = cleaned.replace(/\[META\][\s\S]*$/, "");
+  cleaned = cleaned.replace(/\[META\][\s\S]*$/, '')
   // Strip partial opening tag fragments at end
-  cleaned = cleaned.replace(/\[M(?:E(?:T(?:A)?)?)?$/, "");
-  return cleaned.trim();
+  cleaned = cleaned.replace(/\[M(?:E(?:T(?:A)?)?)?$/, '')
+  return cleaned.trim()
 }
 ```
 
@@ -88,10 +85,10 @@ Then update the `displayContent` computation (currently line 74-75):
 
 ```typescript
 // Before:
-const displayContent = role === "assistant" ? stripChoiceBlocks(content) : content;
+const displayContent = role === 'assistant' ? stripChoiceBlocks(content) : content
 
 // After:
-const displayContent = role === "assistant" ? stripMetaBlocks(stripChoiceBlocks(content)) : content;
+const displayContent = role === 'assistant' ? stripMetaBlocks(stripChoiceBlocks(content)) : content
 ```
 
 This ensures the user **never** sees `[META]` content at any point during streaming or after.
@@ -104,4 +101,3 @@ Only two files need modification:
 
 - `[apps/web/src/app/chat/components/SubmissionStatusPanel.tsx](apps/web/src/app/chat/components/SubmissionStatusPanel.tsx)` -- remove bg/border from stream box, use full-height gradient, fixed `h-32` height, lighter text color
 - `[apps/web/src/app/chat/components/MessageBubble.tsx](apps/web/src/app/chat/components/MessageBubble.tsx)` -- add `stripMetaBlocks()`, apply it to `displayContent` for live stripping during streaming
-

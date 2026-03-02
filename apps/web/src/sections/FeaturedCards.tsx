@@ -1,28 +1,28 @@
-"use client";
+'use client'
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from 'react'
 
 export default function FeaturedCards() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
+          setIsVisible(true)
+          observer.disconnect()
         }
       },
       { threshold: 0.1 },
-    );
+    )
 
     if (sectionRef.current) {
-      observer.observe(sectionRef.current);
+      observer.observe(sectionRef.current)
     }
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <section ref={sectionRef} className="px-4 md:px-8 lg:px-12 py-12">
@@ -31,9 +31,7 @@ export default function FeaturedCards() {
           {/* Large featured card */}
           <div
             className={`lg:col-span-2 transition-all duration-700 ${
-              isVisible
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-8"
+              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
             }`}
           >
             <a href="/chat" className="block group">
@@ -77,25 +75,18 @@ export default function FeaturedCards() {
             <a
               href="#pricing"
               className={`block group transition-all duration-700 delay-100 ${
-                isVisible
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-8"
+                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
             >
               <div
                 className="relative aspect-[16/9] rounded-xl overflow-hidden"
                 style={{
-                  background:
-                    "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+                  background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
                 }}
               >
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-3xl md:text-4xl font-bold text-white">
-                    $2k
-                  </span>
-                  <span className="text-white/80 text-sm mt-1">
-                    Vibe Tier
-                  </span>
+                  <span className="text-3xl md:text-4xl font-bold text-white">$2k</span>
+                  <span className="text-white/80 text-sm mt-1">Vibe Tier</span>
                 </div>
               </div>
               <div className="mt-3">
@@ -111,25 +102,18 @@ export default function FeaturedCards() {
             <a
               href="#pricing"
               className={`block group transition-all duration-700 delay-200 ${
-                isVisible
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-8"
+                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
             >
               <div
                 className="relative aspect-[16/9] rounded-xl overflow-hidden"
                 style={{
-                  background:
-                    "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)",
+                  background: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
                 }}
               >
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-3xl md:text-4xl font-bold text-white">
-                    $8k
-                  </span>
-                  <span className="text-white/80 text-sm mt-1">
-                    Verified Tier
-                  </span>
+                  <span className="text-3xl md:text-4xl font-bold text-white">$8k</span>
+                  <span className="text-white/80 text-sm mt-1">Verified Tier</span>
                 </div>
               </div>
               <div className="mt-3">
@@ -147,19 +131,13 @@ export default function FeaturedCards() {
             <a
               href="#pricing"
               className={`block group transition-all duration-700 delay-300 ${
-                isVisible
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-8"
+                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
             >
               <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-gradient-to-br from-blue-300 to-cyan-400">
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-3xl md:text-4xl font-bold text-white">
-                    $25k
-                  </span>
-                  <span className="text-white/80 text-sm mt-1">
-                    Foundry Tier
-                  </span>
+                  <span className="text-3xl md:text-4xl font-bold text-white">$25k</span>
+                  <span className="text-white/80 text-sm mt-1">Foundry Tier</span>
                 </div>
               </div>
               <div className="mt-3">
@@ -175,5 +153,5 @@ export default function FeaturedCards() {
         </div>
       </div>
     </section>
-  );
+  )
 }

@@ -1,85 +1,79 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { Copy, Check } from "lucide-react";
-import type { PRDData, Comment } from "./demo-data";
+import { useState } from 'react'
+import { Copy, Check } from 'lucide-react'
+import type { PRDData, Comment } from './demo-data'
 
 export default function PRDEditor({ prd }: { prd: PRDData }) {
-  const [comments, setComments] = useState<Record<string, Comment[]>>(
-    prd.comments,
-  );
-  const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
-  const [newComment, setNewComment] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [comments, setComments] = useState<Record<string, Comment[]>>(prd.comments)
+  const [activeSectionId, setActiveSectionId] = useState<string | null>(null)
+  const [newComment, setNewComment] = useState('')
+  const [copied, setCopied] = useState(false)
 
-  const ambiguityHigh = prd.ambiguityScore > 20;
+  const ambiguityHigh = prd.ambiguityScore > 20
 
   async function handleCopyJson() {
-    await navigator.clipboard.writeText(JSON.stringify(prd, null, 2));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    await navigator.clipboard.writeText(JSON.stringify(prd, null, 2))
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   function hasTBD(text: string): boolean {
-    return /\bTBD\b/i.test(text);
+    return /\bTBD\b/i.test(text)
   }
 
   function sectionHasTBD(sectionId: string): boolean {
     switch (sectionId) {
-      case "overview":
+      case 'overview':
         return (
-          hasTBD(prd.overview?.description || "") ||
-          hasTBD(prd.overview?.problemStatement || "")
-        );
-      case "target-users":
+          hasTBD(prd.overview?.description || '') || hasTBD(prd.overview?.problemStatement || '')
+        )
+      case 'target-users':
         return (prd.targetUsers?.personas || []).some(
-          (p) => hasTBD(p.name || "") || hasTBD(p.description || ""),
-        );
-      case "features":
-        return (prd.features || []).some(
-          (f) => hasTBD(f.name || "") || hasTBD(f.description || ""),
-        );
-      case "user-stories":
+          (p) => hasTBD(p.name || '') || hasTBD(p.description || ''),
+        )
+      case 'features':
+        return (prd.features || []).some((f) => hasTBD(f.name || '') || hasTBD(f.description || ''))
+      case 'user-stories':
         return (prd.userStories || []).some(
           (s) =>
-            hasTBD(s.title || "") ||
-            hasTBD(s.given || "") ||
-            hasTBD(s.when || "") ||
-            hasTBD(s.then || ""),
-        );
-      case "data-model":
-        return hasTBD(prd.dataModel || "");
-      case "api":
-        return hasTBD(JSON.stringify(prd.apiSpec || {}));
-      case "architecture":
+            hasTBD(s.title || '') ||
+            hasTBD(s.given || '') ||
+            hasTBD(s.when || '') ||
+            hasTBD(s.then || ''),
+        )
+      case 'data-model':
+        return hasTBD(prd.dataModel || '')
+      case 'api':
+        return hasTBD(JSON.stringify(prd.apiSpec || {}))
+      case 'architecture':
         return (
-          hasTBD(prd.architecture?.template || "") ||
-          hasTBD(prd.architecture?.description || "")
-        );
+          hasTBD(prd.architecture?.template || '') || hasTBD(prd.architecture?.description || '')
+        )
       default:
-        return false;
+        return false
     }
   }
 
   function toggleCommentPanel(sectionId: string) {
-    setActiveSectionId((prev) => (prev === sectionId ? null : sectionId));
-    setNewComment("");
+    setActiveSectionId((prev) => (prev === sectionId ? null : sectionId))
+    setNewComment('')
   }
 
   function addComment(sectionId: string) {
-    if (!newComment.trim()) return;
+    if (!newComment.trim()) return
     const comment: Comment = {
       id: `c-${Date.now()}`,
-      author: "You",
+      author: 'You',
       content: newComment.trim(),
       timestamp: new Date().toISOString(),
       resolved: false,
-    };
+    }
     setComments((prev) => ({
       ...prev,
       [sectionId]: [...(prev[sectionId] ?? []), comment],
-    }));
-    setNewComment("");
+    }))
+    setNewComment('')
   }
 
   function resolveComment(sectionId: string, commentId: string) {
@@ -88,21 +82,21 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
       [sectionId]: (prev[sectionId] ?? []).map((c) =>
         c.id === commentId ? { ...c, resolved: true } : c,
       ),
-    }));
+    }))
   }
 
   function commentCount(sectionId: string): number {
-    return (comments[sectionId] ?? []).filter((c) => !c.resolved).length;
+    return (comments[sectionId] ?? []).filter((c) => !c.resolved).length
   }
 
   function formatTimestamp(iso: string): string {
-    const d = new Date(iso);
-    return d.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
+    const d = new Date(iso)
+    return d.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    })
   }
 
   return (
@@ -127,8 +121,8 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
               Some requirements need clarification
             </p>
             <p className="mt-3 text-sm leading-relaxed text-amber-700">
-              Ambiguity score is {prd.ambiguityScore}%. A project manager will
-              reach out to resolve open questions before development begins.
+              Ambiguity score is {prd.ambiguityScore}%. A project manager will reach out to resolve
+              open questions before development begins.
             </p>
           </div>
         </div>
@@ -140,37 +134,32 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
           <h1 className="font-[var(--font-serif)] text-[1.75rem] font-semibold leading-[1.2] tracking-[-0.01em] text-[var(--text-primary)]">
             {prd.projectName}
           </h1>
-          <span className="text-xs font-medium text-[var(--text-secondary)]">
-            v{prd.version}
-          </span>
+          <span className="text-xs font-medium text-[var(--text-secondary)]">v{prd.version}</span>
           <button
             onClick={handleCopyJson}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
             {copied ? <Check size={14} /> : <Copy size={14} />}
-            {copied ? "Copied!" : "Copy JSON"}
+            {copied ? 'Copied!' : 'Copy JSON'}
           </button>
         </div>
         <p className="mt-4 text-sm leading-relaxed text-[var(--text-secondary)]">
-          Product Requirements Document &middot; Last updated{" "}
-          {prd.lastUpdated}
+          Product Requirements Document &middot; Last updated {prd.lastUpdated}
         </p>
       </div>
 
       {/* Sections */}
       <div>
         {prd.sections.map((section) => {
-          const isTBD = sectionHasTBD(section.id);
-          const isCommentOpen = activeSectionId === section.id;
-          const unresolvedCount = commentCount(section.id);
+          const isTBD = sectionHasTBD(section.id)
+          const isCommentOpen = activeSectionId === section.id
+          const unresolvedCount = commentCount(section.id)
 
           return (
             <section
               key={section.id}
               id={section.id}
-              className={`mb-24 ${
-                isTBD ? "bg-amber-50" : ""
-              }`}
+              className={`mb-24 ${isTBD ? 'bg-amber-50' : ''}`}
             >
               {/* Section header with comment button */}
               <div className="mb-8 flex items-start justify-between">
@@ -186,8 +175,8 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
                   onClick={() => toggleCommentPanel(section.id)}
                   className={`relative flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors ${
                     isCommentOpen
-                      ? "text-[var(--accent)]"
-                      : "text-[var(--text-secondary)] hover:text-[var(--accent)]"
+                      ? 'text-[var(--accent)]'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--accent)]'
                   }`}
                   aria-label={`Comments for ${section.title}`}
                 >
@@ -235,9 +224,7 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
                     {(comments[section.id] ?? []).map((comment) => (
                       <div
                         key={comment.id}
-                        className={`py-6 ${
-                          comment.resolved ? "opacity-60" : ""
-                        }`}
+                        className={`py-6 ${comment.resolved ? 'opacity-60' : ''}`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
@@ -253,18 +240,14 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
                           </div>
                           {!comment.resolved && (
                             <button
-                              onClick={() =>
-                                resolveComment(section.id, comment.id)
-                              }
+                              onClick={() => resolveComment(section.id, comment.id)}
                               className="text-xs font-medium text-[var(--text-secondary)] transition-colors hover:text-green-700"
                             >
                               Resolve
                             </button>
                           )}
                           {comment.resolved && (
-                            <span className="text-xs font-medium text-green-600">
-                              Resolved
-                            </span>
+                            <span className="text-xs font-medium text-green-600">Resolved</span>
                           )}
                         </div>
                         <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">
@@ -281,7 +264,7 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") addComment(section.id);
+                        if (e.key === 'Enter') addComment(section.id)
                       }}
                       placeholder="Add a comment..."
                       className="flex-1 rounded-[2px] border border-[var(--border)] bg-[var(--bg-primary)] px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-secondary)] outline-none transition-colors focus:border-[var(--accent)]"
@@ -297,7 +280,7 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
                 </div>
               )}
             </section>
-          );
+          )
         })}
       </div>
 
@@ -307,8 +290,8 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
           disabled={ambiguityHigh}
           className={`rounded-[4px] px-8 py-3.5 text-base font-semibold transition-colors ${
             ambiguityHigh
-              ? "cursor-not-allowed bg-[var(--bg-secondary)] text-[var(--text-secondary)]"
-              : "bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]"
+              ? 'cursor-not-allowed bg-[var(--bg-secondary)] text-[var(--text-secondary)]'
+              : 'bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]'
           }`}
         >
           Approve PRD &amp; Continue
@@ -320,37 +303,28 @@ export default function PRDEditor({ prd }: { prd: PRDData }) {
         )}
       </div>
     </div>
-  );
+  )
 }
 
-function PriorityBadge({
-  priority,
-}: {
-  priority: "must-have" | "should-have" | "nice-to-have";
-}) {
+function PriorityBadge({ priority }: { priority: 'must-have' | 'should-have' | 'nice-to-have' }) {
   const styles = {
-    "must-have": "text-[var(--accent)] font-medium",
-    "should-have": "text-[var(--text-primary)] font-medium",
-    "nice-to-have": "text-[var(--text-secondary)]",
-  };
-  return (
-    <span className={`text-xs ${styles[priority]}`}>{priority}</span>
-  );
+    'must-have': 'text-[var(--accent)] font-medium',
+    'should-have': 'text-[var(--text-primary)] font-medium',
+    'nice-to-have': 'text-[var(--text-secondary)]',
+  }
+  return <span className={`text-xs ${styles[priority]}`}>{priority}</span>
 }
 
 function HighlightTBD({ text }: { text: string }) {
   if (!/\bTBD\b/.test(text)) {
-    return <>{text}</>;
+    return <>{text}</>
   }
-  const parts = text.split(/(\bTBD\b)/g);
+  const parts = text.split(/(\bTBD\b)/g)
   return (
     <>
       {parts.map((part, i) =>
-        part === "TBD" ? (
-          <mark
-            key={i}
-            className="bg-amber-200 px-1 font-semibold text-amber-900"
-          >
+        part === 'TBD' ? (
+          <mark key={i} className="bg-amber-200 px-1 font-semibold text-amber-900">
             TBD
           </mark>
         ) : (
@@ -358,18 +332,12 @@ function HighlightTBD({ text }: { text: string }) {
         ),
       )}
     </>
-  );
+  )
 }
 
-function SectionContent({
-  section,
-  prd,
-}: {
-  section: { id: string; type: string };
-  prd: PRDData;
-}) {
+function SectionContent({ section, prd }: { section: { id: string; type: string }; prd: PRDData }) {
   switch (section.type) {
-    case "overview":
+    case 'overview':
       return (
         <div className="space-y-8">
           <div>
@@ -389,15 +357,13 @@ function SectionContent({
             </p>
           </div>
         </div>
-      );
+      )
 
-    case "target-users":
+    case 'target-users':
       return (
         <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-3">
           {(prd.targetUsers?.personas || []).map((persona) => (
-            <div
-              key={persona.name}
-            >
+            <div key={persona.name}>
               <h3 className="font-[var(--font-sans)] text-sm font-semibold text-[var(--text-primary)]">
                 {persona.name}
               </h3>
@@ -407,16 +373,13 @@ function SectionContent({
             </div>
           ))}
         </div>
-      );
+      )
 
-    case "features":
+    case 'features':
       return (
         <div className="space-y-8">
           {(prd.features || []).map((feature) => (
-            <div
-              key={feature.name}
-              className="pb-8"
-            >
+            <div key={feature.name} className="pb-8">
               <div className="flex items-center gap-4">
                 <h3 className="font-[var(--font-sans)] text-sm font-semibold text-[var(--text-primary)]">
                   {feature.name}
@@ -429,9 +392,9 @@ function SectionContent({
             </div>
           ))}
         </div>
-      );
+      )
 
-    case "user-stories":
+    case 'user-stories':
       return (
         <div className="space-y-8">
           {(prd.userStories || []).map((story) => (
@@ -443,10 +406,10 @@ function SectionContent({
                 <code>
                   <span className="text-emerald-700">Given </span>
                   <HighlightTBD text={story.given} />
-                  {"\n"}
+                  {'\n'}
                   <span className="text-sky-700">When </span>
                   <HighlightTBD text={story.when} />
-                  {"\n"}
+                  {'\n'}
                   <span className="text-amber-700">Then </span>
                   <HighlightTBD text={story.then} />
                 </code>
@@ -454,15 +417,13 @@ function SectionContent({
             </div>
           ))}
         </div>
-      );
+      )
 
-    case "data-model":
+    case 'data-model':
       return (
         <div>
           <div className="mb-6 flex items-center gap-4">
-            <span className="text-sm font-medium text-[var(--text-secondary)]">
-              Mermaid.js
-            </span>
+            <span className="text-sm font-medium text-[var(--text-secondary)]">Mermaid.js</span>
             <span className="text-xs text-[var(--text-secondary)]">
               Diagram rendering coming soon
             </span>
@@ -471,9 +432,9 @@ function SectionContent({
             <code>{prd.dataModel}</code>
           </pre>
         </div>
-      );
+      )
 
-    case "api":
+    case 'api':
       return prd.apiSpec ? (
         <pre className="overflow-x-auto rounded-[4px] bg-[var(--code-bg)] p-6 font-[var(--font-mono)] text-sm leading-relaxed text-[var(--text-primary)]">
           <code>{JSON.stringify(prd.apiSpec, null, 2)}</code>
@@ -482,9 +443,9 @@ function SectionContent({
         <p className="text-sm italic leading-relaxed text-[var(--text-secondary)]">
           No API specification provided yet.
         </p>
-      );
+      )
 
-    case "architecture":
+    case 'architecture':
       return (
         <div className="space-y-6">
           <span className="text-sm font-semibold text-[var(--accent)]">
@@ -494,9 +455,9 @@ function SectionContent({
             <HighlightTBD text={prd.architecture.description} />
           </p>
         </div>
-      );
+      )
 
     default:
-      return null;
+      return null
   }
 }

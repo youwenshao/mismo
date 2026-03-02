@@ -68,6 +68,7 @@ The deployment implements three validation gates integrated into n8n workflows:
 ## Supabase Integration
 
 All gates log decisions to the `Build` and `Commission` tables in Supabase:
+
 - `Build.executionIds`: Tracks the execution order of agents.
 - `Build.errorLogs`: Stores detailed validation and contract violation logs.
 - `Build.status` & `Build.failureCount`: Triggers human review escalation via database triggers.

@@ -1,13 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react'
 
 interface ResearchItem {
-  id: string;
-  title: string;
-  category: string;
-  date: string;
-  image: string;
-  gradient?: string;
-  icon?: React.ReactNode;
+  id: string
+  title: string
+  category: string
+  date: string
+  image: string
+  gradient?: string
+  icon?: React.ReactNode
 }
 
 const researchItems: ResearchItem[] = [
@@ -35,29 +35,29 @@ const researchItems: ResearchItem[] = [
     image: '/images/research3.jpg',
     gradient: 'linear-gradient(135deg, #fed7aa 0%, #fbcfe8 100%)',
   },
-];
+]
 
 export default function LatestResearch() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
+          setIsVisible(true)
+          observer.disconnect()
         }
       },
-      { threshold: 0.1 }
-    );
+      { threshold: 0.1 },
+    )
 
     if (sectionRef.current) {
-      observer.observe(sectionRef.current);
+      observer.observe(sectionRef.current)
     }
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <section ref={sectionRef} className="px-4 md:px-8 lg:px-12 py-12" id="research">
@@ -65,10 +65,7 @@ export default function LatestResearch() {
         {/* Section Header */}
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-xl font-semibold text-gray-900">Latest research</h2>
-          <a
-            href="#"
-            className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-          >
+          <a href="#" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
             View all
           </a>
         </div>
@@ -80,9 +77,7 @@ export default function LatestResearch() {
               key={item.id}
               href="#"
               className={`block group transition-all duration-700 ${
-                isVisible
-                  ? 'opacity-100 translate-y-0'
-                  : 'opacity-0 translate-y-8'
+                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
               style={{ transitionDelay: `${index * 100}ms` }}
             >
@@ -92,11 +87,7 @@ export default function LatestResearch() {
               >
                 {item.id === '1' && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <svg
-                      viewBox="0 0 200 120"
-                      fill="none"
-                      className="w-32 h-20"
-                    >
+                    <svg viewBox="0 0 200 120" fill="none" className="w-32 h-20">
                       <rect
                         x="20"
                         y="20"
@@ -181,10 +172,7 @@ export default function LatestResearch() {
                         <div className="text-xs text-gray-500">POLYMERASE</div>
                         <div className="flex gap-1">
                           {[...Array(8)].map((_, i) => (
-                            <div
-                              key={i}
-                              className="w-2 h-2 rounded-full bg-black"
-                            />
+                            <div key={i} className="w-2 h-2 rounded-full bg-black" />
                           ))}
                         </div>
                       </div>
@@ -192,10 +180,7 @@ export default function LatestResearch() {
                         <div className="text-xs text-gray-500">POLYMERASE</div>
                         <div className="flex gap-1">
                           {[...Array(6)].map((_, i) => (
-                            <div
-                              key={i}
-                              className="w-2 h-2 rounded-full bg-black"
-                            />
+                            <div key={i} className="w-2 h-2 rounded-full bg-black" />
                           ))}
                           <div className="w-2 h-2 rounded-full border-2 border-black" />
                           <div className="w-2 h-2 rounded-full border-2 border-black" />
@@ -205,10 +190,7 @@ export default function LatestResearch() {
                         <div className="text-xs text-gray-500">LIGASE</div>
                         <div className="flex gap-1">
                           {[...Array(4)].map((_, i) => (
-                            <div
-                              key={i}
-                              className="w-2 h-2 rounded-full bg-black"
-                            />
+                            <div key={i} className="w-2 h-2 rounded-full bg-black" />
                           ))}
                           <div className="w-2 h-2 rounded-full border-2 border-black" />
                           <div className="w-2 h-2 rounded-full border-2 border-black" />
@@ -237,5 +219,5 @@ export default function LatestResearch() {
         </div>
       </div>
     </section>
-  );
+  )
 }

@@ -74,7 +74,12 @@ function simulateCheck(check: VerificationCheck): VerificationCheck {
     case 'lighthouse-a11y':
       return { ...check, status: 'passed', actual: 97 }
     case 'snyk-vuln':
-      return { ...check, status: 'passed', actual: 0, details: '0 critical/high vulnerabilities found' }
+      return {
+        ...check,
+        status: 'passed',
+        actual: 0,
+        details: '0 critical/high vulnerabilities found',
+      }
     case 'playwright-e2e':
       return { ...check, status: 'passed', details: '42/42 tests passed' }
     case 'stackhawk-dast':

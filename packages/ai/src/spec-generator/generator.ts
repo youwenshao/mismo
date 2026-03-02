@@ -188,7 +188,9 @@ export class SpecGenerator {
 
     if (dataTypes) {
       const types = Array.isArray(dataTypes) ? dataTypes : [dataTypes]
-      if (types.some((t) => t.toLowerCase().includes('file') || t.toLowerCase().includes('media'))) {
+      if (
+        types.some((t) => t.toLowerCase().includes('file') || t.toLowerCase().includes('media'))
+      ) {
         lines.push('    Attachment {')
         lines.push('        string id PK')
         lines.push('        string userId FK')
@@ -355,7 +357,9 @@ function buildProblemStatement(data: Record<string, unknown>): string {
   const parts: string[] = []
   if (problem) parts.push(problem)
   if (currentSolutions) {
-    parts.push(`Current alternatives include ${currentSolutions}, which fail to fully address the need.`)
+    parts.push(
+      `Current alternatives include ${currentSolutions}, which fail to fully address the need.`,
+    )
   }
 
   return parts.length > 0 ? parts.join(' ') : 'TBD'

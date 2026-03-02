@@ -165,7 +165,7 @@ Make sure to add `commissions Commission[]` to the existing `User` model to esta
 
 Create a raw SQL migration to initialize pgsodium and encrypt the `encryptedTokens` column in the `Credential` table. Note: Supabase has pgsodium installed, but we need to set up the key and view.
 
-*Implementation Note: We will use the Transparent Column Encryption (TCE) feature of pgsodium.*
+_Implementation Note: We will use the Transparent Column Encryption (TCE) feature of pgsodium._
 
 ```sql
 -- Enable pgsodium extension if not already enabled (usually enabled by default in Supabase)
@@ -196,7 +196,7 @@ BEGIN
     new_key_id := pgsodium.create_key(
         name := 'credential_encryption_key'
     );
-    
+
     -- Set default key for new records if we want a single table key
     -- Or we can just use the server root key dynamically.
 END $$;
@@ -234,7 +234,7 @@ FOR EACH ROW
 EXECUTE FUNCTION encrypt_credential_token();
 ```
 
-*(Note: The exact pgsodium setup might require specific Supabase tenant IDs or key management strategies. The above is a conceptual standard SQL implementation. We will refine the exact SQL based on standard Supabase pgsodium TCE docs during execution).*
+_(Note: The exact pgsodium setup might require specific Supabase tenant IDs or key management strategies. The above is a conceptual standard SQL implementation. We will refine the exact SQL based on standard Supabase pgsodium TCE docs during execution)._
 
 ### Task 3: Create Raw SQL Migration for RLS and Realtime
 
@@ -324,20 +324,20 @@ RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.status = 'FAILED' THEN
         NEW."failureCount" := COALESCE(OLD."failureCount", 0) + 1;
-        
+
         IF NEW."failureCount" >= 3 THEN
             NEW."humanReview" := true;
             -- Optionally update commission status to ESCALATED
             UPDATE "Commission" SET status = 'ESCALATED' WHERE id = NEW."commissionId";
         END IF;
     END IF;
-    
+
     -- If status changes to SUCCESS, reset failures? (Optional, based on business logic)
     IF NEW.status = 'SUCCESS' THEN
         NEW."failureCount" := 0;
         NEW."humanReview" := false;
     END IF;
-    
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;

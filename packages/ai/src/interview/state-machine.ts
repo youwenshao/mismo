@@ -1,4 +1,11 @@
-import { InterviewState, READINESS_THRESHOLD, INTERVIEW_REMINDER_MS, type InterviewMessage, type SessionCheckpoint, type ReadinessMetadata } from '@mismo/shared'
+import {
+  InterviewState,
+  READINESS_THRESHOLD,
+  INTERVIEW_REMINDER_MS,
+  type InterviewMessage,
+  type SessionCheckpoint,
+  type ReadinessMetadata,
+} from '@mismo/shared'
 import { INTERVIEW_STATES, type StateConfig } from './states'
 import { MO_BASE_PROMPT } from './prompts'
 
@@ -83,13 +90,15 @@ export class InterviewStateMachine {
   saveCheckpoint(): void {
     this.context.checkpoints.push({
       messageIndex: this.context.messages.length,
-      context: JSON.parse(JSON.stringify({
-        currentState: this.context.currentState,
-        extractedData: this.context.extractedData,
-        readinessScore: this.context.readinessScore,
-        turnCount: this.context.turnCount,
-        totalTurnCount: this.context.totalTurnCount,
-      })),
+      context: JSON.parse(
+        JSON.stringify({
+          currentState: this.context.currentState,
+          extractedData: this.context.extractedData,
+          readinessScore: this.context.readinessScore,
+          turnCount: this.context.turnCount,
+          totalTurnCount: this.context.totalTurnCount,
+        }),
+      ),
       timestamp: new Date().toISOString(),
     })
   }
@@ -116,11 +125,11 @@ export class InterviewStateMachine {
     try {
       const metadata = JSON.parse(match[1])
       this.context.readinessScore = metadata.readiness
-      
+
       if (metadata.extractedData && typeof metadata.extractedData === 'object') {
         this.context.extractedData = {
           ...this.context.extractedData,
-          ...metadata.extractedData
+          ...metadata.extractedData,
         }
       }
 
@@ -136,7 +145,10 @@ export class InterviewStateMachine {
     CHOICES_REGEX.lastIndex = 0
     if (!match) return null
 
-    const lines = match[1].trim().split('\n').filter((l) => l.trim())
+    const lines = match[1]
+      .trim()
+      .split('\n')
+      .filter((l) => l.trim())
     return lines.map((line) => {
       const trimmed = line.trim()
       const colonIdx = trimmed.indexOf(':')
@@ -216,7 +228,8 @@ export class InterviewStateMachine {
     const config = this.currentStateConfig
     const ctx = this.context
 
-    let prompt = MO_BASE_PROMPT + '\n\n---\n\nCURRENT PHASE: ' + config.id + '\n\n' + config.systemPrompt
+    let prompt =
+      MO_BASE_PROMPT + '\n\n---\n\nCURRENT PHASE: ' + config.id + '\n\n' + config.systemPrompt
 
     prompt += `\n\n### EXTRACTION RULES (CRITICAL)
 You MUST extract structured data from the user's input and include it in your [META] block. 

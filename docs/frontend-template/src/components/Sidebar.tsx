@@ -1,6 +1,6 @@
 interface SidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen: boolean
+  onClose: () => void
 }
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
@@ -15,18 +15,18 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     { label: 'Stories', href: '#stories' },
     { label: 'Company', href: '#company' },
     { label: 'News', href: '#news' },
-  ];
+  ]
 
   return (
     <>
       {/* Overlay - visible when sidebar is open */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/20 z-[45] transition-opacity duration-300" 
+        <div
+          className="fixed inset-0 bg-black/20 z-[45] transition-opacity duration-300"
           onClick={(e) => {
             // Only close if clicking directly on the overlay, not on the sidebar
             if (e.target === e.currentTarget) {
-              onClose();
+              onClose()
             }
           }}
         />
@@ -51,5 +51,5 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         </nav>
       </aside>
     </>
-  );
+  )
 }

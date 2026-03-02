@@ -3,7 +3,7 @@ name: Chat indicator and dashboard
 overview: Fix the persistently invisible streaming indicator in the chat UI, add traffic-light status indicators to the project dashboard, and add one-click PRD JSON copy.
 todos:
   - id: fix-streaming-indicator
-    content: "Fix streaming tag indicator in MessageBubble.tsx: inline style for animationDelay, larger dots (w-1.5 h-1.5), visible colors (gray-400), larger text (11px)"
+    content: 'Fix streaming tag indicator in MessageBubble.tsx: inline style for animationDelay, larger dots (w-1.5 h-1.5), visible colors (gray-400), larger text (11px)'
     status: completed
   - id: dashboard-status-dots
     content: Add StatusDot component and traffic-light colored dots to project list in dashboard/page.tsx
@@ -37,18 +37,29 @@ isProject: false
 - Use **inline `style`** for `animationDelay` instead of Tailwind arbitrary properties, eliminating the CSS specificity/ordering issue:
 
 ```tsx
-{streamingTag && displayContent && (
-  <div className="flex items-center gap-2 mt-2">
-    <span className="flex gap-1">
-      <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-      <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-      <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "300ms" }} />
-    </span>
-    <span className="text-[11px] font-mono text-gray-400">
-      {streamingTag === "choices" ? "preparing options..." : "finishing up..."}
-    </span>
-  </div>
-)}
+{
+  streamingTag && displayContent && (
+    <div className="flex items-center gap-2 mt-2">
+      <span className="flex gap-1">
+        <span
+          className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce"
+          style={{ animationDelay: '0ms' }}
+        />
+        <span
+          className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce"
+          style={{ animationDelay: '150ms' }}
+        />
+        <span
+          className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce"
+          style={{ animationDelay: '300ms' }}
+        />
+      </span>
+      <span className="text-[11px] font-mono text-gray-400">
+        {streamingTag === 'choices' ? 'preparing options...' : 'finishing up...'}
+      </span>
+    </div>
+  )
+}
 ```
 
 Key changes vs current code:
@@ -82,18 +93,20 @@ Implementation: Create a `StatusDot` component (inline in the dashboard file) th
 ```tsx
 function StatusDot({ status }: { status: ProjectStatus }) {
   const config: Record<ProjectStatus, { color: string; pulse: boolean }> = {
-    DISCOVERY:    { color: "bg-gray-400",  pulse: true },
-    REVIEW:       { color: "bg-amber-400", pulse: true },
-    CONTRACTED:   { color: "bg-blue-400",  pulse: false },
-    DEVELOPMENT:  { color: "bg-blue-400",  pulse: true },
-    VERIFICATION: { color: "bg-amber-400", pulse: true },
-    DELIVERED:    { color: "bg-green-400", pulse: false },
-    CANCELLED:    { color: "bg-red-400",   pulse: false },
-  };
-  const { color, pulse } = config[status];
+    DISCOVERY: { color: 'bg-gray-400', pulse: true },
+    REVIEW: { color: 'bg-amber-400', pulse: true },
+    CONTRACTED: { color: 'bg-blue-400', pulse: false },
+    DEVELOPMENT: { color: 'bg-blue-400', pulse: true },
+    VERIFICATION: { color: 'bg-amber-400', pulse: true },
+    DELIVERED: { color: 'bg-green-400', pulse: false },
+    CANCELLED: { color: 'bg-red-400', pulse: false },
+  }
+  const { color, pulse } = config[status]
   return (
-    <span className={`inline-block w-2 h-2 rounded-full ${color} ${pulse ? "animate-pulse" : ""}`} />
-  );
+    <span
+      className={`inline-block w-2 h-2 rounded-full ${color} ${pulse ? 'animate-pulse' : ''}`}
+    />
+  )
 }
 ```
 
@@ -146,12 +159,12 @@ Implementation:
 - On click: copy the JSON, set `copied = true`, `setTimeout` to reset after 2s
 
 ```tsx
-const [copied, setCopied] = useState(false);
+const [copied, setCopied] = useState(false)
 
 async function handleCopyJson() {
-  await navigator.clipboard.writeText(JSON.stringify(prd, null, 2));
-  setCopied(true);
-  setTimeout(() => setCopied(false), 2000);
+  await navigator.clipboard.writeText(JSON.stringify(prd, null, 2))
+  setCopied(true)
+  setTimeout(() => setCopied(false), 2000)
 }
 ```
 
@@ -163,7 +176,7 @@ Button placed in the PRD header `div` (line ~131):
   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
 >
   {copied ? <Check size={14} /> : <Copy size={14} />}
-  {copied ? "Copied!" : "Copy JSON"}
+  {copied ? 'Copied!' : 'Copy JSON'}
 </button>
 ```
 
@@ -175,4 +188,3 @@ Button placed in the PRD header `div` (line ~131):
 - [apps/web/src/app/dashboard/page.tsx](apps/web/src/app/dashboard/page.tsx) -- add StatusDot component and colored dots to project list
 - [apps/web/src/app/project/[id]/page.tsx](apps/web/src/app/project/[id]/page.tsx) -- add ReviewPipeline component above PRD content
 - [apps/web/src/app/project/[id]/prd/prd-editor.tsx](apps/web/src/app/project/[id]/prd/prd-editor.tsx) -- add Copy JSON button in PRD header
-

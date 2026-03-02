@@ -87,7 +87,8 @@ const PROMISE_ALL_DEPENDENT: DetectionRule = {
       }
 
       const body = promiseBody.join('\n')
-      const writeOps = body.match(/\b(?:update|delete|create|insert|remove|set|push|write)\w*\s*\(/gi) || []
+      const writeOps =
+        body.match(/\b(?:update|delete|create|insert|remove|set|push|write)\w*\s*\(/gi) || []
       if (writeOps.length >= 2) {
         matches.push({
           file: filePath,
@@ -107,7 +108,8 @@ const MISSING_AWAIT: DetectionRule = {
   name: 'Missing await on async call',
   detect(lines, filePath) {
     const matches: RaceConditionMatch[] = []
-    const asyncCallPattern = /(?<!await\s)(?<!return\s)(?<!\.then\()(\w+Async|\w+\.(?:save|create|update|delete|remove|send|fetch|findMany|findFirst|findUnique)\s*\()/
+    const asyncCallPattern =
+      /(?<!await\s)(?<!return\s)(?<!\.then\()(\w+Async|\w+\.(?:save|create|update|delete|remove|send|fetch|findMany|findFirst|findUnique)\s*\()/
 
     let insideAsync = false
     let asyncDepth = 0
@@ -126,7 +128,11 @@ const MISSING_AWAIT: DetectionRule = {
         asyncDepth -= (line.match(/}/g) || []).length
 
         if (asyncCallPattern.test(trimmed) && !/^\s*(\/\/|\/\*|\*)/.test(line)) {
-          if (!/await\s/.test(trimmed) && !/\.then\s*\(/.test(trimmed) && !/return\s/.test(trimmed)) {
+          if (
+            !/await\s/.test(trimmed) &&
+            !/\.then\s*\(/.test(trimmed) &&
+            !/return\s/.test(trimmed)
+          ) {
             matches.push({
               file: filePath,
               line: i + 1,

@@ -3,61 +3,61 @@ name: Mismo Platform Implementation
 overview: Phased implementation plan for the Mismo hybrid human-AI software development platform, organized into 6 major phases with parallelization across independent workstreams. Each phase builds on the prior, with the first 3 phases targeting a functional MVP and the latter 3 hardening for production.
 todos:
   - id: phase-0
-    content: "Phase 0: Project scaffolding - Turborepo monorepo, Next.js apps, Prisma, CI/CD, Vercel deploy"
+    content: 'Phase 0: Project scaffolding - Turborepo monorepo, Next.js apps, Prisma, CI/CD, Vercel deploy'
     status: completed
   - id: phase-1a
-    content: "Phase 1A: Database schema (Prisma) + Supabase Auth + RLS policies + seed data"
+    content: 'Phase 1A: Database schema (Prisma) + Supabase Auth + RLS policies + seed data'
     status: completed
   - id: phase-1b
-    content: "Phase 1B: Landing page + Mo chat UI shell (mock responses, no AI)"
+    content: 'Phase 1B: Landing page + Mo chat UI shell (mock responses, no AI)'
     status: completed
   - id: phase-1c
-    content: "Phase 1C: Internal dashboard shell (auth-gated, empty states)"
+    content: 'Phase 1C: Internal dashboard shell (auth-gated, empty states)'
     status: completed
   - id: phase-2a
-    content: "Phase 2A: Mo interview agent - state machine, Vercel AI SDK, streaming, 15-min limit"
+    content: 'Phase 2A: Mo interview agent - state machine, Vercel AI SDK, streaming, 15-min limit'
     status: completed
   - id: phase-2b
-    content: "Phase 2B: Safety classifier - regex + LLM 3-tier risk scoring"
+    content: 'Phase 2B: Safety classifier - regex + LLM 3-tier risk scoring'
     status: completed
   - id: phase-2c
-    content: "Phase 2C: WebRTC voice integration with LiveKit (deferrable)"
+    content: 'Phase 2C: WebRTC voice integration with LiveKit (deferrable)'
     status: completed
   - id: phase-3a
-    content: "Phase 3A: PRD/specification generator from interview data"
+    content: 'Phase 3A: PRD/specification generator from interview data'
     status: completed
   - id: phase-3b
-    content: "Phase 3B: Collaborative PRD editor with inline comments + Supabase Realtime"
+    content: 'Phase 3B: Collaborative PRD editor with inline comments + Supabase Realtime'
     status: completed
   - id: phase-3c
-    content: "Phase 3C: Stripe checkout + age verification + DocuSign contracts"
+    content: 'Phase 3C: Stripe checkout + age verification + DocuSign contracts'
     status: completed
   - id: phase-4a
-    content: "Phase 4A: Template seeding system (3 pre-audited architecture templates)"
+    content: 'Phase 4A: Template seeding system (3 pre-audited architecture templates)'
     status: completed
   - id: phase-4b
-    content: "Phase 4B: Cursor automation stack - Docker + orchestrator + token budgets"
+    content: 'Phase 4B: Cursor automation stack - Docker + orchestrator + token budgets'
     status: completed
   - id: phase-4c
-    content: "Phase 4C: CI/CD orchestration - Playwright generation, security scanning, Vercel preview"
+    content: 'Phase 4C: CI/CD orchestration - Playwright generation, security scanning, Vercel preview'
     status: completed
   - id: phase-5a
-    content: "Phase 5A: Dev team review dashboard with SLA tracking"
+    content: 'Phase 5A: Dev team review dashboard with SLA tracking'
     status: completed
   - id: phase-5b
-    content: "Phase 5B: Automated code review protocol (secrets, N+1, race conditions)"
+    content: 'Phase 5B: Automated code review protocol (secrets, N+1, race conditions)'
     status: completed
   - id: phase-5c
-    content: "Phase 5C: Client progress portal with timeline + revision requests"
+    content: 'Phase 5C: Client progress portal with timeline + revision requests'
     status: completed
   - id: phase-6a
-    content: "Phase 6A: Compliance engine - Iubenda, GDPR, OSS license scanning"
+    content: 'Phase 6A: Compliance engine - Iubenda, GDPR, OSS license scanning'
     status: completed
   - id: phase-6b
-    content: "Phase 6B: Verification + delivery pipeline - audits, IP transfer, debt ledger"
+    content: 'Phase 6B: Verification + delivery pipeline - audits, IP transfer, debt ledger'
     status: completed
   - id: phase-6c
-    content: "Phase 6C: Production hardening - rate limiting, monitoring, load testing"
+    content: 'Phase 6C: Production hardening - rate limiting, monitoring, load testing'
     status: completed
 isProject: false
 ---
@@ -230,8 +230,8 @@ The core product differentiator. Two parallel workstreams:
 Implement the state-machine interview protocol:
 
 ```
-States: GREETING -> PROBLEM_DEFINITION -> TARGET_USERS -> 
-        FEATURE_EXTRACTION -> TECHNICAL_TRADEOFFS -> 
+States: GREETING -> PROBLEM_DEFINITION -> TARGET_USERS ->
+        FEATURE_EXTRACTION -> TECHNICAL_TRADEOFFS ->
         MONETIZATION -> COMPLIANCE_CHECK -> SUMMARY -> COMPLETE
 ```
 
@@ -445,34 +445,32 @@ flowchart TD
     P0[Phase 0: Scaffolding] --> P1A[1A: DB Schema + Auth]
     P0 --> P1B[1B: Landing + Chat UI]
     P0 --> P1C[1C: Internal Dashboard Shell]
-    
+
     P1A --> P2A[2A: Mo Interview Agent]
     P1B --> P2A
     P1A --> P2B[2B: Safety Classifier]
     P1B --> P2C[2C: WebRTC Voice]
-    
+
     P2A --> P3A[3A: Spec Generator]
     P2B --> P3A
     P2A --> P3B[3B: PRD Editor]
     P1A --> P3C[3C: Stripe + Contracts]
-    
+
     P3A --> P4A[4A: Template System]
     P3A --> P4B[4B: Cursor Automation]
     P3A --> P4C[4C: CI/CD Orchestration]
-    
+
     P4B --> P5A[5A: Dev Review Dashboard]
     P4C --> P5B[5B: Code Review Protocol]
     P1C --> P5A
     P3B --> P5C[5C: Client Progress Portal]
-    
+
     P5A --> P6A[6A: Compliance Engine]
     P5B --> P6B[6B: Verification + Delivery]
     P4C --> P6B
     P3C --> P6A
     P5A --> P6C[6C: Production Hardening]
 ```
-
-
 
 ---
 

@@ -14,9 +14,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing description' }, { status: 400 })
   }
 
-  const fullText = extractedData
-    ? `${description}\n${JSON.stringify(extractedData)}`
-    : description
+  const fullText = extractedData ? `${description}\n${JSON.stringify(extractedData)}` : description
 
   const regexResult = classifier.classifyWithRegex(fullText)
 

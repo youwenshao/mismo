@@ -13,8 +13,7 @@ const buttonVariants = cva(
           'rounded-[4px] border border-[var(--border)] bg-transparent text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] cursor-pointer',
         tertiary:
           'rounded-none bg-transparent text-[var(--accent)] border-b border-[var(--accent)] hover:text-[var(--accent-hover)] hover:border-[var(--accent-hover)] cursor-pointer',
-        send:
-          'rounded-full bg-[var(--accent)] text-white font-semibold hover:bg-[var(--accent-hover)] cursor-pointer',
+        send: 'rounded-full bg-[var(--accent)] text-white font-semibold hover:bg-[var(--accent-hover)] cursor-pointer',
       },
       size: {
         default: 'px-6 py-3',
@@ -31,17 +30,12 @@ const buttonVariants = cva(
 )
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {}
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {}
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, ...props }, ref) => {
     return (
-      <button
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        {...props}
-      />
+      <button className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
     )
   },
 )

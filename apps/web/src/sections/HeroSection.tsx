@@ -1,31 +1,31 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { ArrowUp } from "lucide-react";
+import { useState, useEffect } from 'react'
+import { ArrowUp } from 'lucide-react'
 
 const placeholderTexts = [
-  "A marketplace for vintage cameras",
-  "An AI-powered fitness tracker",
-  "A booking platform for local guides",
-  "A SaaS dashboard for analytics",
-];
+  'A marketplace for vintage cameras',
+  'An AI-powered fitness tracker',
+  'A booking platform for local guides',
+  'A SaaS dashboard for analytics',
+]
 
 const pillButtons = [
-  { label: "Talk to Mo", href: "/chat" },
-  { label: "View Pricing", href: "#pricing" },
-  { label: "How It Works", href: "#how-it-works" },
-];
+  { label: 'Talk to Mo', href: '/chat' },
+  { label: 'View Pricing', href: '#pricing' },
+  { label: 'How It Works', href: '#how-it-works' },
+]
 
 export default function HeroSection() {
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
-  const [inputValue, setInputValue] = useState("");
+  const [placeholderIndex, setPlaceholderIndex] = useState(0)
+  const [inputValue, setInputValue] = useState('')
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setPlaceholderIndex((prev) => (prev + 1) % placeholderTexts.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
+      setPlaceholderIndex((prev) => (prev + 1) % placeholderTexts.length)
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [])
 
   return (
     <section className="min-h-[60vh] flex flex-col items-center justify-center px-4 pt-4 pb-12">
@@ -60,5 +60,5 @@ export default function HeroSection() {
         ))}
       </div>
     </section>
-  );
+  )
 }

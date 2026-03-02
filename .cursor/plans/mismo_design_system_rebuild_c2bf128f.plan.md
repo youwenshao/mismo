@@ -1,6 +1,6 @@
 ---
 name: Mismo Design System Rebuild
-overview: "Create an agent-readable style guide document, then systematically rebuild both frontends (apps/web and apps/internal) to comply with the Mismo Design System: Swiss Typographic Style with warm off-white backgrounds, crimson accents, serif headings, no gradients/shadows/blur/purple/border-boxes. Design a new restrained color coding system for the dev dashboard."
+overview: 'Create an agent-readable style guide document, then systematically rebuild both frontends (apps/web and apps/internal) to comply with the Mismo Design System: Swiss Typographic Style with warm off-white backgrounds, crimson accents, serif headings, no gradients/shadows/blur/purple/border-boxes. Design a new restrained color coding system for the dev dashboard.'
 todos:
   - id: style-guide
     content: Create docs/mismo-design-system.md -- agent-readable style guide with all tokens, rules, component specs, dashboard color system
@@ -65,14 +65,14 @@ Rebuild `[apps/web/src/app/globals.css](apps/web/src/app/globals.css)` and `[app
 
 ```css
 :root {
-  --bg-primary: #FAF9F6;
-  --bg-secondary: #F5F5F0;
-  --text-primary: #0F0F0F;
+  --bg-primary: #faf9f6;
+  --bg-secondary: #f5f5f0;
+  --text-primary: #0f0f0f;
   --text-secondary: #525252;
-  --accent: #B91C1C;
-  --accent-hover: #991B1B;
-  --border: #E5E5E0;
-  --code-bg: #F0F0EA;
+  --accent: #b91c1c;
+  --accent-hover: #991b1b;
+  --border: #e5e5e0;
+  --code-bg: #f0f0ea;
   /* dashboard-specific tokens in internal app */
 }
 ```
@@ -255,14 +255,13 @@ Rebuild to match design system:
 ## Key Implementation Notes
 
 - **No dark mode**: Remove all `dark:` prefixes and `prefers-color-scheme` queries
-- **No shadows**: Remove all `shadow-`* classes
-- **No backdrop blur**: Remove all `backdrop-blur-`* classes
-- **No gradients**: Remove all `bg-gradient-`* and `bg-clip-text` usage
+- **No shadows**: Remove all `shadow-`\* classes
+- **No backdrop blur**: Remove all `backdrop-blur-`\* classes
+- **No gradients**: Remove all `bg-gradient-`\* and `bg-clip-text` usage
 - **No border boxes on content sections**: Remove `border border-gray-200 rounded-xl` card patterns
-- **No purple/indigo**: Replace all `indigo-`*, `violet-`*, `purple-*` with crimson/neutral
+- **No purple/indigo**: Replace all `indigo-`_, `violet-`_, `purple-*` with crimson/neutral
 - **Serif for H1/H2**: Use Source Serif 4 for major headings
 - **Left-aligned only**: No `text-center` except the logo
 - **Sentence case**: No `uppercase` except button labels per spec
 - **Transitions**: Only 150-200ms ease-out on color/background-color/border-color
-- **No scale transforms**: Remove all `active:scale-`* and `hover:scale-`*
-
+- **No scale transforms**: Remove all `active:scale-`_ and `hover:scale-`_

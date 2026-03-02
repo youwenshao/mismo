@@ -19,6 +19,7 @@ The layout issues stem from **multiple root causes** that compound each other. B
 - Body not establishing a proper full-viewport baseline for child layouts
 
 **Evidence:**
+
 - `apps/web/src/app/layout.tsx`: `<body>{children}</body>` — no classes
 - `apps/web/src/app/globals.css`: `body { background; color; font-family; }` — no height
 - `docs/frontend-template/src/index.css`: Same pattern
@@ -51,6 +52,7 @@ Or use Tailwind utilities on the layout root:
 **Problem:** `min-h-screen` maps to `100vh`. On mobile browsers (especially Safari), `100vh` includes the area behind the browser chrome (URL bar, toolbar). When the UI is visible, the visible viewport is smaller than 100vh, so content appears vertically squashed or cut off.
 
 **Evidence:**
+
 - `apps/web/src/app/page.tsx`: `<div className="min-h-screen bg-white">`
 - `docs/frontend-template/src/App.tsx`: Same
 - Design system references `min-h-screen` implicitly
@@ -82,6 +84,7 @@ Or use a fallback for older browsers:
 **Problem:** The header is `fixed` with no reserved space. Only the first section (HeroSection) adds `pt-24` to clear the header. Any page or route that doesn’t start with a hero-like section will have content hidden under the header.
 
 **Evidence:**
+
 - `apps/web/src/components/Header.tsx`: `fixed top-0 right-0 z-[55]`
 - `apps/web/src/app/page.tsx`: `<main className={...}>` — no `pt-*`
 - HeroSection: `pt-24` — correct for first section
@@ -106,6 +109,7 @@ This matches the design system’s header height (~56–64px).
 **Problem:** The design system specifies `py-12` for section padding, but sections use different values, leading to uneven vertical rhythm.
 
 **Evidence:**
+
 - Design system: `px-4 md:px-8 lg:px-12 py-12`
 - HowItWorks: `py-12` ✓
 - TestimonialsSection: `py-12` ✓
@@ -146,13 +150,13 @@ body {
 
 ## Summary of Fixes
 
-| Priority | Fix | Files | Effort |
-|----------|-----|-------|--------|
-| 1 | Add `min-h-full` to `html` and `body` | `layout.tsx`, `globals.css` (both apps) | Low |
-| 2 | Replace `min-h-screen` with `min-h-dvh` | `page.tsx`, `App.tsx` | Low |
-| 3 | Add `pt-20` to `<main>` | `page.tsx`, `App.tsx` | Low |
-| 4 | Standardize FeaturedCards to `py-12` | `FeaturedCards.tsx` | Trivial |
-| 5 | Add `line-height: 1.6` to body | `globals.css` | Trivial |
+| Priority | Fix                                     | Files                                   | Effort  |
+| -------- | --------------------------------------- | --------------------------------------- | ------- |
+| 1        | Add `min-h-full` to `html` and `body`   | `layout.tsx`, `globals.css` (both apps) | Low     |
+| 2        | Replace `min-h-screen` with `min-h-dvh` | `page.tsx`, `App.tsx`                   | Low     |
+| 3        | Add `pt-20` to `<main>`                 | `page.tsx`, `App.tsx`                   | Low     |
+| 4        | Standardize FeaturedCards to `py-12`    | `FeaturedCards.tsx`                     | Trivial |
+| 5        | Add `line-height: 1.6` to body          | `globals.css`                           | Trivial |
 
 ---
 

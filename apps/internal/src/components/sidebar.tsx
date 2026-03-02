@@ -1,27 +1,27 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
 const nav = [
-  { label: "Overview", href: "/" },
-  { label: "Projects", href: "/projects" },
-  { label: "Settings", href: "/settings" },
-];
+  { label: 'Overview', href: '/' },
+  { label: 'Projects', href: '/projects' },
+  { label: 'Settings', href: '/settings' },
+]
 
 export function Sidebar() {
-  const pathname = usePathname();
+  const pathname = usePathname()
 
   function isActive(href: string) {
-    if (href === "/") return pathname === "/";
-    return pathname.startsWith(href);
+    if (href === '/') return pathname === '/'
+    return pathname.startsWith(href)
   }
 
   async function handleSignOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    window.location.href = "http://localhost:3000";
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    window.location.href = 'http://localhost:3000'
   }
 
   return (
@@ -38,8 +38,8 @@ export function Sidebar() {
             href={item.href}
             className={`block py-2 px-4 text-sm transition-colors ${
               isActive(item.href)
-                ? "text-black font-medium border-l-2 border-black"
-                : "text-gray-500 hover:text-gray-700"
+                ? 'text-black font-medium border-l-2 border-black'
+                : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             {item.label}
@@ -56,5 +56,5 @@ export function Sidebar() {
         </button>
       </div>
     </aside>
-  );
+  )
 }

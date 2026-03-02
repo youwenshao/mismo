@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import { ArrowUp } from 'lucide-react';
+import { useState, useEffect } from 'react'
+import { ArrowUp } from 'lucide-react'
 
 const placeholderTexts = [
   'Plan an itinerary for teens in Hong Kong',
   'Show me the F1 racing schedule',
-];
+]
 
 const pillButtons = [
   { label: 'Learn about ChatGPT Business', href: '#' },
@@ -12,24 +12,22 @@ const pillButtons = [
   { label: 'Talk with ChatGPT', href: '#' },
   { label: 'Research', href: '#' },
   { label: 'More', href: '#' },
-];
+]
 
 export default function HeroSection() {
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
-  const [inputValue, setInputValue] = useState('');
+  const [placeholderIndex, setPlaceholderIndex] = useState(0)
+  const [inputValue, setInputValue] = useState('')
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setPlaceholderIndex((prev) => (prev + 1) % placeholderTexts.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
+      setPlaceholderIndex((prev) => (prev + 1) % placeholderTexts.length)
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [])
 
   return (
     <section className="min-h-[60vh] flex flex-col items-center justify-center px-4 pt-4 pb-12">
-      <h1 className="text-3xl md:text-4xl font-semibold text-center mb-8">
-        What can I help with?
-      </h1>
+      <h1 className="text-3xl md:text-4xl font-semibold text-center mb-8">What can I help with?</h1>
 
       {/* Search Input */}
       <div className="w-full max-w-2xl relative mb-6">
@@ -60,5 +58,5 @@ export default function HeroSection() {
         ))}
       </div>
     </section>
-  );
+  )
 }

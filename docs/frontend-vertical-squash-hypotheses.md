@@ -4,13 +4,13 @@
 
 ## Why Template Works, Web App Doesn't
 
-| Aspect | docs/frontend-template (works) | apps/web (broken) |
-|--------|-------------------------------|-------------------|
-| **Tailwind** | v3.4 (@tailwind base/components/utilities) | v4 (@import tailwindcss/index.css) |
-| **Build** | Vite (client-only) | Next.js (SSR + hydration) |
-| **Document** | Static index.html, CSS in index.css | Layout.tsx, CSS in globals.css |
-| **Root structure** | body > div#root > div.min-h-dvh | body > div.min-h-dvh |
-| **html/body height** | Explicit in index.css (min-height: 100%) | Explicit in globals.css + layout className |
+| Aspect               | docs/frontend-template (works)             | apps/web (broken)                          |
+| -------------------- | ------------------------------------------ | ------------------------------------------ |
+| **Tailwind**         | v3.4 (@tailwind base/components/utilities) | v4 (@import tailwindcss/index.css)         |
+| **Build**            | Vite (client-only)                         | Next.js (SSR + hydration)                  |
+| **Document**         | Static index.html, CSS in index.css        | Layout.tsx, CSS in globals.css             |
+| **Root structure**   | body > div#root > div.min-h-dvh            | body > div.min-h-dvh                       |
+| **html/body height** | Explicit in index.css (min-height: 100%)   | Explicit in globals.css + layout className |
 
 ---
 
@@ -46,7 +46,7 @@
 ```css
 html {
   min-height: 100%;
-  line-height: 1.6;  /* match body, override v4's 1.5 */
+  line-height: 1.6; /* match body, override v4's 1.5 */
   scroll-behavior: smooth;
 }
 ```
@@ -99,7 +99,8 @@ html {
 
 **Theory:** The template works with Tailwind v3. The most reliable fix is to make the web app's CSS structure mirror the template as closely as possible within v4 constraints.
 
-**Fix:** 
+**Fix:**
+
 1. Put html/body rules in `@layer base` (H1)
 2. Use the same `*` selector as template: only `border-color`, no margin/box-sizing (H5)
 3. Ensure html comes before body, same property order as template
@@ -118,6 +119,7 @@ html {
 ## Verification
 
 After each fix:
+
 1. Restart dev server
 2. Hard refresh (Cmd+Shift+R)
 3. Compare with template in same viewport size

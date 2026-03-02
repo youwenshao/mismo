@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import {
-  checkGDPRCompliance,
-  type DataExportRequest,
-  type DeletionRequest,
-} from '@mismo/ai'
+import { checkGDPRCompliance, type DataExportRequest, type DeletionRequest } from '@mismo/ai'
 
 const MOCK_APP_CONFIG: Record<string, unknown> = {
   dataExportEndpoint: true,
@@ -41,10 +37,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (!body.type || !body.userId) {
-    return NextResponse.json(
-      { error: 'Missing type or userId in request body' },
-      { status: 400 },
-    )
+    return NextResponse.json({ error: 'Missing type or userId in request body' }, { status: 400 })
   }
 
   if (body.type === 'export') {
@@ -67,5 +60,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'Data deletion request created', request })
   }
 
-  return NextResponse.json({ error: 'Invalid type — must be "export" or "deletion"' }, { status: 400 })
+  return NextResponse.json(
+    { error: 'Invalid type — must be "export" or "deletion"' },
+    { status: 400 },
+  )
 }

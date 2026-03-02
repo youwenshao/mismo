@@ -7,9 +7,7 @@ import { cn } from './utils'
  * Use spacing and typography to create hierarchy instead.
  */
 const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('', className)} {...props} />
-  ),
+  ({ className, ...props }, ref) => <div ref={ref} className={cn('', className)} {...props} />,
 )
 Card.displayName = 'Card'
 
@@ -24,7 +22,10 @@ const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HT
   ({ className, ...props }, ref) => (
     <h3
       ref={ref}
-      className={cn('font-serif text-[1.75rem] font-semibold leading-[1.2] tracking-[-0.01em] text-[var(--text-primary)]', className)}
+      className={cn(
+        'font-serif text-[1.75rem] font-semibold leading-[1.2] tracking-[-0.01em] text-[var(--text-primary)]',
+        className,
+      )}
       {...props}
     />
   ),
@@ -40,9 +41,7 @@ const CardDescription = React.forwardRef<
 CardDescription.displayName = 'CardDescription'
 
 const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('', className)} {...props} />
-  ),
+  ({ className, ...props }, ref) => <div ref={ref} className={cn('', className)} {...props} />,
 )
 CardContent.displayName = 'CardContent'
 

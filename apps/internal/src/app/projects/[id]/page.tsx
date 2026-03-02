@@ -1,56 +1,52 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { prisma } from "@mismo/db";
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { prisma } from '@mismo/db'
 
 function formatDate(date: Date): string {
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
 }
 
 function formatTimestamp(date: Date): string {
-  return date.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
 }
 
 function sentenceCase(str: string): string {
-  return str.charAt(0) + str.slice(1).toLowerCase();
+  return str.charAt(0) + str.slice(1).toLowerCase()
 }
 
 function safetyColor(safety: string): string {
   switch (safety) {
-    case "YELLOW":
-      return "text-amber-600";
-    case "RED":
-      return "text-red-600";
+    case 'YELLOW':
+      return 'text-amber-600'
+    case 'RED':
+      return 'text-red-600'
     default:
-      return "text-gray-500";
+      return 'text-gray-500'
   }
 }
 
-export default async function ProjectDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
+export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
 
   const project = await prisma.project.findUnique({
     where: { id },
     include: {
       user: true,
-      buildLogs: { orderBy: { createdAt: "desc" }, take: 20 },
-      tokenUsages: { orderBy: { createdAt: "desc" }, take: 20 },
+      buildLogs: { orderBy: { createdAt: 'desc' }, take: 20 },
+      tokenUsages: { orderBy: { createdAt: 'desc' }, take: 20 },
     },
-  });
+  })
 
-  if (!project) notFound();
+  if (!project) notFound()
 
   return (
     <div>
@@ -77,9 +73,7 @@ export default async function ProjectDetailPage({
         </div>
         <div>
           <p className="text-xs text-gray-400">Safety</p>
-          <p className={`text-sm ${safetyColor(project.safetyScore)}`}>
-            {project.safetyScore}
-          </p>
+          <p className={`text-sm ${safetyColor(project.safetyScore)}`}>{project.safetyScore}</p>
         </div>
         <div>
           <p className="text-xs text-gray-400">Created</p>
@@ -87,9 +81,7 @@ export default async function ProjectDetailPage({
         </div>
         <div>
           <p className="text-xs text-gray-400">Contract</p>
-          <p className="text-sm">
-            {project.contractSigned ? "Signed" : "Pending"}
-          </p>
+          <p className="text-sm">{project.contractSigned ? 'Signed' : 'Pending'}</p>
         </div>
       </div>
 
@@ -134,16 +126,10 @@ export default async function ProjectDetailPage({
               {project.tokenUsages.map((usage) => (
                 <tr key={usage.id} className="border-b border-gray-100">
                   <td className="py-2 text-sm">{usage.feature}</td>
-                  <td className="py-2 text-sm font-mono">
-                    {usage.tokens.toLocaleString()}
-                  </td>
-                  <td className="py-2 text-sm font-mono">
-                    ${usage.cost.toFixed(4)}
-                  </td>
+                  <td className="py-2 text-sm font-mono">{usage.tokens.toLocaleString()}</td>
+                  <td className="py-2 text-sm font-mono">${usage.cost.toFixed(4)}</td>
                   <td className="py-2 text-sm text-gray-500">{usage.agent}</td>
-                  <td className="py-2 text-sm text-gray-400">
-                    {formatTimestamp(usage.createdAt)}
-                  </td>
+                  <td className="py-2 text-sm text-gray-400">{formatTimestamp(usage.createdAt)}</td>
                 </tr>
               ))}
             </tbody>
@@ -151,5 +137,5 @@ export default async function ProjectDetailPage({
         )}
       </div>
     </div>
-  );
+  )
 }

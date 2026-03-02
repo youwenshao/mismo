@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server'
 
 // TODO: Install livekit-server-sdk and generate a real room token.
 // import { AccessToken } from "livekit-server-sdk";
@@ -12,9 +12,8 @@ import { NextResponse } from "next/server";
 export async function POST() {
   return NextResponse.json(
     {
-      error:
-        "LiveKit not configured. Set LIVEKIT_API_KEY and LIVEKIT_API_SECRET.",
+      error: 'LiveKit not configured. Set LIVEKIT_API_KEY and LIVEKIT_API_SECRET.',
     },
     { status: 501 },
-  );
+  )
 }

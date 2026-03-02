@@ -10,9 +10,7 @@ export interface AuditLogEntry {
   classifierVersion: string
 }
 
-export function createAuditEntry(
-  params: Omit<AuditLogEntry, 'id' | 'timestamp'>,
-): AuditLogEntry {
+export function createAuditEntry(params: Omit<AuditLogEntry, 'id' | 'timestamp'>): AuditLogEntry {
   return {
     id: randomUUID(),
     timestamp: new Date().toISOString(),
