@@ -1,6 +1,7 @@
 import { createDeepSeek } from '@ai-sdk/deepseek'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { MODEL_PROVIDERS } from '@mismo/shared'
+import type { LanguageModel } from 'ai'
 
 type ProviderId = keyof typeof MODEL_PROVIDERS
 
@@ -9,7 +10,7 @@ interface ActiveModelConfig {
   modelId: string
 }
 
-const providerFactories: Record<ProviderId, (modelId: string, apiKey: string) => ReturnType<ReturnType<typeof createDeepSeek>>> = {
+const providerFactories: Record<ProviderId, (modelId: string, apiKey: string) => LanguageModel | any> = {
   deepseek: (modelId, apiKey) => {
     const provider = createDeepSeek({ apiKey })
     return provider(modelId)
@@ -20,7 +21,7 @@ const providerFactories: Record<ProviderId, (modelId: string, apiKey: string) =>
       apiKey,
       baseURL: 'https://api.moonshot.ai/v1',
     })
-    return provider(modelId) as ReturnType<ReturnType<typeof createDeepSeek>>
+    return provider(modelId)
   },
   minimax: (modelId, apiKey) => {
     const provider = createOpenAICompatible({
@@ -28,7 +29,7 @@ const providerFactories: Record<ProviderId, (modelId: string, apiKey: string) =>
       apiKey,
       baseURL: 'https://api.minimax.chat/v1',
     })
-    return provider(modelId) as ReturnType<ReturnType<typeof createDeepSeek>>
+    return provider(modelId)
   },
   zai: (modelId, apiKey) => {
     const provider = createOpenAICompatible({
@@ -36,7 +37,7 @@ const providerFactories: Record<ProviderId, (modelId: string, apiKey: string) =>
       apiKey,
       baseURL: 'https://api.z.ai/api/paas/v4/',
     })
-    return provider(modelId) as ReturnType<ReturnType<typeof createDeepSeek>>
+    return provider(modelId)
   },
 }
 
@@ -61,7 +62,7 @@ function getDefaultConfig(): ActiveModelConfig {
   }
 }
 
-export function getActiveModel(config?: Partial<ActiveModelConfig>) {
+export function getActiveModel(config?: Partial<ActiveModelConfig>): LanguageModel | any {
   const defaults = getDefaultConfig()
   const providerId = (config?.providerId || defaults.providerId) as ProviderId
   const modelId = config?.modelId || defaults.modelId

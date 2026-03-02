@@ -3,10 +3,10 @@ import { streamText, type LanguageModel } from 'ai'
 import { prisma } from '@mismo/db'
 import {
   type InterviewContext,
-  SpecGenerator,
   calculatePriceEstimate,
   getActiveModel,
-  prdContentSchema,
+  runOutputCoordinator,
+  runFeasibilityCheck,
 } from '@mismo/ai'
 import { InterviewState, ServiceTier, type PriceEstimate } from '@mismo/shared'
 import { getMoRuntimeConfig } from '@/lib/mo-config'
@@ -86,8 +86,10 @@ export async function POST(
         try {
           push({ type: 'status', message: 'Reviewing what we discussed so far…' })
 
-          const specGenerator = new SpecGenerator()
-          const llmPayload = specGenerator.generateWithLLM(savedContext)
+          const llmPayload = {
+            systemPrompt: "You are generating a PRD based on an interview.",
+            userPrompt: (session.transcript || "") as string
+          };
           const model = getActiveModel(runtimeConfig) as unknown as LanguageModel
 
           push({ type: 'status', message: 'Drafting your project plan…' })
@@ -104,25 +106,20 @@ export async function POST(
             push({ type: 'delta', text: delta })
           }
 
-          const fallbackPRD = await specGenerator.generate(savedContext)
-          const parsed = extractJsonPayload(llmText)
-          const validated = parsed ? prdContentSchema.safeParse(parsed) : null
+          const [generatedPRD] = await Promise.all([
+            runOutputCoordinator(session.transcript as string || ""),
+          ]);
+          
+          const fullFeasibilityResult = await runFeasibilityCheck(session.transcript as string || "", generatedPRD);
 
-          const generatedPRD = validated?.success
-            ? {
-                ...fallbackPRD,
-                content: validated.data,
-                userStories: validated.data.features.flatMap((f) => f.userStories || []) as any,
-              }
-            : fallbackPRD
-          const usedLlm = !!validated?.success
+          const usedLlm = true;
 
           push({ type: 'status', message: 'Finalizing and preparing your workspace…' })
 
           const persisted = await prisma.$transaction(async (tx) => {
             const project = await tx.project.create({
               data: {
-                name: projectName,
+                name: generatedPRD.title || projectName,
                 status: 'REVIEW',
                 tier: estimate.tierRecommendation as ServiceTier,
                 userId: session.userId,
@@ -133,15 +130,16 @@ export async function POST(
               data: {
                 projectId: project.id,
                 content: JSON.parse(JSON.stringify({
-                  ...generatedPRD.content,
+                  ...generatedPRD,
                   priceEstimate: estimate,
-                  difficultyScore: estimate.difficultyScore,
-                  feasibilityNotes: estimate.feasibilityNotes,
+                  difficultyScore: Number(estimate.difficultyScore) || 0,
+                  feasibilityNotes: fullFeasibilityResult.warnings.join("\n"),
+                  feasibilityRaw: fullFeasibilityResult,
                 })),
-                userStories: JSON.parse(JSON.stringify(generatedPRD.userStories)),
-                dataModel: generatedPRD.mermaidDataModel,
-                archTemplate: generatedPRD.archTemplate,
-                ambiguityScore: generatedPRD.ambiguityScore,
+                userStories: [],
+                dataModel: "",
+                archTemplate: "SINGLE_TENANT_DOCKER_NO_DB" as any,
+                ambiguityScore: 0,
               },
             })
 
@@ -157,7 +155,7 @@ export async function POST(
                 notes: JSON.stringify({
                   priceEstimate: estimate,
                   interviewSessionId: session.id,
-                  generatedAt: generatedPRD.generatedAt,
+                  generatedAt: new Date().toISOString(),
                 }),
               },
             })
