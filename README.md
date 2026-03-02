@@ -37,7 +37,7 @@ mismo/
 │   └── templates/            # Pre-audited architectural templates
 ├── docker/
 │   ├── cursor-agent/         # Dockerfile for headless Cursor CLI execution
-│   └── n8n-ha/              # n8n high-availability configuration
+│   └── n8n-ha/               # n8n high-availability configuration
 ├── mac-studios-iac/          # Ansible playbooks for Mac Studio provisioning
 ├── docs/                     # Documentation and design systems
 └── scripts/                  # Automation scripts
