@@ -15,8 +15,11 @@
     "n8n-workflow": "^1.39.1"
   },
   "devDependencies": {
-    "typescript": "^5.7.0",
-    "@types/node": "^22.0.0"
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.0.0",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.6",
+    "typescript": "^5.7.0"
   },
   "n8n": {
     "n8nNodesApiVersion": 1,
@@ -24,7 +27,13 @@
     "nodes": [
       "dist/nodes/BmadValidator/BmadValidator.node.js",
       "dist/nodes/GsdDependencyChecker/GsdDependencyChecker.node.js",
-      "dist/nodes/ContractChecker/ContractChecker.node.js"
+      "dist/nodes/ContractChecker/ContractChecker.node.js",
+      "dist/nodes/GsdRetryWrapper/GsdRetryWrapper.node.js",
+      "dist/nodes/DbArchitectAgent/DbArchitectAgent.node.js",
+      "dist/nodes/BackendEngineerAgent/BackendEngineerAgent.node.js",
+      "dist/nodes/FrontendDeveloperAgent/FrontendDeveloperAgent.node.js",
+      "dist/nodes/DevOpsAgent/DevOpsAgent.node.js",
+      "dist/nodes/ErrorLogger/ErrorLogger.node.js"
     ]
   }
 }

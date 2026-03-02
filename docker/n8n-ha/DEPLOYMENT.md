@@ -59,11 +59,28 @@ graph TD
 
 ## Validation Gates (BMAD Pattern)
 
-The deployment implements three validation gates integrated into n8n workflows:
+The deployment implements validation gates integrated into n8n workflows:
 
 - **Gate 1: BMAD Validator (Pre-flight)**: Triggered upon PRD receipt. Checks for `tech_stack`, `api_contracts`, `data_boundaries`, and `feasibility_score`. Logs rejections to `Build.errorLogs`.
-- **Gate 2: GSD Dependency Checker (Planning)**: Triggered after swarm plan generation. Performs topological sorting to ensure correct agent execution order (e.g., Database before Frontend). Logs to `Build.executionIds`.
-- **Gate 3: Contract Checker (Execution)**: Triggered upon task completion. Performs AST analysis to verify interface compatibility. Logs violations to `Build.errorLogs` and triggers escalation after 3 failures.
+- **Gate 2: GSD Dependency Checker (Planning)**: Triggered after swarm plan generation. Parses `gsd_decomposition` from PRD, performs topological sorting, cycle detection. Logs to `Build.executionIds`.
+- **Gate 3: Contract Checker (Execution)**: Triggered upon task completion. API contract validation (path, method, status codes) and type safety checks (Zod schema usage, no `any` types). Logs violations to `Build.errorLogs` and triggers escalation after 3 failures.
+
+## GSD Build Pipeline (Full Stack)
+
+The complete build pipeline adds agent microservices and error logging. See [docs/gsd-build-pipeline.md](../../docs/gsd-build-pipeline.md) for full documentation.
+
+| Service | Main Compose | Worker Compose | Port |
+|---------|--------------|----------------|------|
+| bmad-validator | ✓ | — | 3001→3000 |
+| gsd-dependency | ✓ | — | 3002→3000 |
+| contract-checker | — | ✓ | 3003→3000 |
+| db-architect | (add Dockerfile) | — | 3001 |
+| backend-engineer | (add Dockerfile) | — | 3002 |
+| frontend-developer | (add Dockerfile) | — | 3003 |
+| devops | (add Dockerfile) | — | 3004 |
+| error-logger | (add Dockerfile) | — | 3005 |
+
+For local development, run agents via `./scripts/start-build-pipeline.sh`. Set `GSD_DEPENDENCY_URL`, `BMAD_VALIDATOR_URL`, `CONTRACT_CHECKER_URL`, `DB_ARCHITECT_URL`, etc. in n8n environment when using external agent hosts.
 
 ## Supabase Integration
 

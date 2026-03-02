@@ -10,6 +10,7 @@ Mismo provides a complete agency platform with:
 - **Automated PRD Generation**: Creates specifications with user stories, API contracts, and data models
 - **Safety Classification**: 3-tier risk scoring for project compliance
 - **AI-Powered Development**: Cursor-based automation with human review gates
+- **n8n Workflow Pipeline**: Generate, test, and deploy n8n automations from PRD specs (Slack, Notion, Google Sheets, etc.)
 - **Integrated Billing & Contracts**: Stripe payments with DocuSign e-signatures
 - **Zero-Trust Infrastructure**: Tailscale mesh network for secure multi-node operations
 
@@ -23,7 +24,7 @@ mismo/
 │   ├── web/                  # Next.js 15 - client-facing app (Mo chat, PRD editor, dashboards)
 │   └── internal/             # Next.js 15 - internal dev team dashboard
 ├── packages/
-│   ├── ai/                   # Mo agent logic, safety classifier, spec generator
+│   ├── ai/                   # Mo agent logic, safety classifier, spec generator, n8n workflow generator
 │   ├── db/                   # Prisma schema, migrations, seed data
 │   ├── ui/                   # Shared UI components (shadcn/ui based)
 │   ├── shared/               # Shared types, utils, constants
@@ -154,6 +155,17 @@ NEXT_PUBLIC_LIVEKIT_URL=wss://your-livekit-url
 GITHUB_TOKEN=ghp_...
 GITHUB_ORG=your-org
 
+# Qdrant (Optional - for Design DNA reference system)
+QDRANT_URL=http://localhost:6333
+QDRANT_API_KEY=
+
+# n8n Workflow Pipeline (Optional)
+SLACK_ALERT_WEBHOOK_URL=          # Forward workflow failure alerts to Slack
+SANDBOX_HOST=                     # Studio 3 hostname for remote sandbox (e.g. studio-3.tailxxxxx.ts.net)
+SANDBOX_PORT=5679                 # Sandbox n8n port
+N8N_MANAGED_URL=                  # For managed deployment (Option B)
+N8N_MANAGED_API_KEY=              # For managed deployment (Option B)
+
 # App URLs
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 INTERNAL_APP_URL=http://localhost:3001
@@ -187,6 +199,14 @@ pnpm --filter @mismo/db db:push
 
 # Seed the database with initial data
 pnpm --filter @mismo/db db:seed
+```
+
+#### Credential Encryption (n8n pipeline)
+
+For the n8n workflow pipeline credential manager, enable pgsodium in Supabase → Database → Extensions, then run:
+
+```bash
+pnpm --filter @mismo/db db:setup-pgsodium
 ```
 
 ### Step 4: Configure Tailscale ACLs
@@ -293,11 +313,20 @@ Add the webhook signing secret to your `.env` file.
 
 | Package              | Description                                                                          |
 | -------------------- | ------------------------------------------------------------------------------------ |
-| `packages/ai`        | Mo interview agent, safety classifier, spec generator, Cursor orchestrator           |
+| `packages/ai`        | Mo agent, safety classifier, spec generator, Cursor orchestrator, Design DNA enforcement, n8n workflow generator |
+| `packages/n8n-nodes` | Custom n8n nodes (BmadValidator, GsdDependencyChecker, ContractChecker, GsdRetryWrapper, agent nodes, ErrorLogger) |
 | `packages/db`        | Prisma schema, migrations, database utilities                                        |
-| `packages/ui`        | Shared React components based on shadcn/ui                                           |
+| `packages/ui`        | Shared React components (shadcn/ui + Design DNA navbars, heroes, content sections)  |
 | `packages/shared`    | TypeScript types, constants, utilities                                               |
 | `packages/templates` | Pre-audited architectural templates (Serverless SaaS, Monolithic MVP, Microservices) |
+| `packages/gsd-dependency` | GSD topological sort, PRD parsing, cycle detection                         |
+| `packages/bmad-validator` | BMAD PRD schema validation                                               |
+| `packages/contract-checker` | API contract and type safety validation                                |
+| `packages/error-logger` | Centralized failure logging, circuit breaker for build pipeline             |
+| `packages/agents/db-architect` | Database Architect agent (SQL + Zod + TS from data contracts)      |
+| `packages/agents/backend-engineer` | Backend Engineer agent (Next.js routes + OpenAPI)                 |
+| `packages/agents/frontend-developer` | Frontend Developer agent (React components + typed API client)    |
+| `packages/agents/devops` | DevOps agent (Vercel/Terraform config, env template, deploy script)           |
 
 ## Available Scripts
 
@@ -309,10 +338,14 @@ Add the webhook signing secret to your `.env` file.
 | `pnpm type-check`                     | Run TypeScript type checking       |
 | `pnpm format`                         | Format code with Prettier          |
 | `pnpm quickstart`                     | Full setup and start script        |
+| `pnpm n8n:verify`                     | Verify n8n workflow pipeline (requires dev servers) |
 | `pnpm --filter @mismo/db db:generate` | Generate Prisma client             |
 | `pnpm --filter @mismo/db db:push`     | Push schema changes to database    |
 | `pnpm --filter @mismo/db db:migrate`  | Run migrations                     |
 | `pnpm --filter @mismo/db db:seed`     | Seed database with initial data    |
+| `pnpm --filter @mismo/db db:setup-pgsodium` | Enable credential encryption for n8n pipeline |
+| `./scripts/start-build-pipeline.sh`  | Start GSD build pipeline microservices |
+| `./scripts/stop-build-pipeline.sh`   | Stop GSD build pipeline microservices |
 
 ## Verification
 
@@ -426,6 +459,10 @@ pnpm build
 
 ## Documentation
 
+- [GSD Build Pipeline](docs/gsd-build-pipeline.md) - BMAD-contract build orchestration, agent swarm, contract validation
+- [n8n Workflow Pipeline](docs/n8n-workflow-pipeline.md) - Generate, test, and deploy n8n automations from PRD specs
+- [Content Generation Pipeline](docs/content-generation-pipeline.md) - Fluff-free content validation for headlines, features, microcopy
+- [Design DNA Enforcement](docs/design-dna-enforcement.md) - Design DNA schema, component library, enforcement agent
 - [Design System](docs/mismo-design-system.md) - UI/UX guidelines
 - [Verification Steps](verification.md) - Network testing procedures
 - [Mac Studios IaC](mac-studios-iac/README.md) - Infrastructure provisioning

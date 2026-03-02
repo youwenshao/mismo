@@ -10,7 +10,8 @@
     "type-check": "turbo type-check",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "quickstart": "bash scripts/quickstart.sh"
+    "quickstart": "bash scripts/quickstart.sh",
+    "n8n:verify": "bash scripts/n8n-pipeline-verify.sh"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
