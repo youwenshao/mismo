@@ -11,6 +11,15 @@ import {
 import { InterviewState, ServiceTier, type PriceEstimate } from '@mismo/shared'
 import { getMoRuntimeConfig } from '@/lib/mo-config'
 
+// Define archTemplate values as string literals to avoid CommonJS module issues with @prisma/client
+const ArchTemplateValues = {
+  SERVERLESS_SAAS: 'SERVERLESS_SAAS',
+  MONOLITHIC_MVP: 'MONOLITHIC_MVP',
+  MICROSERVICES_SCALE: 'MICROSERVICES_SCALE',
+} as const
+
+type ArchTemplateType = typeof ArchTemplateValues[keyof typeof ArchTemplateValues]
+
 type ConfirmStreamEvent =
   | { type: 'status'; message: string }
   | { type: 'delta'; text: string }
@@ -19,6 +28,17 @@ type ConfirmStreamEvent =
 
 function encodeEvent(event: ConfirmStreamEvent): string {
   return `${JSON.stringify(event)}\n`
+}
+
+function transcriptToString(transcript: unknown): string {
+  if (typeof transcript === 'string') return transcript
+  if (Array.isArray(transcript)) {
+    return transcript
+      .map((m) => (typeof m === 'object' && m && 'content' in m && typeof (m as { content: unknown }).content === 'string' ? (m as { content: string }).content : ''))
+      .filter(Boolean)
+      .join('\n\n')
+  }
+  return ''
 }
 
 function extractJsonPayload(text: string): unknown | null {
@@ -86,9 +106,15 @@ export async function POST(
         try {
           push({ type: 'status', message: 'Reviewing what we discussed so far…' })
 
+          // #region agent log
+          fetch('http://127.0.0.1:7647/ingest/4c895778-277f-47f9-a81d-449357c81162',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f30eff'},body:JSON.stringify({sessionId:'f30eff',location:'confirm/route.ts:92',message:'transcript debug',data:{typeof:typeof session.transcript,isArray:Array.isArray(session.transcript),sample:typeof session.transcript==='string'?session.transcript?.slice(0,80):JSON.stringify(session.transcript)?.slice(0,120)},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
+
+          const transcriptStr = transcriptToString(session.transcript)
+
           const llmPayload = {
             systemPrompt: "You are generating a PRD based on an interview.",
-            userPrompt: (session.transcript || "") as string
+            userPrompt: transcriptStr
           };
           const model = getActiveModel(runtimeConfig) as unknown as LanguageModel
 
@@ -107,16 +133,23 @@ export async function POST(
           }
 
           const [generatedPRD] = await Promise.all([
-            runOutputCoordinator(session.transcript as string || ""),
+            runOutputCoordinator(transcriptStr),
           ]);
-          
-          const fullFeasibilityResult = await runFeasibilityCheck(session.transcript as string || "", generatedPRD);
+
+          const fullFeasibilityResult = await runFeasibilityCheck(transcriptStr, generatedPRD);
+
+          // #region agent log
+          fetch('http://127.0.0.1:7647/ingest/4c895778-277f-47f9-a81d-449357c81162',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f30eff'},body:JSON.stringify({sessionId:'f30eff',runId:'post-fix',location:'confirm/route.ts:127',message:'feasibility check passed',data:{transcriptLen:transcriptStr.length,isFeasible:fullFeasibilityResult.isFeasible},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
 
           const usedLlm = true;
 
           push({ type: 'status', message: 'Finalizing and preparing your workspace…' })
 
           const persisted = await prisma.$transaction(async (tx) => {
+            // #region agent log
+            fetch('http://127.0.0.1:7647/ingest/4c895778-277f-47f9-a81d-449357c81162',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'f30eff'},body:JSON.stringify({sessionId:'f30eff',hypothesisId:'A',location:'confirm/route.ts:145',message:'prisma create debug',data:{archTemplate: "MONOLITHIC_MVP", typeof: typeof "MONOLITHIC_MVP", txKeys: Object.keys(tx)},timestamp:Date.now()})}).catch(()=>{});
+            // #endregion
             const project = await tx.project.create({
               data: {
                 name: generatedPRD.title || projectName,
@@ -125,6 +158,14 @@ export async function POST(
                 userId: session.userId,
               },
             })
+
+            // Map the generated archTemplate string to the proper enum value
+            const archTemplateMap: Record<string, ArchTemplateType> = {
+              'SERVERLESS_SAAS': ArchTemplateValues.SERVERLESS_SAAS,
+              'MONOLITHIC_MVP': ArchTemplateValues.MONOLITHIC_MVP,
+              'MICROSERVICES_SCALE': ArchTemplateValues.MICROSERVICES_SCALE,
+            };
+            const archTemplate = archTemplateMap[generatedPRD.archTemplate] ?? ArchTemplateValues.MONOLITHIC_MVP;
 
             await tx.pRD.create({
               data: {
@@ -138,7 +179,7 @@ export async function POST(
                 })),
                 userStories: [],
                 dataModel: "",
-                archTemplate: "SINGLE_TENANT_DOCKER_NO_DB" as any,
+                archTemplate,
                 ambiguityScore: 0,
               },
             })

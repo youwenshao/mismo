@@ -1,7 +1,8 @@
 import { generateObject, generateText } from "ai";
 import { getActiveModel } from "../providers";
-import { PRD, prdSchema } from "./schemas";
+import { PRD, prdSchema, ArchTemplateValues } from "./schemas";
 import { ProjectArchetypes } from "./archetypes";
+import { ArchTemplate } from "@mismo/shared";
 import { z } from "zod";
 
 export async function runClassifierAgent(transcript: string) {
@@ -63,6 +64,36 @@ export async function runScopeAgent(transcript: string) {
   return object;
 }
 
+/**
+ * Determines the architecture template based on the transcript content.
+ * Uses the same logic as pricing.ts for consistency.
+ */
+function determineArchTemplate(transcript: string): ArchTemplate {
+  const lower = transcript.toLowerCase();
+  
+  // Check for microservices indicators
+  if (lower.includes('microservice') || 
+      lower.includes('scale') || 
+      lower.includes('enterprise') ||
+      lower.includes('high availability') ||
+      lower.includes('distributed')) {
+    return ArchTemplate.MICROSERVICES_SCALE;
+  }
+  
+  // Check for monolith/MVP indicators
+  if (lower.includes('speed') || 
+      lower.includes('fast') || 
+      lower.includes('simple') || 
+      lower.includes('monolith') ||
+      lower.includes('mvp') ||
+      lower.includes('quick')) {
+    return ArchTemplate.MONOLITHIC_MVP;
+  }
+  
+  // Default to serverless SaaS
+  return ArchTemplate.SERVERLESS_SAAS;
+}
+
 export async function runOutputCoordinator(transcript: string): Promise<PRD> {
   const model = getActiveModel();
   
@@ -75,7 +106,7 @@ export async function runOutputCoordinator(transcript: string): Promise<PRD> {
 
   const { object } = await generateObject({
     model,
-    schema: prdSchema,
+    schema: prdSchema.omit({ archTemplate: true }),
     prompt: `You are the Lead Technical Architect writing a Product Requirements Document (PRD).
     Based on the interview transcript and the specialized agent analyses provided, generate a comprehensive PRD.
     
@@ -90,6 +121,9 @@ export async function runOutputCoordinator(transcript: string): Promise<PRD> {
     `,
   });
 
+  // Determine archTemplate from transcript for consistency with pricing
+  const archTemplate = determineArchTemplate(transcript);
+
   return {
     ...object,
     archetype: classifierData.archetype,
@@ -98,5 +132,6 @@ export async function runOutputCoordinator(transcript: string): Promise<PRD> {
       mvp: scopeData.mvp,
       v2: scopeData.v2,
     },
+    archTemplate,
   };
 }

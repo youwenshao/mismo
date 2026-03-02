@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { ProjectArchetypes } from "./archetypes";
 
+export const ArchTemplateValues = ["SERVERLESS_SAAS", "MONOLITHIC_MVP", "MICROSERVICES_SCALE"] as const;
+
 export const prdSchema = z.object({
   archetype: z.enum(ProjectArchetypes).optional().describe("The classified archetype of the project"),
   title: z.string().describe("The name or title of the project"),
@@ -15,6 +17,7 @@ export const prdSchema = z.object({
     mvp: z.array(z.string()).describe("Features to be included in the MVP phase"),
     v2: z.array(z.string()).describe("Features deferred to V2 or later"),
   }).describe("Phased breakdown of the project"),
+  archTemplate: z.enum(ArchTemplateValues).describe("Architecture template for the project"),
 });
 
 export type PRD = z.infer<typeof prdSchema>;
