@@ -12,6 +12,7 @@
   "dependencies": {
     "@ai-sdk/openai": "^3.0.31",
     "@mismo/ai": "workspace:*",
+    "@mismo/comms": "workspace:*",
     "@mismo/db": "workspace:*",
     "@mismo/shared": "workspace:*",
     "@mismo/templates": "workspace:*",

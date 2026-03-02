@@ -123,6 +123,18 @@ For Docker, use service names as hostnames. For local development, set these in 
 
 ---
 
+## Client Notifications (Project Lifecycle Communications)
+
+When `Build.status` changes, a Postgres trigger (if migrations are applied) POSTs to `/api/comms/webhook`. The communication system then:
+
+- **BUILD_STARTED** — When status becomes `RUNNING`
+- **BUILD_COMPLETE** — When status becomes `SUCCESS`; triggers delivery package assembly
+- **SUPPORT_REQUIRED** — When status becomes `FAILED` (or Commission escalates after 3 failures)
+
+Notifications use Resend (or SMTP fallback) and optionally Slack. Templates support EN and CN. See [Project Lifecycle Communications](project-lifecycle-communications.md) for full documentation.
+
+---
+
 ## Error Handling (GSD Pattern)
 
 1. **Task failure** → Log to Supabase `Build.errorLogs` with source, timestamp, context
@@ -233,8 +245,23 @@ curl -X POST http://localhost:3005/log \
 
 ---
 
+## Post-Build: Delivery Pipeline
+
+When a build completes successfully, the `Commission` status transitions to `COMPLETED`. This triggers the **GitHub Delivery Pipeline** (via `notify_n8n_commission_completed` DB trigger):
+
+1. Pre-transfer validation (secret scan, BMAD checks, contract diff)
+2. Repository creation under agency org with code + BMAD documentation
+3. Branch protection and development branch
+4. Client invite → 24h acceptance window → ownership transfer
+
+See [Delivery Pipeline](delivery-pipeline.md) for full documentation.
+
+---
+
 ## Related Documentation
 
+- [Delivery Pipeline](delivery-pipeline.md) — Automated source code delivery after build success
+- [Hosting Transfer Pipeline](hosting-transfer-pipeline.md) — Deploy and transfer ownership (Vercel, Railway/Render, AWS/GCP, Self-Hosted)
 - [Repo Surgery Pipeline](repo-surgery-pipeline.md) — Modify existing codebases with BMAD boundaries, Qdrant vector search
 - [Mobile Build Pipeline](mobile-build-pipeline.md) — React Native + Expo iOS/Android builds with BMAD feasibility scoring
 - [Content Generation Pipeline](content-generation-pipeline.md) — Runs before Frontend agent

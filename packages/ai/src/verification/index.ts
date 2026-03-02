@@ -14,7 +14,9 @@ export {
 
 export {
   planTransfer,
+  executeTransfer,
   type TransferConfig,
   type TransferResult,
   type TransferStep,
+  type ExecuteTransferOptions,
 } from './ip-transfer'

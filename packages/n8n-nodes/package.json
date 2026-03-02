@@ -46,7 +46,13 @@
       "dist/nodes/ImpactAnalysis/ImpactAnalysis.node.js",
       "dist/nodes/DiffGenerator/DiffGenerator.node.js",
       "dist/nodes/ValidationGate/ValidationGate.node.js",
-      "dist/nodes/ReviewGenerator/ReviewGenerator.node.js"
+      "dist/nodes/ReviewGenerator/ReviewGenerator.node.js",
+      "dist/nodes/PreTransferValidator/PreTransferValidator.node.js",
+      "dist/nodes/RepoCreator/RepoCreator.node.js",
+      "dist/nodes/DocGenerator/DocGenerator.node.js",
+      "dist/nodes/DeliveryTransferAgent/DeliveryTransferAgent.node.js",
+      "dist/nodes/PostTransferVerifier/PostTransferVerifier.node.js",
+      "dist/nodes/MaintenanceChecker/MaintenanceChecker.node.js"
     ]
   }
 }

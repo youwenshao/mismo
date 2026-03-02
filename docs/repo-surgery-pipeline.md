@@ -217,6 +217,7 @@ RETENTION_DAYS=14 pnpm repo-surgery:cleanup
 ## Related Documentation
 
 - [GSD Build Pipeline](gsd-build-pipeline.md) — BMAD-contract build orchestration for new projects
+- [Delivery Pipeline](delivery-pipeline.md) — Automated source code delivery after build success
 - [n8n Workflow Pipeline](n8n-workflow-pipeline.md) — Workflow generation and deployment
 - [Design DNA Enforcement](design-dna-enforcement.md) — Qdrant usage for Design DNA references
 - [README](../README.md) — Platform overview and setup

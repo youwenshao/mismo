@@ -1,0 +1,230 @@
+{
+  "name": "Maintenance Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 1 * *"
+            }
+          ]
+        }
+      },
+      "id": "maint-0001-4000-8000-000000000001",
+      "name": "Monthly Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000' }}/api/maintenance/plans",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "action",
+              "value": "list-active"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "maint-0001-4000-8000-000000000002",
+      "name": "Fetch Active Plans",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "plans",
+        "options": {}
+      },
+      "id": "maint-0001-4000-8000-000000000003",
+      "name": "Split Plans",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "githubUrl": "={{ $json.githubUrl }}",
+        "branch": "={{ $json.branch || 'main' }}",
+        "autoCreatePrs": true,
+        "commissionId": "={{ $json.commissionId }}"
+      },
+      "id": "maint-0001-4000-8000-000000000004",
+      "name": "Maintenance Checker",
+      "type": "n8n-nodes-mismo.maintenanceChecker",
+      "typeVersion": 1,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.securityIssueCount }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "id": "maint-0001-4000-8000-000000000005",
+      "name": "Has Security Issues?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000' }}/api/comms/webhook",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "type",
+              "value": "maintenance_report"
+            },
+            {
+              "name": "commission_id",
+              "value": "={{ $node['Maintenance Checker'].json.commissionId || '' }}"
+            },
+            {
+              "name": "outdated_count",
+              "value": "={{ $node['Maintenance Checker'].json.outdatedCount }}"
+            },
+            {
+              "name": "security_count",
+              "value": "={{ $node['Maintenance Checker'].json.securityIssueCount }}"
+            },
+            {
+              "name": "prs_created",
+              "value": "={{ JSON.stringify($node['Maintenance Checker'].json.prsCreated) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "maint-0001-4000-8000-000000000006",
+      "name": "Send Security Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1300, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000' }}/api/maintenance/report",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "commissionId",
+              "value": "={{ $node['Maintenance Checker'].json.commissionId || '' }}"
+            },
+            {
+              "name": "result",
+              "value": "={{ JSON.stringify($node['Maintenance Checker'].json) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "maint-0001-4000-8000-000000000007",
+      "name": "Save Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1300, 450]
+    }
+  ],
+  "connections": {
+    "Monthly Schedule": {
+      "main": [
+        [
+          {
+            "node": "Fetch Active Plans",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Active Plans": {
+      "main": [
+        [
+          {
+            "node": "Split Plans",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Plans": {
+      "main": [
+        [
+          {
+            "node": "Maintenance Checker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Maintenance Checker": {
+      "main": [
+        [
+          {
+            "node": "Has Security Issues?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Security Issues?": {
+      "main": [
+        [
+          {
+            "node": "Send Security Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Save Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Security Alert": {
+      "main": [
+        [
+          {
+            "node": "Save Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "staticData": null,
+  "tags": ["maintenance"],
+  "triggerCount": 1,
+  "active": false
+}

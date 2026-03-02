@@ -13,6 +13,8 @@ Mismo provides a complete agency platform with:
 - **n8n Workflow Pipeline**: Generate, test, and deploy n8n automations from PRD specs (Slack, Notion, Google Sheets, etc.)
 - **Repo Surgery Pipeline**: Modify existing codebases with BMAD boundary mapping, contract extraction, semantic code search (Qdrant), and safe diff generation
 - **Mobile Build Pipeline**: React Native + Expo builds for iOS/Android with BMAD feasibility scoring, EAS builds, and store submission automation
+- **Project Lifecycle Communications**: Automated status updates (Resend/Slack), delivery packaging (ADR, how-to guide, walkthrough video), post-delivery feedback with escalation, and maintenance mode (npm outdated, automated PRs for security patches)
+- **Hosting Transfer Pipeline**: Deploy and transfer ownership across Vercel, Railway/Render, AWS/GCP, or Self-Hosted—gated by Stripe payment, with 7-day post-transfer monitoring
 - **Integrated Billing & Contracts**: Stripe payments with DocuSign e-signatures
 - **Zero-Trust Infrastructure**: Tailscale mesh network for secure multi-node operations
 
@@ -77,8 +79,8 @@ The platform uses a **Zero-Trust Tailscale Mesh Network**:
    - Kimi API Key
    - MiniMax API Key
    - ZAI API Key
-6. **LiveKit Account**: WebRTC voice capabilities (optional)
-7. **GitHub Token**: For repository automation
+7. **LiveKit Account**: WebRTC voice capabilities (optional)
+8. **GitHub Token**: For repository automation, bug reports, maintenance PRs
 
 ### System Requirements
 
@@ -153,9 +155,10 @@ LIVEKIT_API_KEY=...
 LIVEKIT_API_SECRET=...
 NEXT_PUBLIC_LIVEKIT_URL=wss://your-livekit-url
 
-# GitHub (Required for CI/CD automation)
+# GitHub (Required for CI/CD automation and Delivery Pipeline)
 GITHUB_TOKEN=ghp_...
 GITHUB_ORG=your-org
+GITHUB_DELIVERY_ORG=mismo-agency
 
 # Qdrant (Required for Repo Surgery; optional for Design DNA reference system)
 QDRANT_URL=http://localhost:6333
@@ -167,12 +170,24 @@ REPO_SURGERY_WORKSPACE=/tmp/mismo-surgery
 # SONARQUBE_URL=             # Optional: enhanced static analysis
 
 # n8n Workflow Pipeline (Optional)
-SLACK_ALERT_WEBHOOK_URL=          # Forward workflow failure alerts to Slack
+SLACK_ALERT_WEBHOOK_URL=          # Forward workflow failure alerts to Slack; also used by Hosting Transfer monitoring
 SANDBOX_HOST=                     # Studio 3 hostname for remote sandbox (e.g. studio-3.tailxxxxx.ts.net)
 SANDBOX_PORT=5679                 # Sandbox n8n port
 N8N_MANAGED_URL=                  # For managed deployment (Option B)
 N8N_MANAGED_API_KEY=              # For managed deployment (Option B)
 N8N_MOBILE_PIPELINE_WEBHOOK_URL=  # Mobile build pipeline webhook (e.g. http://localhost:5678/webhook/mobile-build-pipeline)
+
+# Hosting Transfer (Optional - for deployment and ownership handoff)
+VERCEL_API_TOKEN=                 # Mismo's Vercel token (deploy to Mismo account, then transfer)
+VERCEL_TEAM_ID=                   # Optional team ID
+RAILWAY_API_TOKEN=                # For Railway deployments
+RENDER_API_KEY=                   # For Render deployments
+
+# Communication System (status updates, delivery, feedback)
+RESEND_API_KEY=re_...
+RESEND_FROM_EMAIL=updates@mismo.dev
+# SMTP_HOST=, SMTP_PORT=587, SMTP_USER=, SMTP_PASS=   # Fallback if Resend fails
+COMMS_WEBHOOK_SECRET=                                 # Optional: verify pg_net webhook calls
 
 # App URLs
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -208,6 +223,22 @@ pnpm --filter @mismo/db db:push
 # Seed the database with initial data
 pnpm --filter @mismo/db db:seed
 ```
+
+#### Comms Triggers (Project Lifecycle)
+
+For automatic Build-status notifications via pg_net, run migrations (instead of only `db:push`):
+
+```bash
+pnpm --filter @mismo/db db:migrate-deploy
+```
+
+Then set `app.comms_webhook_url` in Supabase:
+
+```sql
+ALTER DATABASE postgres SET app.comms_webhook_url = 'https://your-app.com/api/comms/webhook';
+```
+
+See [Project Lifecycle Communications](docs/project-lifecycle-communications.md).
 
 #### Credential Encryption (n8n pipeline)
 
@@ -302,11 +333,11 @@ brew install stripe/stripe-cli/stripe
 # Login to Stripe
 stripe login
 
-# Forward webhooks to local dev server
-stripe listen --forward-to localhost:3000/api/webhooks/stripe
+# Forward webhooks to local dev server (checkout, payment_intent for Hosting Transfer)
+stripe listen --forward-to localhost:3000/api/billing/webhook
 ```
 
-Add the webhook signing secret to your `.env` file.
+Add the webhook signing secret to your `.env` as `STRIPE_WEBHOOK_SECRET`.
 
 ## Project Structure Details
 
@@ -321,8 +352,8 @@ Add the webhook signing secret to your `.env` file.
 
 | Package              | Description                                                                          |
 | -------------------- | ------------------------------------------------------------------------------------ |
-| `packages/ai`        | Mo agent, safety classifier, spec generator, Cursor orchestrator, Design DNA enforcement, n8n workflow generator, Repo Surgery pipeline |
-| `packages/n8n-nodes` | Custom n8n nodes (BmadValidator, GsdDependencyChecker, ContractChecker, GsdRetryWrapper, agent nodes, ErrorLogger) |
+| `packages/ai`        | Mo agent, safety classifier, spec generator, Cursor orchestrator, Design DNA enforcement, n8n workflow generator, Repo Surgery pipeline, Delivery pipeline |
+| `packages/n8n-nodes` | Custom n8n nodes (BmadValidator, GsdDependencyChecker, ContractChecker, GsdRetryWrapper, agent nodes, ErrorLogger, Delivery pipeline nodes) |
 | `packages/db`        | Prisma schema, migrations, database utilities                                        |
 | `packages/ui`        | Shared React components (shadcn/ui + Design DNA navbars, heroes, content sections)  |
 | `packages/shared`    | TypeScript types, constants, utilities                                               |
@@ -350,7 +381,7 @@ Add the webhook signing secret to your `.env` file.
 | `pnpm type-check`                     | Run TypeScript type checking       |
 | `pnpm format`                         | Format code with Prettier          |
 | `pnpm quickstart`                     | Full setup and start script        |
-| `pnpm n8n:verify`                     | Verify n8n workflow pipeline (requires dev servers) |
+| `pnpm n8n:verify`                     | Verify n8n workflow pipeline and delivery API (requires dev servers) |
 | `pnpm repo-surgery:cleanup`           | Remove expired Repo Surgery workspaces and Qdrant collections (30-day retention) |
 | `pnpm --filter @mismo/db db:generate` | Generate Prisma client             |
 | `pnpm --filter @mismo/db db:push`     | Push schema changes to database    |
@@ -362,6 +393,9 @@ Add the webhook signing secret to your `.env` file.
 | `./scripts/start-mobile-pipeline.sh` | Start Mobile build pipeline microservices (Scaffold, Feature, Build Engineer, Store Submission) |
 | `./scripts/stop-mobile-pipeline.sh`  | Stop Mobile build pipeline microservices |
 | `./scripts/start-repo-surgery-services.sh` | Start Qdrant (Docker) for Repo Surgery pipeline |
+| `pnpm --filter @mismo/db db:migrate-deploy` | Deploy migrations (required for comms triggers; `db:push` does not run trigger SQL) |
+| `./scripts/n8n-pipeline-verify.sh` | Verify n8n workflow generation and optionally delivery API (via `pnpm n8n:verify`) |
+| Import `packages/n8n-nodes/workflows/hosting-monitor.json` into n8n | Hosting Transfer 5-min health checks (Vercel/Railway/Render/AWS/GCP) |
 
 ## Verification
 
@@ -475,11 +509,14 @@ pnpm build
 
 ## Documentation
 
+- [Project Lifecycle Communications](docs/project-lifecycle-communications.md) - Status updates (Resend/Slack), delivery packaging, feedback survey, maintenance mode
 - [GSD Build Pipeline](docs/gsd-build-pipeline.md) - BMAD-contract build orchestration, agent swarm, contract validation
+- [GitHub Delivery Pipeline](docs/delivery-pipeline.md) - Automated source code delivery, BMAD documentation, ownership transfer
 - [Repo Surgery Pipeline](docs/repo-surgery-pipeline.md) - Modify existing codebases with BMAD boundaries, Qdrant vector search, validation gates
 - [Mobile Build Pipeline](docs/mobile-build-pipeline.md) - React Native + Expo iOS/Android builds with feasibility scoring, EAS, store submission
 - [n8n Workflow Pipeline](docs/n8n-workflow-pipeline.md) - Generate, test, and deploy n8n automations from PRD specs
 - [Content Generation Pipeline](docs/content-generation-pipeline.md) - Fluff-free content validation for headlines, features, microcopy
+- [Hosting Transfer Pipeline](docs/hosting-transfer-pipeline.md) - Deploy and transfer ownership (Vercel, Railway/Render, AWS/GCP, Self-Hosted), payment gating, 7-day monitoring |
 - [Design DNA Enforcement](docs/design-dna-enforcement.md) - Design DNA schema, component library, enforcement agent
 - [Design System](docs/mismo-design-system.md) - UI/UX guidelines
 - [Verification Steps](verification.md) - Network testing procedures

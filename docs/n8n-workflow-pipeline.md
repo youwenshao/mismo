@@ -133,6 +133,23 @@ If `SLACK_ALERT_WEBHOOK_URL` is set in `.env`, alerts are forwarded to Slack.
 
 ---
 
+### 6. Hosting Transfer Monitor Workflow
+
+**Location:** `packages/n8n-nodes/workflows/hosting-monitor.json`
+
+A **separate scheduled workflow** for post-transfer health monitoring (see [Hosting Transfer Pipeline](hosting-transfer-pipeline.md)):
+
+- Runs **every 5 minutes** via Schedule Trigger
+- Fetches active monitors from `GET /api/delivery/monitors/active`
+- Health-checks each deployment URL
+- Sends Slack alert if unhealthy (`statusCode !== 200`)
+
+**Import:** In n8n, go to Workflows → Import from File → select `packages/n8n-nodes/workflows/hosting-monitor.json`, then activate the workflow.
+
+Requires `NEXT_PUBLIC_APP_URL` (or `http://localhost:3000` for local) and `SLACK_ALERT_WEBHOOK_URL` for alerts.
+
+---
+
 ## Quick Start
 
 ### Verify pipeline (local dev)
@@ -188,17 +205,46 @@ curl -X POST http://localhost:3000/api/credentials \
 
 ---
 
+## Maintenance Pipeline
+
+A separate n8n workflow (`packages/n8n-nodes/workflows/maintenance-pipeline.json`) runs monthly to check opt-in repos for dependency updates:
+
+- **Trigger:** Schedule node (1st of month, 09:00)
+- **MaintenanceChecker node:** Calls `POST /api/maintenance/check` for each `MaintenancePlan` with `maintenanceOptIn = true`
+- **Security patches:** Auto-create PR via GitHub API
+- **Minor updates:** Auto-create PR with `needs-review` label
+- **Major updates:** Create issue for client approval
+
+Requires `GITHUB_TOKEN`, `NEXT_PUBLIC_APP_URL`, and `MaintenancePlan` records. See [Project Lifecycle Communications](project-lifecycle-communications.md).
+
+---
+
 ## Environment Variables
 
 | Variable | App | Description |
 |----------|-----|-------------|
 | `SLACK_ALERT_WEBHOOK_URL` | web | Optional; forwards n8n failure alerts to Slack |
+| `RESEND_API_KEY` | web | Required for lifecycle emails (status, delivery, feedback) |
+| `COMMS_WEBHOOK_SECRET` | web | Optional; verify pg_net webhook calls |
 | `SANDBOX_HOST` | internal | Optional; Studio 3 hostname for remote sandbox |
 | `SANDBOX_PORT` | internal | Optional; port for sandbox n8n (default 5679) |
 | `N8N_MANAGED_URL` | internal | For managed deployment (Option B) |
 | `N8N_MANAGED_API_KEY` | internal | For managed deployment (Option B) |
 | `DEFAULT_MO_PROVIDER` | ai | AI provider for Workflow Generator (e.g. deepseek) |
 | `DEEPSEEK_API_KEY` | ai | (or other AI provider key) |
+
+---
+
+## Delivery Pipeline Workflow
+
+A separate n8n workflow (`packages/n8n-nodes/workflows/delivery-pipeline.json`) handles **source code delivery** when a Commission build succeeds. It is triggered by the `notify_n8n_commission_completed` Supabase trigger (pg_net) and runs:
+
+- Pre-transfer validation (secret scan, BMAD acceptance, contract diff)
+- Repo creation under agency org
+- BMAD documentation generation
+- Client invite and ownership transfer
+
+Import this workflow alongside the workflow generation pipeline. See [Delivery Pipeline](delivery-pipeline.md) for details.
 
 ---
 

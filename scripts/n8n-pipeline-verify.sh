@@ -42,8 +42,22 @@ else
 fi
 echo ""
 
-# 3. Optional: test sandbox (requires Docker)
-echo "3. Testing sandbox (requires Docker)..."
+# 3. Test delivery validation API (quick smoke test with empty temp dir)
+echo "3. Testing delivery validation API..."
+TMP_WS=$(mktemp -d 2>/dev/null || echo "/tmp")
+VAL_RESP=$(curl -s --max-time 10 -X POST "$INTERNAL_URL/api/delivery/validate" \
+  -H "Content-Type: application/json" \
+  -d "{\"workspaceDir\":\"$TMP_WS\",\"buildStatus\":\"SUCCESS\",\"commissionStatus\":\"COMPLETED\"}" 2>/dev/null || echo "{}")
+[ -d "$TMP_WS" ] && rmdir "$TMP_WS" 2>/dev/null || true
+if echo "$VAL_RESP" | grep -q '"allPassed"'; then
+  echo "   OK (delivery validate endpoint responding)"
+else
+  echo "   WARN: delivery validate failed or unreachable (optional)"
+fi
+echo ""
+
+# 4. Optional: test sandbox (requires Docker)
+echo "4. Testing sandbox (requires Docker)..."
 if command -v docker &>/dev/null && docker info &>/dev/null 2>&1; then
   START_RESP=$(curl -s --max-time 90 -X POST "$INTERNAL_URL/api/sandbox/start" \
     -H "Content-Type: application/json" \
@@ -63,4 +77,6 @@ else
 fi
 echo ""
 
-echo "Verification complete. See docs/n8n-workflow-pipeline.md for full usage."
+echo "Verification complete."
+echo "  - Workflow generation: docs/n8n-workflow-pipeline.md"
+echo "  - Delivery pipeline: docs/delivery-pipeline.md"

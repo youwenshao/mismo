@@ -1,0 +1,350 @@
+{
+  "name": "Delivery Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "delivery-pipeline",
+        "responseMode": "lastNode"
+      },
+      "id": "d1e2f3a4-0001-4000-8000-000000000001",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [0, 300],
+      "webhookId": "delivery-pipeline"
+    },
+    {
+      "parameters": {
+        "serviceUrl": "={{ (process.env.DELIVERY_AGENT_URL || 'http://localhost:3001') + '/api/delivery/validate' }}",
+        "requestBody": "={{ JSON.stringify({ buildId: $json.body.buildId, commissionId: $json.body.commissionId, workspaceDir: $json.body.workspaceDir, buildStatus: $json.body.buildStatus || 'SUCCESS', commissionStatus: $json.body.commissionStatus || 'COMPLETED', apiContracts: $json.body.apiContracts, implementedRoutes: $json.body.implementedRoutes }) }}",
+        "buildId": "={{ $json.body.buildId }}",
+        "httpMethod": "POST",
+        "maxRetries": 2,
+        "initialBackoffMs": 1000
+      },
+      "id": "d1e2f3a4-0001-4000-8000-000000000002",
+      "name": "Pre-Transfer Validation Retry",
+      "type": "n8n-nodes-mismo.gsdRetryWrapper",
+      "typeVersion": 1,
+      "position": [300, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.result.allPassed }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "d1e2f3a4-0001-4000-8000-000000000003",
+      "name": "Validation Passed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [550, 300]
+    },
+    {
+      "parameters": {
+        "serviceUrl": "={{ (process.env.DELIVERY_AGENT_URL || 'http://localhost:3001') + '/api/delivery/create-repo' }}",
+        "requestBody": "={{ JSON.stringify({ buildId: $node['Webhook Trigger'].json.body.buildId, commissionId: $node['Webhook Trigger'].json.body.commissionId, repoName: $node['Webhook Trigger'].json.body.repoName, githubOrg: $node['Webhook Trigger'].json.body.githubOrg, workspaceDir: $node['Webhook Trigger'].json.body.workspaceDir, templateId: $node['Webhook Trigger'].json.body.templateId }) }}",
+        "buildId": "={{ $node['Webhook Trigger'].json.body.buildId }}",
+        "httpMethod": "POST",
+        "maxRetries": 3,
+        "initialBackoffMs": 2000
+      },
+      "id": "d1e2f3a4-0001-4000-8000-000000000004",
+      "name": "Repo Creator Retry",
+      "type": "n8n-nodes-mismo.gsdRetryWrapper",
+      "typeVersion": 1,
+      "position": [800, 200]
+    },
+    {
+      "parameters": {
+        "serviceUrl": "={{ (process.env.DELIVERY_AGENT_URL || 'http://localhost:3001') + '/api/delivery/generate-docs' }}",
+        "requestBody": "={{ JSON.stringify({ buildId: $node['Webhook Trigger'].json.body.buildId, commissionId: $node['Webhook Trigger'].json.body.commissionId, prdJson: $node['Webhook Trigger'].json.body.prdJson, repoOwner: $json.result.repoOwner, repoName: $json.result.repoName }) }}",
+        "buildId": "={{ $node['Webhook Trigger'].json.body.buildId }}",
+        "httpMethod": "POST",
+        "maxRetries": 2,
+        "initialBackoffMs": 1000
+      },
+      "id": "d1e2f3a4-0001-4000-8000-000000000005",
+      "name": "Doc Generator Retry",
+      "type": "n8n-nodes-mismo.gsdRetryWrapper",
+      "typeVersion": 1,
+      "position": [1100, 200]
+    },
+    {
+      "parameters": {
+        "serviceUrl": "={{ (process.env.DELIVERY_AGENT_URL || 'http://localhost:3001') + '/api/delivery/transfer' }}",
+        "requestBody": "={{ JSON.stringify({ deliveryId: $node['Webhook Trigger'].json.body.deliveryId, clientGithubUsername: $node['Webhook Trigger'].json.body.clientGithubUsername, clientGithubOrg: $node['Webhook Trigger'].json.body.clientGithubOrg, repoUrl: $node['Repo Creator Retry'].json.result.repoUrl, repoOwner: $node['Repo Creator Retry'].json.result.repoOwner, repoName: $node['Repo Creator Retry'].json.result.repoName }) }}",
+        "buildId": "={{ $node['Webhook Trigger'].json.body.buildId }}",
+        "httpMethod": "POST",
+        "maxRetries": 3,
+        "initialBackoffMs": 5000
+      },
+      "id": "d1e2f3a4-0001-4000-8000-000000000006",
+      "name": "Transfer Agent Retry",
+      "type": "n8n-nodes-mismo.gsdRetryWrapper",
+      "typeVersion": 1,
+      "position": [1400, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.result.success }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "d1e2f3a4-0001-4000-8000-000000000007",
+      "name": "Transfer Succeeded?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1650, 200]
+    },
+    {
+      "parameters": {
+        "serviceUrl": "={{ (process.env.DELIVERY_AGENT_URL || 'http://localhost:3001') + '/api/delivery/verify' }}",
+        "requestBody": "={{ JSON.stringify({ deliveryId: $node['Webhook Trigger'].json.body.deliveryId, transferredRepoUrl: $json.result.transferredUrl, clientGithubUsername: $node['Webhook Trigger'].json.body.clientGithubUsername, repoOwner: $node['Webhook Trigger'].json.body.clientGithubOrg || $node['Webhook Trigger'].json.body.clientGithubUsername, repoName: $node['Repo Creator Retry'].json.result.repoName, deployedUrl: $node['Webhook Trigger'].json.body.deployedUrl, requiredEnvVars: $node['Webhook Trigger'].json.body.requiredEnvVars || [] }) }}",
+        "buildId": "={{ $node['Webhook Trigger'].json.body.buildId }}",
+        "httpMethod": "POST",
+        "maxRetries": 2,
+        "initialBackoffMs": 3000
+      },
+      "id": "d1e2f3a4-0001-4000-8000-000000000008",
+      "name": "Post-Transfer Verify Retry",
+      "type": "n8n-nodes-mismo.gsdRetryWrapper",
+      "typeVersion": 1,
+      "position": [1900, 100]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "pipelineStatus",
+              "value": "COMPLETED"
+            },
+            {
+              "name": "message",
+              "value": "Delivery pipeline completed successfully"
+            }
+          ]
+        }
+      },
+      "id": "d1e2f3a4-0001-4000-8000-000000000009",
+      "name": "Set Success",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [2200, 100]
+    },
+    {
+      "parameters": {
+        "buildId": "={{ $node['Webhook Trigger'].json.body.buildId }}",
+        "stage": "delivery-pipeline",
+        "status": "FAILED",
+        "output": "={{ JSON.stringify({ error: 'Pre-transfer validation failed', blockers: $node['Pre-Transfer Validation Retry'].json.result.blockers }) }}"
+      },
+      "id": "d1e2f3a4-0001-4000-8000-000000000010",
+      "name": "Log Validation Failure",
+      "type": "n8n-nodes-mismo.errorLogger",
+      "typeVersion": 1,
+      "position": [800, 450]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "pipelineStatus",
+              "value": "FAILED"
+            },
+            {
+              "name": "message",
+              "value": "Delivery pipeline failed: pre-transfer validation did not pass"
+            }
+          ]
+        }
+      },
+      "id": "d1e2f3a4-0001-4000-8000-000000000011",
+      "name": "Set Validation Failed",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1100, 450]
+    },
+    {
+      "parameters": {
+        "buildId": "={{ $node['Webhook Trigger'].json.body.buildId }}",
+        "stage": "delivery-pipeline",
+        "status": "FAILED",
+        "output": "={{ JSON.stringify({ error: 'Transfer failed', details: $json.result }) }}"
+      },
+      "id": "d1e2f3a4-0001-4000-8000-000000000012",
+      "name": "Log Transfer Failure",
+      "type": "n8n-nodes-mismo.errorLogger",
+      "typeVersion": 1,
+      "position": [1900, 350]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "pipelineStatus",
+              "value": "FAILED"
+            },
+            {
+              "name": "message",
+              "value": "Delivery pipeline failed: repository transfer did not succeed"
+            }
+          ]
+        }
+      },
+      "id": "d1e2f3a4-0001-4000-8000-000000000013",
+      "name": "Set Transfer Failed",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [2200, 350]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Pre-Transfer Validation Retry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pre-Transfer Validation Retry": {
+      "main": [
+        [
+          {
+            "node": "Validation Passed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation Passed?": {
+      "main": [
+        [
+          {
+            "node": "Repo Creator Retry",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Validation Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Repo Creator Retry": {
+      "main": [
+        [
+          {
+            "node": "Doc Generator Retry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Doc Generator Retry": {
+      "main": [
+        [
+          {
+            "node": "Transfer Agent Retry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transfer Agent Retry": {
+      "main": [
+        [
+          {
+            "node": "Transfer Succeeded?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transfer Succeeded?": {
+      "main": [
+        [
+          {
+            "node": "Post-Transfer Verify Retry",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Transfer Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post-Transfer Verify Retry": {
+      "main": [
+        [
+          {
+            "node": "Set Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Validation Failure": {
+      "main": [
+        [
+          {
+            "node": "Set Validation Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Transfer Failure": {
+      "main": [
+        [
+          {
+            "node": "Set Transfer Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "active": false
+}

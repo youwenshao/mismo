@@ -90,6 +90,17 @@ For local development:
 
 Set `GSD_DEPENDENCY_URL`, `BMAD_VALIDATOR_URL`, `CONTRACT_CHECKER_URL`, `DB_ARCHITECT_URL`, `MOBILE_SCAFFOLD_URL`, `MOBILE_FEATURE_URL`, etc. in n8n environment when using external agent hosts. See [docs/mobile-build-pipeline.md](../../docs/mobile-build-pipeline.md) for mobile pipeline details.
 
+## Delivery Pipeline (Post-Build Source Code Transfer)
+
+When Commission status becomes COMPLETED, the `notify_n8n_commission_completed` trigger sends a webhook to n8n. Import `packages/n8n-nodes/workflows/delivery-pipeline.json` and configure the webhook URL in the Supabase pg_net function to point to your n8n instance (e.g. `https://n8n.yourdomain.com/webhook/delivery-pipeline`).
+
+**Required for Delivery Pipeline:**
+- `GITHUB_TOKEN` — GitHub PAT with repo, admin:org, user scope
+- `GITHUB_DELIVERY_ORG` — Agency org (e.g. `mismo-agency`)
+- `DELIVERY_AGENT_URL` — Internal app URL (e.g. `http://internal-app:3001` when internal app runs in Docker)
+
+Delivery API routes run in `apps/internal`; no separate microservices. See [docs/delivery-pipeline.md](../../docs/delivery-pipeline.md).
+
 ## Supabase Integration
 
 All gates log decisions to the `Build` and `Commission` tables in Supabase:

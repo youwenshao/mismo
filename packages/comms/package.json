@@ -1,0 +1,28 @@
+{
+  "name": "@mismo/comms",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@react-email/components": "^0.0.31",
+    "@slack/webhook": "^7.0.4",
+    "nodemailer": "^6.9.16",
+    "puppeteer": "^24.37.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "resend": "^4.1.2"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^6.4.17",
+    "@types/react": "^19.0.0",
+    "typescript": "^5.7.0"
+  },
+  "peerDependencies": {
+    "@mismo/db": "workspace:*"
+  }
+}

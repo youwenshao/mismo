@@ -202,6 +202,21 @@ enum CommissionStatus {
   ESCALATED
 }
 
+enum NotificationChannel {
+  EMAIL
+  SLACK
+}
+
+enum NotificationEvent {
+  BUILD_STARTED
+  BUILD_PROGRESS
+  BUILD_COMPLETE
+  TRANSFER_READY
+  SUPPORT_REQUIRED
+  FEEDBACK_REQUEST
+  MAINTENANCE_REPORT
+}
+
 enum PaymentState {
   UNPAID
   PARTIAL
@@ -244,9 +259,15 @@ model Commission {
 
   user        User              @relation(fields: [userId], references: [id])
   archetype   ProjectArchetype? @relation(fields: [archetypeId], references: [id])
-  builds         Build[]
-  credentials    Credential[]
-  repoSurgeries  RepoSurgery[]
+  builds            Build[]
+  credentials       Credential[]
+  repoSurgeries     RepoSurgery[]
+  deliveries        Delivery[]
+  hostingTransfers  HostingTransfer[]
+  clientPreference  ClientPreference?
+  notifications     Notification[]
+  feedbacks         Feedback[]
+  maintenancePlan   MaintenancePlan?
 }
 
 model Build {
@@ -265,7 +286,10 @@ model Build {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  commission Commission @relation(fields: [commissionId], references: [id])
+  commission       Commission        @relation(fields: [commissionId], references: [id])
+  deliveries       Delivery[]
+  hostingTransfers HostingTransfer[]
+  deliveryPackage  DeliveryPackage?
 }
 
 model Agent {
@@ -324,6 +348,117 @@ model RepoSurgery {
   commission Commission? @relation(fields: [commissionId], references: [id])
 }
 
+enum TransferStatus {
+  PENDING_PAYMENT
+  PAYMENT_CONFIRMED
+  DEPLOYING
+  DEPLOYED
+  TRANSFERRING
+  COMPLETED
+  FAILED
+  MONITORING
+}
+
+enum HostingProvider {
+  VERCEL
+  RAILWAY
+  RENDER
+  AWS
+  GCP
+  SELF_HOSTED
+}
+
+model HostingTransfer {
+  id                     String          @id @default(cuid())
+  commissionId           String
+  buildId                String?
+  provider               HostingProvider
+  status                 TransferStatus  @default(PENDING_PAYMENT)
+
+  stripePaymentIntentId  String?         @unique
+  paymentConfirmedAt     DateTime?
+
+  deploymentUrl          String?
+  deploymentConfig       Json?
+  deploymentOutput       Json?
+
+  clientAccountId        String?
+  clientCredentials      Json?
+  transferOutput         Json?
+
+  monitoringEnabled      Boolean         @default(false)
+  monitoringUntil        DateTime?
+  lastHealthCheck        DateTime?
+  healthStatus           Json?
+
+  errorLogs              Json?
+  failureCount           Int             @default(0)
+  retryCount             Int             @default(0)
+
+  idempotencyKey         String?         @unique
+
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+
+  commission             Commission      @relation(fields: [commissionId], references: [id])
+  build                  Build?          @relation(fields: [buildId], references: [id])
+}
+
+model ClientPreference {
+  id               String     @id @default(cuid())
+  commissionId     String     @unique
+  locale           String     @default("en")
+  slackWebhookUrl  String?
+  maintenanceOptIn Boolean    @default(false)
+  commission       Commission @relation(fields: [commissionId], references: [id])
+}
+
+model Notification {
+  id           String              @id @default(cuid())
+  commissionId String
+  event        NotificationEvent
+  channel      NotificationChannel
+  subject      String
+  bodySnapshot String
+  metadata     Json?
+  sentAt       DateTime            @default(now())
+  commission   Commission          @relation(fields: [commissionId], references: [id])
+}
+
+model DeliveryPackage {
+  id          String   @id @default(cuid())
+  buildId     String   @unique
+  githubUrl   String
+  hostingUrl  String?
+  adrDocument String
+  howToGuide  String
+  apiDocs     String?
+  videoUrl    String?
+  assembledAt DateTime @default(now())
+  build       Build    @relation(fields: [buildId], references: [id])
+}
+
+model Feedback {
+  id           String     @id @default(cuid())
+  commissionId String
+  rating       Int
+  comment      String?
+  createdAt    DateTime   @default(now())
+  commission   Commission @relation(fields: [commissionId], references: [id])
+}
+
+model MaintenancePlan {
+  id              String    @id @default(cuid())
+  commissionId    String    @unique
+  githubUrl       String
+  lastCheckAt     DateTime?
+  nextCheckAt     DateTime?
+  dependencyState Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  commission      Commission @relation(fields: [commissionId], references: [id])
+}
+
 model Credential {
   id              String    @id @default(cuid())
   commissionId    String
@@ -336,4 +471,42 @@ model Credential {
   commission Commission @relation(fields: [commissionId], references: [id])
 
   @@unique([commissionId, service])
+}
+
+enum DeliveryStatus {
+  VALIDATING
+  CREATING_REPO
+  GENERATING_DOCS
+  TRANSFERRING
+  AWAITING_ACCEPTANCE
+  VERIFYING
+  COMPLETED
+  FAILED
+  ROLLBACK
+}
+
+model Delivery {
+  id                  String         @id @default(cuid())
+  commissionId        String
+  buildId             String
+  repoName            String
+  githubOrg           String
+  clientGithubUsername String?
+  clientGithubOrg     String?
+  status              DeliveryStatus @default(VALIDATING)
+  repoUrl             String?
+  transferredRepoUrl  String?
+  inviteId            Int?
+  inviteRetryCount    Int            @default(0)
+  secretScanPassed    Boolean        @default(false)
+  bmadChecksPassed    Boolean        @default(false)
+  contractCheckPassed Boolean        @default(false)
+  deliverables        Json?
+  auditLog            Json           @default("[]")
+  errorMessage        String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  commission Commission @relation(fields: [commissionId], references: [id])
+  build      Build      @relation(fields: [buildId], references: [id])
 }

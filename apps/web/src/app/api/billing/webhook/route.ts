@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
+import { HostingTransferOrchestrator } from '@mismo/ai'
 
 export async function POST(request: NextRequest) {
   if (!stripe) {
@@ -36,6 +37,20 @@ export async function POST(request: NextRequest) {
         `Payment completed for project ${projectId}, tier ${tier}. ` + `Session ID: ${session.id}`,
       )
       // TODO: Update project payment status in database once Prisma is connected
+      break
+    }
+    case 'payment_intent.succeeded': {
+      const paymentIntent = event.data.object
+      const { transferId } = paymentIntent.metadata ?? {}
+      if (transferId) {
+        try {
+          const orchestrator = new HostingTransferOrchestrator()
+          await orchestrator.onPaymentConfirmed(paymentIntent.id)
+          console.log(`Transfer payment confirmed for transfer ${transferId}`)
+        } catch (err) {
+          console.error(`Failed to process transfer payment: ${err instanceof Error ? err.message : err}`)
+        }
+      }
       break
     }
     default:
