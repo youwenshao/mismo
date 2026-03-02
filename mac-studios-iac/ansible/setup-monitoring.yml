@@ -1,0 +1,125 @@
+---
+- name: Deploy monitoring to Mac Studios
+  hosts: mac_studios
+  vars:
+    ansible_become_pass: "{{ lookup('env', 'SUDO_PASSWORD') }}"
+    mismo_root: /opt/mismo
+    watchdog_script: "{{ mismo_root }}/mac-studios-iac/scripts/monitoring/resource-watchdog.sh"
+    plist_name: com.mismo.resource-watchdog
+    plist_path: "/Library/LaunchDaemons/{{ plist_name }}.plist"
+
+  tasks:
+    - name: Ensure monitoring log files exist with correct permissions
+      become: yes
+      file:
+        path: "{{ item }}"
+        state: touch
+        mode: '0644'
+      loop:
+        - /var/log/mismo-watchdog.log
+        - /var/log/mismo-watchdog-error.log
+        - /var/log/mismo-backup-verify.log
+
+    - name: Copy resource-watchdog script
+      become: yes
+      copy:
+        src: ../scripts/monitoring/resource-watchdog.sh
+        dest: "{{ watchdog_script }}"
+        mode: '0755'
+
+    - name: Copy launchd plist for resource-watchdog
+      become: yes
+      copy:
+        src: ../scripts/monitoring/com.mismo.resource-watchdog.plist
+        dest: "{{ plist_path }}"
+        mode: '0644'
+
+    - name: Load resource-watchdog launchd job
+      become: yes
+      shell: |
+        launchctl unload "{{ plist_path }}" 2>/dev/null || true
+        launchctl load "{{ plist_path }}"
+      changed_when: true
+
+    - name: Configure pf blocked_ips table for security monitoring
+      become: yes
+      shell: |
+        if ! pfctl -s Tables | grep -q blocked_ips; then
+          echo "table <blocked_ips> persist" >> /etc/pf.anchors/mismo.studio
+          echo "block in quick from <blocked_ips>" >> /etc/pf.anchors/mismo.studio
+          pfctl -f /etc/pf.conf
+          echo "changed"
+        else
+          echo "unchanged"
+        fi
+      register: pf_table_result
+      changed_when: pf_table_result.stdout == 'changed'
+
+    - name: Set up log rotation for monitoring logs
+      become: yes
+      copy:
+        dest: /etc/newsyslog.d/mismo-monitoring.conf
+        mode: '0644'
+        content: |
+          # logfilename                          [owner:group]  mode  count  size  when  flags
+          /var/log/mismo-watchdog.log                           644   7      1024  *     J
+          /var/log/mismo-watchdog-error.log                     644   7      512   *     J
+          /var/log/mismo-backup-verify.log                      644   7      512   *     J
+
+- name: Deploy backup verification to Studio 3
+  hosts: studio-3
+  vars:
+    ansible_become_pass: "{{ lookup('env', 'SUDO_PASSWORD') }}"
+    mismo_root: /opt/mismo
+    verify_script: "{{ mismo_root }}/mac-studios-iac/scripts/backups/verify-backup.sh"
+
+  tasks:
+    - name: Copy backup verification script
+      become: yes
+      copy:
+        src: ../scripts/backups/verify-backup.sh
+        dest: "{{ verify_script }}"
+        mode: '0755'
+
+    - name: Deploy daily backup verification launchd plist
+      become: yes
+      copy:
+        dest: /Library/LaunchDaemons/com.mismo.backup-verify.plist
+        mode: '0644'
+        content: |
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>Label</key>
+              <string>com.mismo.backup-verify</string>
+              <key>ProgramArguments</key>
+              <array>
+                  <string>/bin/bash</string>
+                  <string>-c</string>
+                  <string>set -a; source /opt/mismo/.env; set +a; exec {{ verify_script }}</string>
+              </array>
+              <key>StartCalendarInterval</key>
+              <dict>
+                  <key>Hour</key>
+                  <integer>3</integer>
+                  <key>Minute</key>
+                  <integer>0</integer>
+              </dict>
+              <key>RunAtLoad</key>
+              <false/>
+              <key>StandardOutPath</key>
+              <string>/var/log/mismo-backup-verify.log</string>
+              <key>StandardErrorPath</key>
+              <string>/var/log/mismo-backup-verify.log</string>
+              <key>WorkingDirectory</key>
+              <string>/opt/mismo</string>
+          </dict>
+          </plist>
+
+    - name: Load backup verification launchd job
+      become: yes
+      shell: |
+        launchctl unload /Library/LaunchDaemons/com.mismo.backup-verify.plist 2>/dev/null || true
+        launchctl load /Library/LaunchDaemons/com.mismo.backup-verify.plist
+      changed_when: true

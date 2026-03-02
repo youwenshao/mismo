@@ -10,6 +10,7 @@ The system utilizes a Hybrid Adapter pattern where custom n8n nodes act as clien
 graph TD
     subgraph Control_Plane ["Studio 1 (M4 Max)"]
         n8nMain["n8n Main (Web UI/API)"]
+        FarmMonitor["farm-monitor (Monitoring & Alerts)"]
         Redis[("Redis (BullMQ Queue)")]
         PG[("PostgreSQL (n8n Metadata)")]
         BmadService["BMAD Validator (Pre-flight)"]
@@ -17,6 +18,7 @@ graph TD
     end
 
     subgraph Execution_Plane ["Studio 2 & 3 (M2 Ultra)"]
+        Watchdog["resource-watchdog (launchd)"]
         n8nWorker["n8n Worker (25x per Node)"]
         ContractService["Contract Checker (AST Analysis)"]
         DockerSock["/var/run/docker.sock"]
@@ -30,12 +32,14 @@ graph TD
     n8nWorker -->|"Gate 3"| ContractService
     BmadService & GsdService & ContractService -->|"Audit Logs"| Supabase
     n8nWorker -->|"Build Containers"| DockerSock
+    FarmMonitor -->|"SSH metrics"| Watchdog
+    FarmMonitor -->|"Auto-heal"| n8nWorker
 ```
 
 ## Hardware Mapping
 
-- **Studio 1 (M4 Max)**: Control Plane. Hosts the n8n main instance, Redis queue, PostgreSQL database, and the pre-flight/planning validation microservices (`BMAD-Validator` and `GSD-Dependency`).
-- **Studio 2 & 3 (M2 Ultra)**: Execution Plane. Each node runs 25 n8n workers (50 total) and the `Contract-Checker` microservice for AST analysis.
+- **Studio 1 (M4 Max)**: Control Plane. Hosts the n8n main instance, Redis queue, PostgreSQL database, the pre-flight/planning validation microservices (`BMAD-Validator` and `GSD-Dependency`), and the **farm-monitor** service for agent farm monitoring and automated recovery.
+- **Studio 2 & 3 (M2 Ultra)**: Execution Plane. Each node runs 25 n8n workers (50 total), the `Contract-Checker` microservice, and **resource-watchdog** (launchd) for local resource alerts.
 
 ## Role Setup
 
@@ -74,6 +78,7 @@ The complete build pipeline adds agent microservices and error logging. See [doc
 | bmad-validator | ✓ | — | 3001→3000 |
 | gsd-dependency | ✓ | — | 3002→3000 |
 | contract-checker | — | ✓ | 3003→3000 |
+| farm-monitor | ✓ | — | (internal; no exposed port) |
 | db-architect | (add Dockerfile) | — | 3001 |
 | backend-engineer | (add Dockerfile) | — | 3002 |
 | frontend-developer | (add Dockerfile) | — | 3003 |
@@ -109,6 +114,24 @@ All gates log decisions to the `Build` and `Commission` tables in Supabase:
 - `Build.errorLogs`: Stores detailed validation and contract violation logs.
 - `Build.status` & `Build.failureCount`: Triggers human review escalation via database triggers.
 - `Build.studioAssignment`: Tracks which Studio node handled the execution.
+
+## Agent Farm Monitoring
+
+The **farm-monitor** service runs on Studio 1 and provides:
+
+- **Resource alerts**: RAM >85% (5 min) → reduce worker concurrency; Disk >90% → docker prune; CPU >95% (10 min) → kill hung builds
+- **API health**: Kimi latency >3s → switch to DeepSeek; Supabase down → queue builds locally; GitHub rate limit → pause new builds
+- **Build recovery**: 3x commission failure → escalate via SMS; stuck builds >1hr → auto-kill; success rate <80% → P0 alert
+- **Security**: Unauthorized SSH → ban IP; outbound anomalies → alert; credential expiry reminders
+
+The **resource-watchdog** (launchd) runs locally on each Studio every 60s and can trigger alerts even when the network is degraded.
+
+See [docs/agent-farm-monitoring.md](../../docs/agent-farm-monitoring.md) for full documentation. Deploy monitoring via:
+
+```bash
+cd mac-studios-iac/ansible
+ansible-playbook setup-monitoring.yml -K
+```
 
 ## Configuration & Resiliency
 

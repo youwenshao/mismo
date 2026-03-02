@@ -89,3 +89,41 @@ export const MODEL_PROVIDERS = {
     envKey: 'ZAI_API_KEY',
   },
 } as const
+
+export const ALERT_PRIORITY = {
+  P0: 'P0',
+  P1: 'P1',
+  P2: 'P2',
+} as const
+
+export const ALERT_CATEGORY = {
+  RESOURCE: 'RESOURCE',
+  API: 'API',
+  BUILD: 'BUILD',
+  SECURITY: 'SECURITY',
+  BACKUP: 'BACKUP',
+} as const
+
+export const FARM_THRESHOLDS = {
+  RAM_WARN_PERCENT: 85,
+  RAM_WARN_DURATION_MS: 5 * 60_000,
+  DISK_CRITICAL_PERCENT: 90,
+  CPU_CRITICAL_PERCENT: 95,
+  CPU_CRITICAL_DURATION_MS: 10 * 60_000,
+  KIMI_LATENCY_THRESHOLD_MS: 3_000,
+  SUPABASE_RETRY_INTERVAL_MS: 30_000,
+  BUILD_MAX_RETRIES: 3,
+  BUILD_STUCK_TIMEOUT_MS: 60 * 60_000,
+  SUCCESS_RATE_CRITICAL: 0.80,
+  SUCCESS_RATE_WINDOW_MS: 60 * 60_000,
+  CRED_ROTATION_WARNING_DAYS: 30,
+  WORKER_RESTART_THRESHOLD: 5,
+  WORKER_RESTART_WINDOW_MS: 10 * 60_000,
+  GITHUB_RATE_LIMIT_MIN: 100,
+} as const
+
+export const STUDIOS = {
+  STUDIO_1: { id: 'studio-1', role: 'control-plane' },
+  STUDIO_2: { id: 'studio-2', role: 'worker' },
+  STUDIO_3: { id: 'studio-3', role: 'worker' },
+} as const

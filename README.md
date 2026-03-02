@@ -15,7 +15,9 @@ Mismo provides a complete agency platform with:
 - **Mobile Build Pipeline**: React Native + Expo builds for iOS/Android with BMAD feasibility scoring, EAS builds, and store submission automation
 - **Project Lifecycle Communications**: Automated status updates (Resend/Slack), delivery packaging (ADR, how-to guide, walkthrough video), post-delivery feedback with escalation, and maintenance mode (npm outdated, automated PRs for security patches)
 - **Hosting Transfer Pipeline**: Deploy and transfer ownership across Vercel, Railway/Render, AWS/GCP, or Self-Hosted—gated by Stripe payment, with 7-day post-transfer monitoring
+- **Agent Farm Monitoring**: Resource alerts (RAM/CPU/disk), API health (Kimi→DeepSeek failover, Supabase queue, GitHub rate-limit pause), build recovery (3x escalation, stuck-build kill), security (SSH ban, credential rotation), P0/P1/P2 alerts via SMS, phone, Slack, email
 - **Integrated Billing & Contracts**: Stripe payments with DocuSign e-signatures
+- **Mission Control Dashboard**: Internal ops view — fleet status (Studios 1–3), commission kanban, agent performance, financial telemetry, GSD dependency graph, BMAD feasibility warnings, alerting, ETA prediction
 - **Zero-Trust Infrastructure**: Tailscale mesh network for secure multi-node operations
 
 ## Architecture
@@ -189,6 +191,12 @@ RESEND_FROM_EMAIL=updates@mismo.dev
 # SMTP_HOST=, SMTP_PORT=587, SMTP_USER=, SMTP_PASS=   # Fallback if Resend fails
 COMMS_WEBHOOK_SECRET=                                 # Optional: verify pg_net webhook calls
 
+# Agent Farm Monitoring (Mac Studios n8n HA)
+# SLACK_ALERT_WEBHOOK_URL=                            # Also used by n8n workflow alerts
+# ALERT_PHONE_NUMBER=                                 # Developer for P0 critical (SMS + phone)
+# ALERT_EMAIL=                                        # Developer for P1 warnings
+# TWILIO_ACCOUNT_SID=, TWILIO_AUTH_TOKEN=, TWILIO_FROM_NUMBER=   # P0 SMS and phone alerts
+
 # App URLs
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 INTERNAL_APP_URL=http://localhost:3001
@@ -346,7 +354,7 @@ Add the webhook signing secret to your `.env` as `STRIPE_WEBHOOK_SECRET`.
 | App             | Port | Description                                                     |
 | --------------- | ---- | --------------------------------------------------------------- |
 | `apps/web`      | 3000 | Public-facing platform (Mo chat, PRD editor, client dashboards) |
-| `apps/internal` | 3001 | Internal dev team dashboard (review queues, monitoring)         |
+| `apps/internal` | 3001 | Internal Mission Control dashboard (fleet, commissions, agents, financials, alerts, GSD graph) |
 
 ### Packages
 
@@ -357,6 +365,7 @@ Add the webhook signing secret to your `.env` as `STRIPE_WEBHOOK_SECRET`.
 | `packages/db`        | Prisma schema, migrations, database utilities                                        |
 | `packages/ui`        | Shared React components (shadcn/ui + Design DNA navbars, heroes, content sections)  |
 | `packages/shared`    | TypeScript types, constants, utilities                                               |
+| `packages/farm-monitor` | Agent farm monitoring (resource, API health, build recovery, security); P0/P1/P2 alerts |
 | `packages/templates` | Pre-audited architectural templates (Serverless SaaS, Monolithic MVP, Microservices) |
 | `packages/gsd-dependency` | GSD topological sort, PRD parsing, cycle detection                         |
 | `packages/bmad-validator` | BMAD PRD schema validation                                               |
@@ -387,6 +396,7 @@ Add the webhook signing secret to your `.env` as `STRIPE_WEBHOOK_SECRET`.
 | `pnpm --filter @mismo/db db:push`     | Push schema changes to database    |
 | `pnpm --filter @mismo/db db:migrate`  | Run migrations                     |
 | `pnpm --filter @mismo/db db:seed`     | Seed database with initial data    |
+| `pnpm --filter @mismo/db db:seed-mission-control` | Seed Mission Control demo data (StudioMetrics, sample commissions) |
 | `pnpm --filter @mismo/db db:setup-pgsodium` | Enable credential encryption for n8n pipeline |
 | `./scripts/start-build-pipeline.sh`  | Start GSD build pipeline microservices |
 | `./scripts/stop-build-pipeline.sh`   | Stop GSD build pipeline microservices |
@@ -510,6 +520,7 @@ pnpm build
 ## Documentation
 
 - [Project Lifecycle Communications](docs/project-lifecycle-communications.md) - Status updates (Resend/Slack), delivery packaging, feedback survey, maintenance mode
+- [Agent Farm Monitoring](docs/agent-farm-monitoring.md) - Resource/API/build/security monitoring, automated recovery, P0/P1/P2 alerts (SMS, phone, Slack, email)
 - [GSD Build Pipeline](docs/gsd-build-pipeline.md) - BMAD-contract build orchestration, agent swarm, contract validation
 - [GitHub Delivery Pipeline](docs/delivery-pipeline.md) - Automated source code delivery, BMAD documentation, ownership transfer
 - [Repo Surgery Pipeline](docs/repo-surgery-pipeline.md) - Modify existing codebases with BMAD boundaries, Qdrant vector search, validation gates
@@ -517,6 +528,7 @@ pnpm build
 - [n8n Workflow Pipeline](docs/n8n-workflow-pipeline.md) - Generate, test, and deploy n8n automations from PRD specs
 - [Content Generation Pipeline](docs/content-generation-pipeline.md) - Fluff-free content validation for headlines, features, microcopy
 - [Hosting Transfer Pipeline](docs/hosting-transfer-pipeline.md) - Deploy and transfer ownership (Vercel, Railway/Render, AWS/GCP, Self-Hosted), payment gating, 7-day monitoring |
+- [Mission Control Dashboard](docs/mission-control-dashboard.md) - Fleet status, commission pipeline, agent performance, financials, GSD graph, alerting
 - [Design DNA Enforcement](docs/design-dna-enforcement.md) - Design DNA schema, component library, enforcement agent
 - [Design System](docs/mismo-design-system.md) - UI/UX guidelines
 - [Verification Steps](verification.md) - Network testing procedures

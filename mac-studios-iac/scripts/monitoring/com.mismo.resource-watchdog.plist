@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mismo.resource-watchdog</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <!-- Source .env before running so FARM_MONITOR_URL and SLACK_ALERT_WEBHOOK_URL are available -->
+        <string>set -a; source /opt/mismo/.env; set +a; exec /opt/mismo/mac-studios-iac/scripts/monitoring/resource-watchdog.sh</string>
+    </array>
+
+    <key>StartInterval</key>
+    <integer>60</integer>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/var/log/mismo-watchdog.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/var/log/mismo-watchdog-error.log</string>
+
+    <key>WorkingDirectory</key>
+    <string>/opt/mismo</string>
+</dict>
+</plist>

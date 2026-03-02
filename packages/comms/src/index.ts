@@ -1,6 +1,8 @@
-export { dispatch, type DispatchOptions, type DispatchResult } from './dispatcher'
+export { dispatch, dispatchFarmAlert, type DispatchOptions, type DispatchResult, type FarmAlertOptions } from './dispatcher'
 export { sendEmail } from './channels/resend'
 export { sendSlackNotification } from './channels/slack'
+export { sendSms } from './channels/sms'
+export { makePhoneCall } from './channels/phone'
 export { renderTemplate } from './templates/render'
 export { getStrings, type Locale } from './i18n/strings'
 export {

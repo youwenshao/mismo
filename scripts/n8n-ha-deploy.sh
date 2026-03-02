@@ -77,6 +77,11 @@ if [ "$role" == "worker" ]; then
     check_var "MAIN_NODE_IP" "192.168.1.100" || true
 fi
 
+if [ "$role" == "main" ]; then
+    echo "Note: Farm-monitor (agent farm monitoring) will start with n8n-main."
+    echo "      For P0 alerts (SMS/phone), set TWILIO_*, ALERT_PHONE_NUMBER, SLACK_ALERT_WEBHOOK_URL in docker/n8n-ha/.env"
+fi
+
 # Build and Launch
 echo ""
 echo "Building microservices and starting n8n HA ($role mode)..."
@@ -94,6 +99,8 @@ echo ""
 echo "Deployment successful!"
 if [ "$role" == "main" ]; then
     echo "Access n8n at http://localhost:5678"
+    echo "Farm-monitor is running (monitors RAM/CPU/disk, API health, build failures, security)."
+    echo "To deploy resource-watchdog on all Studios: cd mac-studios-iac/ansible && ansible-playbook setup-monitoring.yml -K"
 else
     echo "Worker node is now running and connected to Studio 1."
 fi

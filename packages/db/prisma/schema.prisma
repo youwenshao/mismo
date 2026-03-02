@@ -205,6 +205,8 @@ enum CommissionStatus {
 enum NotificationChannel {
   EMAIL
   SLACK
+  SMS
+  PHONE
 }
 
 enum NotificationEvent {
@@ -215,6 +217,7 @@ enum NotificationEvent {
   SUPPORT_REQUIRED
   FEEDBACK_REQUEST
   MAINTENANCE_REPORT
+  FARM_ALERT
 }
 
 enum PaymentState {
@@ -253,6 +256,8 @@ model Commission {
   paymentState     PaymentState     @default(UNPAID)
   stripeCustomerId String?
   userId           String // Link to auth user for RLS
+  feasibilityScore Float?
+  riskAssessment   Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -471,6 +476,63 @@ model Credential {
   commission Commission @relation(fields: [commissionId], references: [id])
 
   @@unique([commissionId, service])
+}
+
+enum AlertPriority {
+  P0
+  P1
+  P2
+}
+
+enum AlertCategory {
+  RESOURCE
+  API
+  BUILD
+  SECURITY
+  BACKUP
+}
+
+model MonitoringAlert {
+  id         String        @id @default(cuid())
+  priority   AlertPriority
+  category   AlertCategory
+  studio     String?
+  title      String
+  details    Json?
+  resolvedAt DateTime?
+  createdAt  DateTime      @default(now())
+
+  @@index([priority, createdAt])
+  @@index([category, createdAt])
+  @@index([resolvedAt])
+}
+
+model StudioMetrics {
+  id         String   @id @default(cuid())
+  studioId   String
+  studioName String
+  cpuPercent Float
+  ramPercent Float
+  diskPercent Float
+  networkIn  Float
+  networkOut Float
+  queueDepth Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([studioId, createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String
+  resource   String
+  resourceId String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([resource, resourceId])
+  @@index([createdAt])
 }
 
 enum DeliveryStatus {

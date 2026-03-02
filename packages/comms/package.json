@@ -15,7 +15,8 @@
     "puppeteer": "^24.37.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "resend": "^4.1.2"
+    "resend": "^4.1.2",
+    "twilio": "^5.4.0"
   },
   "devDependencies": {
     "@types/nodemailer": "^6.4.17",

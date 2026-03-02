@@ -86,7 +86,40 @@ services:
     ports:
       - "3002:3000"
 
+  farm-monitor:
+    build:
+      context: ../../
+      dockerfile: docker/n8n-ha/Dockerfile.farm-monitor
+    restart: always
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - STUDIO_1_SSH_HOST=${STUDIO_1_SSH_HOST:-192.168.1.101}
+      - STUDIO_2_SSH_HOST=${STUDIO_2_SSH_HOST:-192.168.1.102}
+      - STUDIO_3_SSH_HOST=${STUDIO_3_SSH_HOST:-192.168.1.103}
+      - SSH_USER=${SSH_USER:-admin}
+      - SSH_KEY_PATH=/root/.ssh/id_ed25519
+      - KIMI_API_KEY=${KIMI_API_KEY}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - SLACK_ALERT_WEBHOOK_URL=${SLACK_ALERT_WEBHOOK_URL}
+      - ALERT_EMAIL=${ALERT_EMAIL}
+      - ALERT_PHONE_NUMBER=${ALERT_PHONE_NUMBER}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_FROM_NUMBER=${TWILIO_FROM_NUMBER}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL:-alerts@mismo.dev}
+      - FARM_MONITOR_ENABLED=true
+    volumes:
+      - ~/.ssh:/root/.ssh:ro
+      - farm_monitor_data:/tmp
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   n8n_postgres_data:
   n8n_redis_data:
   n8n_data:
+  farm_monitor_data:

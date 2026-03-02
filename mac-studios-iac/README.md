@@ -10,7 +10,8 @@ mac-studios-iac/
 ├── ansible/
 │   ├── inventory.ini
 │   ├── ansible.cfg
-│   └── setup-studio.yml
+│   ├── setup-studio.yml
+│   └── setup-monitoring.yml
 ├── dotfiles/
 │   ├── .zshrc
 │   ├── .tmux.conf
@@ -18,10 +19,13 @@ mac-studios-iac/
 └── scripts/
     ├── monitoring/
     │   ├── cluster-health.sh
-    │   └── build-status.sh
+    │   ├── build-status.sh
+    │   ├── resource-watchdog.sh
+    │   └── com.mismo.resource-watchdog.plist
     └── backups/
         ├── supabase-backup.sh
-        └── n8n-backup.sh
+        ├── n8n-backup.sh
+        └── verify-backup.sh
 ```
 
 ## Manual Steps (Pre-requisites)
@@ -58,27 +62,57 @@ The Ansible playbook will install Tailscale, but you must authenticate manually 
 - Open Tailscale from the Applications folder or run `tailscale up` in the terminal.
 - Follow the prompt to log in via your browser.
 
-### 4. Scheduling Backups
+### 4. Scheduling Backups and Monitoring
 
-To automate the backup scripts, you need to set up `cron` or `launchd` jobs:
+**Option A: Use setup-monitoring.yml (Recommended)**
 
-- Open your crontab on the MacBook Pro or Studio 3 (wherever you want backups to run from): `crontab -e`
-- Add the following entries (adjust paths as necessary):
+Deploy resource-watchdog and backup verification via Ansible:
 
-  ```bash
-  # Daily Supabase dump at 2 AM
-  0 2 * * * /path/to/mac-studios-iac/scripts/backups/supabase-backup.sh >> /tmp/supabase-backup.log 2>&1
+```bash
+cd ansible
+ansible-playbook setup-monitoring.yml -K
+```
 
-  # Weekly n8n workflow export on Sunday at 3 AM
-  0 3 * * 0 /path/to/mac-studios-iac/scripts/backups/n8n-backup.sh >> /tmp/n8n-backup.log 2>&1
-  ```
+This installs:
+
+- **resource-watchdog** — Runs every 60s on all Studios via launchd; checks RAM/CPU/disk, sends alerts, triggers docker prune or concurrency reduction
+- **Backup verification** — Runs daily at 3 AM on Studio 3; tests restore from latest backup and reports to farm-monitor
+
+Ensure `FARM_MONITOR_URL` and `SLACK_ALERT_WEBHOOK_URL` are set in `/opt/mismo/.env` on each Studio so the watchdog can send alerts.
+
+**Option B: Manual cron/launchd**
+
+If not using setup-monitoring.yml, add entries to crontab (adjust paths as necessary):
+
+```bash
+# Daily Supabase dump at 2 AM
+0 2 * * * /path/to/mac-studios-iac/scripts/backups/supabase-backup.sh >> /tmp/supabase-backup.log 2>&1
+
+# Weekly n8n workflow export on Sunday at 3 AM
+0 3 * * 0 /path/to/mac-studios-iac/scripts/backups/n8n-backup.sh >> /tmp/n8n-backup.log 2>&1
+```
 
 ## Usage
 
 1. Review and update `ansible/inventory.ini` with the correct IP addresses or hostnames.
-2. Run the Ansible playbook:
+2. Run the base setup playbook:
    ```bash
    cd ansible
    ansible-playbook setup-studio.yml -K
    ```
    _(The `-K` flag prompts for the sudo password required for some tasks like firewall configuration)._
+3. (Optional) Deploy monitoring (resource-watchdog + backup verification):
+   ```bash
+   ansible-playbook setup-monitoring.yml -K
+   ```
+
+## Monitoring Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/monitoring/cluster-health.sh` | Ad-hoc: SSH to all Studios, report CPU/RAM/disk |
+| `scripts/monitoring/build-status.sh` | Ad-hoc: n8n queue depth per Studio |
+| `scripts/monitoring/resource-watchdog.sh` | Deployed via launchd; runs every 60s; RAM/CPU/disk checks + automated responses |
+| `scripts/backups/verify-backup.sh` | Daily test-restore of latest backup (Studio 3); reports to farm-monitor |
+
+See [docs/agent-farm-monitoring.md](../docs/agent-farm-monitoring.md) for the full monitoring architecture.

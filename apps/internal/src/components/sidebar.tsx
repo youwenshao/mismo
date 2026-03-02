@@ -5,9 +5,14 @@ import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 const nav = [
-  { label: 'Overview', href: '/' },
-  { label: 'Projects', href: '/projects' },
-  { label: 'Settings', href: '/settings' },
+  { label: 'Overview', href: '/', section: 'main' },
+  { label: 'Fleet Status', href: '/fleet', section: 'mission' },
+  { label: 'Commissions', href: '/commissions', section: 'mission' },
+  { label: 'Agents', href: '/agents', section: 'mission' },
+  { label: 'Financials', href: '/financials', section: 'mission' },
+  { label: 'Alerts', href: '/alerts', section: 'mission' },
+  { label: 'Projects', href: '/projects', section: 'main' },
+  { label: 'Settings', href: '/settings', section: 'main' },
 ]
 
 export function Sidebar() {
@@ -32,19 +37,54 @@ export function Sidebar() {
       </div>
 
       <nav className="mt-8 flex-1">
-        {nav.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`block py-2 px-4 text-sm transition-colors ${
-              isActive(item.href)
-                ? 'text-black font-medium border-l-2 border-black'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            {item.label}
-          </Link>
-        ))}
+        <Link
+          href="/"
+          className={`block py-2 px-4 text-sm transition-colors ${
+            isActive('/') && pathname === '/'
+              ? 'text-black font-medium border-l-2 border-black'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Overview
+        </Link>
+
+        <p className="px-4 pt-6 pb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-300">
+          Mission Control
+        </p>
+        {nav
+          .filter((i) => i.section === 'mission')
+          .map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`block py-2 px-4 text-sm transition-colors ${
+                isActive(item.href)
+                  ? 'text-black font-medium border-l-2 border-black'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+
+        <p className="px-4 pt-6 pb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-300">
+          Workspace
+        </p>
+        {nav
+          .filter((i) => i.section === 'main' && i.href !== '/')
+          .map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`block py-2 px-4 text-sm transition-colors ${
+                isActive(item.href)
+                  ? 'text-black font-medium border-l-2 border-black'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
       </nav>
 
       <div className="px-4 pb-6">

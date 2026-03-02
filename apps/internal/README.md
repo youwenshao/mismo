@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mismo Internal Dashboard
 
-## Getting Started
+Internal development and operations dashboard for the Mismo agentic agency. Requires ADMIN or ENGINEER role.
 
-First, run the development server:
+## Running
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
 pnpm dev
-# or
-bun dev
+# or from repo root:
+pnpm --filter @mismo/internal dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Runs on **http://localhost:3001**. Auth redirects unauthenticated users to the main app login.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Mission Control
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Route | Description |
+|-------|-------------|
+| `/` | Overview — active projects, pending reviews, total clients |
+| `/fleet` | Fleet status — Studio 1–3 metrics, CPU/RAM/Disk, active builds, queue depth |
+| `/commissions` | Commission pipeline — kanban (Interview → Queued → Building → Testing → Delivered), drag-and-drop |
+| `/commissions/[id]` | Commission detail — PRD summary, risk panel, build history, verification status, ETA |
+| `/commissions/[id]/graph` | GSD dependency graph — DAG visualization, critical path, parallelization suggestions |
+| `/agents` | Agent performance — success rate, build time by archetype, error heatmap, quality scores |
+| `/financials` | Financial telemetry — revenue, cost breakdown, profit by archetype, cost alerts |
+| `/alerts` | Alert history — critical path blocked, architecture drift, cost overrun |
 
-## Learn More
+## Requirements
 
-To learn more about Next.js, take a look at the following resources:
+- Supabase auth (user with ADMIN or ENGINEER role)
+- Database with migrations applied (StudioMetrics, AuditLog, Commission.feasibilityScore)
+- `STRIPE_SECRET_KEY` for Financials page (optional; uses tier pricing fallback)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Seed Demo Data
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+pnpm --filter @mismo/db db:seed-mission-control
+```
 
-## Deploy on Vercel
+## Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Next.js 16 (App Router)
+- Supabase Auth + Realtime
+- Prisma (via @mismo/db)
+- Recharts, @xyflow/react, @dnd-kit
+- Tailwind CSS
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Documentation
+
+See [docs/mission-control-dashboard.md](../../docs/mission-control-dashboard.md) for API routes, alert conditions, and data sources.

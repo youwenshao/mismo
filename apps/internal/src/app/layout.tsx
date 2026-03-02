@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { Sidebar } from '@/components/sidebar'
+import { RealtimeProvider } from '@/components/shared/realtime-provider'
+import { AlertBar } from '@/components/alerts/alert-bar'
 import './globals.css'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@mismo/db'
@@ -39,7 +41,12 @@ export default async function RootLayout({
     <html lang="en" className="min-h-full">
       <body className="min-h-full flex text-black">
         <Sidebar />
-        <main className="flex-1 ml-56 p-8">{children}</main>
+        <RealtimeProvider>
+          <main className="flex-1 ml-56 p-8">
+            <AlertBar />
+            {children}
+          </main>
+        </RealtimeProvider>
       </body>
     </html>
   )
