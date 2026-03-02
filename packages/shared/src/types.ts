@@ -32,22 +32,17 @@ export enum SafetyTier {
 }
 
 export enum ArchTemplate {
-  SERVERLESS_SAAS = 'SERVERLESS_SAAS',
-  MONOLITHIC_MVP = 'MONOLITHIC_MVP',
-  MICROSERVICES_SCALE = 'MICROSERVICES_SCALE',
+  MARKETING = 'MARKETING',
+  SAAS = 'SAAS',
+  PIPELINE = 'PIPELINE',
+  INTEGRATION = 'INTEGRATION',
+  AI = 'AI',
+  INTERACTIVE = 'INTERACTIVE',
+  COMPLIANCE = 'COMPLIANCE',
 }
 
 export enum InterviewState {
-  GREETING = 'GREETING',
-  PROBLEM_DEFINITION = 'PROBLEM_DEFINITION',
-  TARGET_USERS = 'TARGET_USERS',
-  FEATURE_EXTRACTION = 'FEATURE_EXTRACTION',
-  TECHNICAL_TRADEOFFS = 'TECHNICAL_TRADEOFFS',
-  MONETIZATION = 'MONETIZATION',
-  COMPLIANCE_CHECK = 'COMPLIANCE_CHECK',
-  SUMMARY = 'SUMMARY',
-  FEASIBILITY_AND_PRICING = 'FEASIBILITY_AND_PRICING',
-  CONFIRMATION = 'CONFIRMATION',
+  IN_PROGRESS = 'IN_PROGRESS',
   COMPLETE = 'COMPLETE',
 }
 
@@ -110,8 +105,12 @@ export interface ModelProviderConfig {
 }
 
 export interface ReadinessMetadata {
-  readiness: number
-  missing: string[]
+  readiness_score: number
+  current_phase: string
+  technical_profile: Record<string, any>
+  next_questions: string[]
+  missing_critical: string[]
+  prer_draft: string
 }
 
 export interface ChoiceOption {
@@ -123,4 +122,33 @@ export interface SessionCheckpoint {
   messageIndex: number
   context: Record<string, unknown>
   timestamp: string
+}
+
+// API Specification types for PRD
+export interface APISpec {
+  version: string
+  baseUrl: string
+  authentication: string
+  endpoints: APIEndpoint[]
+}
+
+export interface APIEndpoint {
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+  path: string
+  description: string
+  auth: string
+  request?: {
+    query?: string[]
+    body?: APIField[]
+  }
+  response: {
+    type: string
+    items?: string
+  }
+}
+
+export interface APIField {
+  field: string
+  type: string
+  required: boolean
 }

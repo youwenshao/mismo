@@ -24,6 +24,7 @@ export function UserMenu({ userId }: { userId: string }) {
 
   async function handleSignOut() {
     const supabase = createClient();
+    if (!supabase) return;
     await supabase.auth.signOut();
     router.push("/");
   }

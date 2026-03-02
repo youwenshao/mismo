@@ -42,9 +42,13 @@ enum SafetyTier {
 }
 
 enum ArchTemplate {
-  SERVERLESS_SAAS
-  MONOLITHIC_MVP
-  MICROSERVICES_SCALE
+  MARKETING
+  SAAS
+  PIPELINE
+  INTEGRATION
+  AI
+  INTERACTIVE
+  COMPLIANCE
 }
 
 model User {

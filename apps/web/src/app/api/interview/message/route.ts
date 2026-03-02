@@ -4,7 +4,6 @@ import {
   InterviewStateMachine,
   type InterviewContext,
   getActiveModel,
-  calculatePriceEstimate,
 } from '@mismo/ai'
 import { prisma } from '@mismo/db'
 import { InterviewState } from '@mismo/shared'
@@ -58,25 +57,7 @@ export async function POST(req: NextRequest) {
       machine.transition()
     }
 
-    const isAutoCompleting = machine.getContext().currentState === InterviewState.CONFIRMATION
-
-    let priceEstimateJson: string | undefined
-    let priceEstimateData: string | undefined
-    if (machine.getContext().currentState === InterviewState.FEASIBILITY_AND_PRICING) {
-      const data = machine.getContext().extractedData
-      const featureCount = Array.isArray(data.features) ? (data.features as unknown[]).length : 3
-      const estimate = calculatePriceEstimate({
-        featureCount,
-        archPreference: typeof data.archPreference === 'string' ? data.archPreference : 'balanced',
-        regulatoryDomains: Array.isArray(data.regulatoryDomains) ? data.regulatoryDomains as string[] : [],
-        complexityTolerance: typeof data.complexityTolerance === 'string' ? data.complexityTolerance : 'moderate',
-        expectedVolume: typeof data.expectedVolume === 'string' ? data.expectedVolume : 'medium',
-      })
-      priceEstimateJson = JSON.stringify(estimate, null, 2)
-      priceEstimateData = JSON.stringify(estimate)
-    }
-
-    const systemPrompt = machine.buildFullSystemPrompt(priceEstimateJson)
+    const systemPrompt = machine.buildFullSystemPrompt()
     const runtimeConfig = await getMoRuntimeConfig()
 
     const result = streamText({
@@ -95,10 +76,6 @@ export async function POST(req: NextRequest) {
             content: cleanText,
             timestamp: new Date().toISOString(),
           })
-
-          if (isAutoCompleting) {
-            machine.transition()
-          }
 
           machine.saveCheckpoint()
 
@@ -124,11 +101,8 @@ export async function POST(req: NextRequest) {
 
     const currentContext = machine.getContext()
     response.headers.set('X-Interview-Session-Id', sessionId)
-    response.headers.set('X-Interview-State', isAutoCompleting ? InterviewState.COMPLETE : currentContext.currentState)
+    response.headers.set('X-Interview-State', currentContext.currentState)
     response.headers.set('X-Interview-Readiness', String(currentContext.readinessScore))
-    if (priceEstimateData) {
-      response.headers.set('X-Price-Estimate', priceEstimateData)
-    }
 
     return response
   } catch (error) {

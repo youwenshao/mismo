@@ -1,6 +1,5 @@
-import { InterviewState, READINESS_THRESHOLD, INTERVIEW_REMINDER_MS, type InterviewMessage, type SessionCheckpoint, type ReadinessMetadata } from '@mismo/shared'
-import { INTERVIEW_STATES, type StateConfig } from './states'
-import { MO_BASE_PROMPT } from './prompts'
+import { InterviewState, INTERVIEW_REMINDER_MS, type InterviewMessage, type SessionCheckpoint, type ReadinessMetadata } from '@mismo/shared'
+import { MO_V2_SYSTEM_PROMPT } from './prompts'
 
 export interface InterviewContext {
   currentState: InterviewState
@@ -22,7 +21,7 @@ export class InterviewStateMachine {
 
   constructor(expiresAt: Date) {
     this.context = {
-      currentState: InterviewState.GREETING,
+      currentState: InterviewState.IN_PROGRESS,
       extractedData: {},
       readinessScore: 0,
       turnCount: 0,
@@ -48,10 +47,6 @@ export class InterviewStateMachine {
     return this.context.currentState
   }
 
-  get currentStateConfig(): StateConfig {
-    return INTERVIEW_STATES[this.context.currentState]
-  }
-
   get isComplete(): boolean {
     return this.context.currentState === InterviewState.COMPLETE
   }
@@ -65,7 +60,7 @@ export class InterviewStateMachine {
   }
 
   getSystemPrompt(): string {
-    return this.currentStateConfig.systemPrompt
+    return MO_V2_SYSTEM_PROMPT
   }
 
   addMessage(message: InterviewMessage): void {
@@ -114,13 +109,44 @@ export class InterviewStateMachine {
     if (!match) return { cleanText: text, metadata: null }
 
     try {
-      const metadata = JSON.parse(match[1])
-      this.context.readinessScore = metadata.readiness
+      const metadata = JSON.parse(match[1]) as ReadinessMetadata
       
-      if (metadata.extractedData && typeof metadata.extractedData === 'object') {
-        this.context.extractedData = {
-          ...this.context.extractedData,
-          ...metadata.extractedData
+      this.context.readinessScore = metadata.readiness_score || 0
+      
+      if (metadata.current_phase === 'complete') {
+        this.context.currentState = InterviewState.COMPLETE
+      }
+      
+      this.context.extractedData = {
+        ...this.context.extractedData,
+        ...metadata.technical_profile, // Flatten technical profile (archetype, feasibility_score, etc.)
+        ...metadata.prer_draft, // Flatten prer_draft (business_problem, solution_approach, etc.)
+        technical_profile: metadata.technical_profile,
+        current_phase: metadata.current_phase,
+        next_questions: metadata.next_questions,
+        missing_critical: metadata.missing_critical,
+        prer_draft: metadata.prer_draft,
+      }
+
+      // Map new Mo v2 fields to legacy EXPECTED_FIELDS for SpecGenerator compatibility
+      if (metadata.prer_draft) {
+        if (metadata.prer_draft.business_problem) {
+          this.context.extractedData.problemStatement = metadata.prer_draft.business_problem
+        }
+        if (metadata.prer_draft.solution_approach) {
+          this.context.extractedData.initialDescription = metadata.prer_draft.solution_approach
+        }
+      }
+      if (metadata.technical_profile) {
+        if (metadata.technical_profile.detected_constraints) {
+          this.context.extractedData.regulatoryDomains = metadata.technical_profile.detected_constraints
+        }
+        if (metadata.technical_profile.key_entities) {
+          this.context.extractedData.features = metadata.technical_profile.key_entities.map((name: string) => ({
+            name,
+            description: `Core entity: ${name}`,
+            priority: 'must-have'
+          }))
         }
       }
 
@@ -154,119 +180,24 @@ export class InterviewStateMachine {
   }
 
   canTransition(): boolean {
-    const config = this.currentStateConfig
-    const goals = config.extractionGoals
-    const allGoalsMet = goals.every((goal) => this.context.extractedData[goal] !== undefined)
-    const maxTurnsReached = this.context.turnCount >= config.maxTurns
-
-    if (
-      this.context.readinessScore >= READINESS_THRESHOLD &&
-      this.context.currentState !== InterviewState.SUMMARY &&
-      this.context.currentState !== InterviewState.FEASIBILITY_AND_PRICING &&
-      this.context.currentState !== InterviewState.CONFIRMATION &&
-      this.context.currentState !== InterviewState.COMPLETE
-    ) {
-      return true
-    }
-
-    if (
-      this.context.currentState === InterviewState.SUMMARY ||
-      this.context.currentState === InterviewState.FEASIBILITY_AND_PRICING ||
-      this.context.currentState === InterviewState.CONFIRMATION
-    ) {
-      const lastMessage = this.context.messages[this.context.messages.length - 1]
-      if (lastMessage?.role === 'user') {
-        const content = lastMessage.content.toLowerCase()
-        const isPositiveChoice =
-          content.startsWith('a:') ||
-          content.includes('proceed') ||
-          content.includes('sounds good') ||
-          content.includes('looks right') ||
-          content.includes('submit')
-        if (isPositiveChoice) return true
-      }
-    }
-
-    return allGoalsMet || maxTurnsReached
+    return false // Transitions are now handled by LLM metadata
   }
 
   transition(): boolean {
-    const config = this.currentStateConfig
-
-    if (
-      this.context.readinessScore >= READINESS_THRESHOLD &&
-      this.context.currentState !== InterviewState.SUMMARY &&
-      this.context.currentState !== InterviewState.FEASIBILITY_AND_PRICING &&
-      this.context.currentState !== InterviewState.CONFIRMATION &&
-      this.context.currentState !== InterviewState.COMPLETE
-    ) {
-      this.context.currentState = InterviewState.SUMMARY
-      this.context.turnCount = 0
-      return true
-    }
-
-    const nextState = config.nextState
-    if (!nextState) return false
-    this.context.currentState = nextState
-    this.context.turnCount = 0
-    return true
+    return false // Transitions are now handled by LLM metadata
   }
 
-  buildFullSystemPrompt(priceEstimateJson?: string): string {
-    const config = this.currentStateConfig
-    const ctx = this.context
+  buildFullSystemPrompt(): string {
+    let prompt = MO_V2_SYSTEM_PROMPT
 
-    let prompt = MO_BASE_PROMPT + '\n\n---\n\nCURRENT PHASE: ' + config.id + '\n\n' + config.systemPrompt
-
-    prompt += `\n\n### EXTRACTION RULES (CRITICAL)
-You MUST extract structured data from the user's input and include it in your [META] block. 
-The system uses this to build the technical specification. 
-Expected fields for the entire interview:
-- projectName: string
-- initialDescription: string
-- problemStatement: string
-- currentSolutions: string
-- uniqueValue: string
-- primaryUsers: string
-- demographics: string
-- expectedVolume: string
-- features: Array<{name: string, description: string, priority: "must-have" | "should-have" | "nice-to-have"}>
-- archPreference: "speed" | "scalability" | "customization"
-- scalabilityNeeds: "low" | "medium" | "high"
-- businessModel: string
-- pricingStrategy: string
-- paymentNeeds: string
-- dataTypes: string[]
-- regulatoryDomains: string[]
-- contentTypes: string[]
-
-Update the "extractedData" object in your [META] block with ANY information gathered so far. 
-NEVER drop previously extracted fields unless they are being corrected.
-
-Format your [META] block exactly like this:
-[META]{"readiness":<score>,"missing":[...],"extractedData":{...}}[/META]`
-
-    if (Object.keys(ctx.extractedData).length > 0) {
-      prompt += `\n\nInformation gathered so far:\n${JSON.stringify(ctx.extractedData, null, 2)}`
+    if (Object.keys(this.context.extractedData).length > 0) {
+      prompt += `\n\n### CURRENT CONTEXT (DO NOT LOSE THIS)\n${JSON.stringify(this.context.extractedData, null, 2)}`
     }
 
-    prompt += `\n\nYou are in the "${config.id}" phase (turn ${ctx.turnCount + 1}/${config.maxTurns}).`
-    prompt += `\nExtraction goals for this phase: ${config.extractionGoals.join(', ') || 'none'}`
-
-    if (config.nextState && config.nextState !== InterviewState.COMPLETE) {
-      prompt += `\nAfter this phase, you will move to: ${config.nextState}`
-    }
-
-    if (priceEstimateJson && ctx.currentState === InterviewState.FEASIBILITY_AND_PRICING) {
-      prompt += `\n\nPRICE ESTIMATE DATA (use these exact numbers in your response):\n${priceEstimateJson}`
-    }
-
-    const elapsedMs = Date.now() - new Date(ctx.startedAt).getTime()
+    const elapsedMs = Date.now() - new Date(this.context.startedAt).getTime()
     if (elapsedMs >= INTERVIEW_REMINDER_MS) {
-      prompt += `\n\n[SYSTEM REMINDER] You have been in this interview for ${Math.round(elapsedMs / 60000)} minutes. Please start wrapping up the interview to ensure full readiness by the 15-minute mark. Focus on finalizing the requirements and moving towards the summary phase.`
+      prompt += `\n\n[SYSTEM REMINDER] You have been in this interview for ${Math.round(elapsedMs / 60000)} minutes. Please start wrapping up the interview to ensure full readiness by the 15-minute mark. Focus on finalizing the requirements and transitioning current_phase to "complete".`
     }
-
-    prompt += `\n\nREMEMBER: End every response with [META]{"readiness":<score>,"missing":[...],"extractedData":{...}}[/META]. This is EXTREMELY IMPORTANT for the system to process the requirements.`
 
     return prompt
   }

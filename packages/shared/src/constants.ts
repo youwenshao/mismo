@@ -39,9 +39,13 @@ export const PRICING = {
   baseFeatureCount: 3,
   perExtraFeaturePercent: 0.12,
   architectureMultiplier: {
-    SERVERLESS_SAAS: 1.0,
-    MONOLITHIC_MVP: 1.1,
-    MICROSERVICES_SCALE: 1.4,
+    MARKETING: 1.0,
+    SAAS: 1.2,
+    PIPELINE: 1.3,
+    INTEGRATION: 1.2,
+    AI: 1.5,
+    INTERACTIVE: 1.4,
+    COMPLIANCE: 1.5,
   },
   complianceAddon: {
     healthcare: 0.2,

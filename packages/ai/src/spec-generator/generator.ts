@@ -47,25 +47,24 @@ const STORIES_BY_PRIORITY: Record<string, number> = {
 
 export class SpecGenerator {
   selectArchTemplate(extractedData: Record<string, unknown>): ArchTemplate {
+    // Check if we already have an archetype from Mo v2 metadata
+    const moArchetype = extractedData.archetype as string | undefined
+    if (moArchetype) {
+      const mapped = moArchetype.toUpperCase() as keyof typeof ArchTemplate
+      if (ArchTemplate[mapped]) return ArchTemplate[mapped]
+    }
+
+    // Fallback logic for legacy data
     const pref = extractedData.archPreference as string | undefined
     const scalability = extractedData.scalabilityNeeds as string | undefined
-    const complexity = extractedData.complexityTolerance as string | undefined
-    const features = (extractedData.features as PRDFeature[]) || []
-    const hasPayments = !!(extractedData.paymentNeeds || extractedData.pricingStrategy)
+    const hasAI = !!(extractedData.contentTypes as string[] | undefined)?.some(t => t.toLowerCase().includes('ai'))
+    const hasCompliance = !!(extractedData.regulatoryDomains as string[] | undefined)?.length
 
-    if (pref === 'scalability' || scalability === 'high') {
-      return ArchTemplate.MICROSERVICES_SCALE
-    }
-
-    if (pref === 'speed' || complexity === 'low') {
-      return ArchTemplate.MONOLITHIC_MVP
-    }
-
-    if (features.length > 5 && hasPayments && scalability === 'medium') {
-      return ArchTemplate.MICROSERVICES_SCALE
-    }
-
-    return ArchTemplate.SERVERLESS_SAAS
+    if (hasAI) return ArchTemplate.AI
+    if (hasCompliance) return ArchTemplate.COMPLIANCE
+    if (pref === 'scalability' || scalability === 'high') return ArchTemplate.SAAS
+    
+    return ArchTemplate.SAAS // Default to SAAS as it's our most common robust archetype
   }
 
   calculateAmbiguity(extractedData: Record<string, unknown>): number {
@@ -122,12 +121,11 @@ export class SpecGenerator {
     return stories
   }
 
-  generateMermaidDataModel(extractedData: Record<string, unknown>): string {
+  generateMermaidDataModel(extractedData: Record<string, unknown>, arch: ArchTemplate): string {
     const features = (extractedData.features as PRDFeature[]) || []
-    const hasPayments = !!(extractedData.paymentNeeds || extractedData.pricingStrategy)
     const businessModel = (extractedData.businessModel as string) || ''
     const hasSubscription = businessModel.toLowerCase().includes('subscription')
-    const dataTypes = extractedData.dataTypes as string | string[] | undefined
+    const hasPayments = !!(extractedData.paymentNeeds || extractedData.pricingStrategy || hasSubscription)
 
     const lines: string[] = ['erDiagram']
 
@@ -137,68 +135,60 @@ export class SpecGenerator {
     lines.push('        string name')
     lines.push('        string role')
     lines.push('        datetime createdAt')
-    lines.push('        datetime updatedAt')
     lines.push('    }')
 
-    const entityNames: string[] = []
+    const entities: string[] = []
+    
+    // Add default entities based on archetype
+    if (arch === ArchTemplate.SAAS || arch === ArchTemplate.COMPLIANCE) {
+      entities.push('Organization', 'TeamMember')
+      lines.push('    Organization {')
+      lines.push('        string id PK')
+      lines.push('        string name')
+      lines.push('        string tier')
+      lines.push('    }')
+      lines.push('    User ||--o{ Organization : "belongs_to"')
+    }
+
+    if (arch === ArchTemplate.AI) {
+      entities.push('AIPipeline', 'ExecutionLog')
+      lines.push('    AIPipeline {')
+      lines.push('        string id PK')
+      lines.push('        string config')
+      lines.push('        string status')
+      lines.push('    }')
+      lines.push('    ExecutionLog {')
+      lines.push('        string id PK')
+      lines.push('        string pipelineId FK')
+      lines.push('        json output')
+      lines.push('    }')
+      lines.push('    User ||--o{ AIPipeline : "configures"')
+      lines.push('    AIPipeline ||--o{ ExecutionLog : "generates"')
+    }
+
     for (const feature of features) {
       const entityName = toEntityName(feature.name)
-      entityNames.push(entityName)
+      if (entities.includes(entityName)) continue
+      entities.push(entityName)
+      
       lines.push(`    ${entityName} {`)
       lines.push('        string id PK')
       lines.push('        string userId FK')
       lines.push(`        string title`)
       lines.push('        string status')
       lines.push('        json metadata')
-      lines.push('        datetime createdAt')
-      lines.push('        datetime updatedAt')
       lines.push('    }')
-      lines.push(`    User ||--o{ ${entityName} : "creates"`)
+      lines.push(`    User ||--o{ ${entityName} : "manages"`)
     }
 
-    if (entityNames.length >= 2) {
-      lines.push(`    ${entityNames[0]} ||--o{ ${entityNames[1]} : "references"`)
-    }
-
-    if (hasPayments || hasSubscription) {
+    if (hasPayments) {
       lines.push('    Payment {')
       lines.push('        string id PK')
       lines.push('        string userId FK')
       lines.push('        decimal amount')
-      lines.push('        string currency')
       lines.push('        string status')
-      lines.push('        string provider')
-      lines.push('        datetime createdAt')
       lines.push('    }')
       lines.push('    User ||--o{ Payment : "makes"')
-    }
-
-    if (hasSubscription) {
-      lines.push('    Subscription {')
-      lines.push('        string id PK')
-      lines.push('        string userId FK')
-      lines.push('        string plan')
-      lines.push('        string status')
-      lines.push('        datetime startDate')
-      lines.push('        datetime endDate')
-      lines.push('    }')
-      lines.push('    User ||--|| Subscription : "subscribes"')
-      lines.push('    Subscription ||--o{ Payment : "generates"')
-    }
-
-    if (dataTypes) {
-      const types = Array.isArray(dataTypes) ? dataTypes : [dataTypes]
-      if (types.some((t) => t.toLowerCase().includes('file') || t.toLowerCase().includes('media'))) {
-        lines.push('    Attachment {')
-        lines.push('        string id PK')
-        lines.push('        string userId FK')
-        lines.push('        string url')
-        lines.push('        string mimeType')
-        lines.push('        int sizeBytes')
-        lines.push('        datetime createdAt')
-        lines.push('    }')
-        lines.push('    User ||--o{ Attachment : "uploads"')
-      }
     }
 
     return lines.join('\n')
@@ -207,7 +197,7 @@ export class SpecGenerator {
   generateWithLLM(context: InterviewContext): LLMPromptPayload {
     const { extractedData, messages } = context
     const projectName = (extractedData.projectName as string) || 'Untitled Project'
-    const features = (extractedData.features as PRDFeature[]) || []
+    const archetype = (extractedData.archetype as string) || 'SaaS'
 
     const transcript = messages
       .filter((m) => m.role !== 'system')
@@ -215,71 +205,58 @@ export class SpecGenerator {
       .join('\n\n')
 
     const systemPrompt = [
-      'You are a senior product manager at a top-tier software consultancy.',
-      `Generate a comprehensive Product Requirements Document (PRD) for "${projectName}".`,
+      'You are Mo\'s "Invisible Architect".',
+      `Generate a high-fidelity Product Requirements Document (PRD) for "${projectName}".`,
+      `The target archetype is: ${archetype}.`,
       '',
-      '## Requirements',
+      '## The Architect\'s mandate:',
+      'If the interview transcript is missing details, YOU MUST MAKE THE CALL.',
+      'Do not use "TBD" or "Unknown". Use your expertise to provide the most likely industry-standard solution for this archetype.',
       '',
-      '### Executive Overview',
-      'Write a 2-3 paragraph summary covering the product purpose, target market, and key differentiators.',
+      '## Requirements:',
+      '- Executive Overview: 2-3 paragraphs. Be specific and visionary.',
+      '- Problem Statement: Describe the pain point and how this solution eliminates it.',
+      '- Target Users: Define 2 distinct personas.',
+      '- Features: Include core entities and functional requirements.',
+      '- User Stories: Gherkin syntax (Given/When/Then).',
+      '- Monetization: A realistic revenue model.',
+      '- Constraints: Technical and regulatory bounds.',
       '',
-      '### Problem Statement',
-      'Articulate the specific problem: current pain points, existing solutions and shortcomings, and the opportunity gap.',
-      '',
-      '### Target Users',
-      'Define primary user personas with demographics, technical proficiency, key needs, and usage patterns.',
-      '',
-      '### Features',
-      'For each feature provide:',
-      '- Name and detailed description',
-      '- Priority: "must-have", "should-have", or "nice-to-have"',
-      '- 1-3 user stories in Gherkin syntax (Given/When/Then) with specific, testable conditions',
-      '',
-      '### Monetization',
-      'Describe revenue model, pricing tiers, payment flow, and key metrics.',
-      '',
-      '### Constraints',
-      'List all technical, regulatory, and business constraints.',
-      '',
-      '## Output Format',
+      '## Output Format:',
       'Return valid JSON matching the requestedOutputSchema exactly.',
-      'Ensure all user stories follow Gherkin Given/When/Then format.',
     ].join('\n')
 
     const userPrompt = [
-      '## Interview Transcript',
+      '## Interview Transcript:',
       transcript,
       '',
-      '## Extracted Data (Pre-parsed)',
+      '## Raw Extracted Data:',
       JSON.stringify(extractedData, null, 2),
       '',
-      '## Identified Features (Pre-parsed)',
-      ...features.map((f, i) => `${i + 1}. ${f.name} [${f.priority}]: ${f.description}`),
-      '',
-      'Generate the PRD now based on the transcript and pre-parsed data. The transcript is the primary source of truth.',
+      'Generate the complete PRD now. Remember: no TBDs. Make the technical decisions required to build a working system.',
     ].join('\n')
 
     const requestedOutputSchema = JSON.stringify(
       {
-        overview: 'string (2-3 paragraphs)',
-        problemStatement: 'string (specific problem articulation)',
-        targetUsers: 'string (persona description)',
+        overview: 'string',
+        problemStatement: 'string',
+        targetUsers: 'string',
         features: [
           {
             name: 'string',
-            description: 'string (detailed)',
+            description: 'string',
             priority: 'must-have | should-have | nice-to-have',
             userStories: [
               {
                 title: 'string',
-                given: 'string (precondition)',
-                when: 'string (action)',
-                then: 'string (outcome)',
+                given: 'string',
+                when: 'string',
+                then: 'string',
               },
             ],
           },
         ],
-        monetization: 'string (revenue model)',
+        monetization: 'string',
         constraints: ['string'],
       },
       null,
@@ -297,15 +274,15 @@ export class SpecGenerator {
     const rawFeatures: PRDFeature[] = (extractedData.features as PRDFeature[]) || []
     const features = this.generateUserStories(rawFeatures)
 
-    const mermaidDataModel = this.generateMermaidDataModel(extractedData)
+    const mermaidDataModel = this.generateMermaidDataModel(extractedData, archTemplate)
 
     const content: PRDContent = {
-      overview: buildOverview(extractedData),
-      problemStatement: buildProblemStatement(extractedData),
-      targetUsers: buildTargetUsers(extractedData),
+      overview: buildOverview(extractedData, archTemplate),
+      problemStatement: buildProblemStatement(extractedData, archTemplate),
+      targetUsers: buildTargetUsers(extractedData, archTemplate),
       features,
-      monetization: buildMonetization(extractedData),
-      constraints: buildConstraints(extractedData),
+      monetization: buildMonetization(extractedData, archTemplate),
+      constraints: buildConstraints(extractedData, archTemplate),
     }
 
     const flatUserStories = features.flatMap((f) => f.userStories || [])
@@ -329,97 +306,65 @@ function toEntityName(featureName: string): string {
     .join('')
 }
 
-function buildOverview(data: Record<string, unknown>): string {
+function buildOverview(data: Record<string, unknown>, arch: ArchTemplate): string {
+  const moDraft = (data.prer_draft as any)?.solution_approach || (data.solution_approach as string)
+  if (moDraft && moDraft !== 'TBD') return moDraft
+
   const description = data.initialDescription as string | undefined
-  const uniqueValue = data.uniqueValue as string | undefined
-  const projectName = data.projectName as string | undefined
+  const projectName = (data.projectName as string) || 'The Project'
 
-  const parts: string[] = []
-  if (projectName && description) {
-    parts.push(`${projectName} is ${description}.`)
-  } else if (description) {
-    parts.push(description)
+  if (description && description !== 'TBD') {
+    return `${projectName} is ${description}. This ${arch.toLowerCase()} solution is designed for maximum efficiency and growth.`
   }
 
-  if (uniqueValue) {
-    parts.push(`Key differentiator: ${uniqueValue}.`)
-  }
-
-  return parts.length > 0 ? parts.join(' ') : 'TBD'
+  // Fallback decision
+  return `${projectName} is a modern ${arch.toLowerCase()} platform built to solve industry-standard challenges in its domain.`
 }
 
-function buildProblemStatement(data: Record<string, unknown>): string {
+function buildProblemStatement(data: Record<string, unknown>, arch: ArchTemplate): string {
+  const moDraft = (data.prer_draft as any)?.business_problem || (data.business_problem as string)
+  if (moDraft && moDraft !== 'TBD') return moDraft
+
   const problem = data.problemStatement as string | undefined
-  const currentSolutions = data.currentSolutions as string | undefined
+  if (problem && problem !== 'TBD') return problem
 
-  const parts: string[] = []
-  if (problem) parts.push(problem)
-  if (currentSolutions) {
-    parts.push(`Current alternatives include ${currentSolutions}, which fail to fully address the need.`)
-  }
-
-  return parts.length > 0 ? parts.join(' ') : 'TBD'
+  // Fallback decision
+  return `Users currently face significant friction in ${arch.toLowerCase()} workflows, leading to lost time and data fragmentation. This project automates and streamlines these critical processes.`
 }
 
-function buildTargetUsers(data: Record<string, unknown>): string {
+function buildTargetUsers(data: Record<string, unknown>, arch: ArchTemplate): string {
   const primaryUsers = data.primaryUsers as string | undefined
-  const demographics = data.demographics as string | undefined
-  const expectedVolume = data.expectedVolume as string | undefined
+  if (primaryUsers && primaryUsers !== 'TBD') return primaryUsers
 
-  const parts: string[] = []
-  if (primaryUsers) parts.push(`Primary users: ${primaryUsers}.`)
-  if (demographics) parts.push(`Demographics: ${demographics}.`)
-  if (expectedVolume) parts.push(`Expected user volume: ${expectedVolume}.`)
-
-  return parts.length > 0 ? parts.join(' ') : 'TBD'
+  // Fallback decision based on archetype
+  switch (arch) {
+    case ArchTemplate.MARKETING: return 'Brand managers and marketing teams looking to establish a strong online presence.'
+    case ArchTemplate.SAAS: return 'Business professionals and operations teams requiring structured data management.'
+    case ArchTemplate.AI: return 'Data-driven decision makers and researchers utilizing automated intelligence.'
+    default: return 'End-users requiring a streamlined, modern digital experience.'
+  }
 }
 
-function buildMonetization(data: Record<string, unknown>): string {
-  const model = data.businessModel as string | undefined
-  const pricing = data.pricingStrategy as string | undefined
-  const payments = data.paymentNeeds as string | undefined
+function buildMonetization(data: Record<string, unknown>, arch: ArchTemplate): string {
+  const moDraft = data.businessModel as string | undefined
+  if (moDraft && moDraft !== 'TBD') return moDraft
 
-  const parts: string[] = []
-  if (model) parts.push(`Business model: ${model}.`)
-  if (pricing) parts.push(`Pricing strategy: ${pricing}.`)
-  if (payments) parts.push(`Payment requirements: ${payments}.`)
-
-  return parts.length > 0 ? parts.join(' ') : 'TBD'
+  // Fallback decision
+  if (arch === ArchTemplate.MARKETING) return 'Brand awareness and lead generation.'
+  return 'Tiered subscription model (SaaS) with a focus on monthly recurring revenue.'
 }
 
-function buildConstraints(extractedData: Record<string, unknown>): string[] {
-  const constraints: string[] = []
-  const dataTypes = extractedData.dataTypes as string | string[] | undefined
-  const regulatoryDomains = extractedData.regulatoryDomains as string | string[] | undefined
+function buildConstraints(extractedData: Record<string, unknown>, arch: ArchTemplate): string[] {
+  const constraints = (extractedData.detected_constraints as string[]) || []
+  if (constraints.length > 0) return constraints
 
-  if (dataTypes) {
-    const types = Array.isArray(dataTypes) ? dataTypes : [dataTypes]
-    for (const t of types) {
-      if (t.toLowerCase().includes('health')) constraints.push('HIPAA compliance required')
-      if (t.toLowerCase().includes('financial')) constraints.push('PCI-DSS compliance required')
-      if (t.toLowerCase().includes('children')) constraints.push('COPPA compliance required')
-      if (t.toLowerCase().includes('personal')) constraints.push('GDPR/privacy compliance required')
-    }
-  }
+  const legacy = (extractedData.regulatoryDomains as string[]) || []
+  if (legacy.length > 0) return legacy
 
-  if (regulatoryDomains) {
-    const domains = Array.isArray(regulatoryDomains) ? regulatoryDomains : [regulatoryDomains]
-    for (const d of domains) {
-      constraints.push(`Regulatory domain: ${d}`)
-    }
-  }
-
-  if (extractedData.scalabilityNeeds === 'high') {
-    constraints.push('High-availability architecture required')
-  }
-
-  if (extractedData.contentTypes) {
-    const types = extractedData.contentTypes as string | string[]
-    const arr = Array.isArray(types) ? types : [types]
-    if (arr.some((t) => t.toLowerCase().includes('video') || t.toLowerCase().includes('stream'))) {
-      constraints.push('Media streaming infrastructure required')
-    }
-  }
-
-  return constraints
+  // Fallback decisions
+  const defaults = ['Modern web browser compatibility', 'Secure data encryption at rest and in transit']
+  if (arch === ArchTemplate.COMPLIANCE) defaults.push('GDPR and industry-specific regulatory standards')
+  if (arch === ArchTemplate.AI) defaults.push('API rate limits and processing latency bounds')
+  
+  return defaults
 }

@@ -51,14 +51,21 @@ function stripMeta(text: string): string {
   return text.replace(META_REGEX, "").trim();
 }
 
-function parseReadiness(text: string): number | null {
+function parseMetadata(text: string): { readiness: number | null; phase: string | null } {
   const match = text.match(META_REGEX);
-  if (!match) return null;
+  if (!match) return { readiness: null, phase: null };
   try {
     const data = JSON.parse(match[1]);
-    return typeof data.readiness === "number" ? data.readiness : null;
+    let readiness = null;
+    if (typeof data.readiness_score === "number") readiness = data.readiness_score;
+    else if (typeof data.readiness === "number") readiness = data.readiness;
+    
+    return { 
+      readiness,
+      phase: typeof data.current_phase === "string" ? data.current_phase : null 
+    };
   } catch {
-    return null;
+    return { readiness: null, phase: null };
   }
 }
 
@@ -229,8 +236,9 @@ function ChatPageInner() {
           });
         }
 
-        const parsedReadiness = parseReadiness(fullText);
-        if (parsedReadiness !== null) setReadiness(parsedReadiness);
+        const meta = parseMetadata(fullText);
+        if (meta.readiness !== null) setReadiness(meta.readiness);
+        if (meta.phase === "complete") setInterviewState("COMPLETE");
 
         const cleanText = stripMeta(fullText);
 
@@ -256,7 +264,8 @@ function ChatPageInner() {
           });
         }
 
-        if (currentState === "COMPLETE") {
+        const finalMeta = parseMetadata(fullText);
+        if (currentState === "COMPLETE" || finalMeta.phase === "complete") {
           setTimeout(() => {
             void handleConfirm();
           }, 1000);

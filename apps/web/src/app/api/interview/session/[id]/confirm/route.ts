@@ -51,7 +51,6 @@ export async function POST(
   const savedContext = session.state as unknown as InterviewContext
 
   if (
-    savedContext.currentState !== InterviewState.CONFIRMATION &&
     savedContext.currentState !== InterviewState.COMPLETE
   ) {
     return NextResponse.json(
@@ -69,6 +68,7 @@ export async function POST(
     regulatoryDomains: Array.isArray(data.regulatoryDomains) ? data.regulatoryDomains as string[] : [],
     complexityTolerance: typeof data.complexityTolerance === 'string' ? data.complexityTolerance : 'moderate',
     expectedVolume: typeof data.expectedVolume === 'string' ? data.expectedVolume : 'medium',
+    archetype: typeof data.archetype === 'string' ? data.archetype : undefined,
   })
 
   const projectName = (data.projectName as string) || 'Untitled Project'

@@ -18,11 +18,12 @@ export default function Header({
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    if (supabase) supabase.auth.getUser().then(({ data }) => setUser(data.user));
   }, []);
 
   async function handleSignOut() {
     const supabase = createClient();
+    if (!supabase) return;
     await supabase.auth.signOut();
     window.location.href = "/";
   }

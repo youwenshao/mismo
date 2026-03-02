@@ -48,6 +48,11 @@ export default function AuthPage() {
     setError(null);
 
     const supabase = createClient();
+    if (!supabase) {
+      setError("Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env");
+      setLoading(null);
+      return;
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
