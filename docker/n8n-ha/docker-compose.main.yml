@@ -19,7 +19,15 @@ services:
   redis:
     image: redis:7
     restart: always
-    command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
+    command: >-
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --appendonly yes
+      --maxmemory-policy allkeys-lru
+      --rename-command FLUSHDB ""
+      --rename-command FLUSHALL ""
+      --rename-command CONFIG ""
+      --rename-command DEBUG ""
     volumes:
       - n8n_redis_data:/data
     healthcheck:
@@ -49,6 +57,11 @@ services:
       - NODE_ENV=production
       - WEBHOOK_URL=https://${N8N_HOST}/
       - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
+      - N8N_USER_MANAGEMENT_DISABLED=false
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_PERSONALIZATION_ENABLED=false
+      - N8N_DEFAULT_USER_EMAIL=${N8N_ADMIN_EMAIL}
+      - N8N_DEFAULT_USER_PASSWORD=${N8N_ADMIN_PASSWORD}
       - BMAD_VALIDATOR_URL=http://bmad-validator:3000
       - GSD_DEPENDENCY_URL=http://gsd-dependency:3000
     ports:
@@ -86,6 +99,19 @@ services:
     ports:
       - "3002:3000"
 
+  registry:
+    image: registry:2
+    restart: always
+    ports:
+      - "5000:5000"
+    volumes:
+      - registry_data:/var/lib/registry
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:5000/v2/']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   farm-monitor:
     build:
       context: ../../
@@ -98,7 +124,7 @@ services:
       - STUDIO_2_SSH_HOST=${STUDIO_2_SSH_HOST:-192.168.1.102}
       - STUDIO_3_SSH_HOST=${STUDIO_3_SSH_HOST:-192.168.1.103}
       - SSH_USER=${SSH_USER:-admin}
-      - SSH_KEY_PATH=/root/.ssh/id_ed25519
+      - SSH_KEY_PATH=/home/app/.ssh/id_ed25519
       - KIMI_API_KEY=${KIMI_API_KEY}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
       - GITHUB_TOKEN=${GITHUB_TOKEN}
@@ -110,12 +136,17 @@ services:
       - TWILIO_FROM_NUMBER=${TWILIO_FROM_NUMBER}
       - RESEND_API_KEY=${RESEND_API_KEY}
       - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL:-alerts@mismo.dev}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
       - FARM_MONITOR_ENABLED=true
     volumes:
-      - ~/.ssh:/root/.ssh:ro
+      - ~/.ssh:/home/app/.ssh:ro
       - farm_monitor_data:/tmp
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
 volumes:
@@ -123,3 +154,4 @@ volumes:
   n8n_redis_data:
   n8n_data:
   farm_monitor_data:
+  registry_data:

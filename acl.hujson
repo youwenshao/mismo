@@ -15,15 +15,25 @@
 			"dst":    ["*:*"]
 		},
 
-		// Studios (tag:studio) are restricted to peer-to-peer communication 
-		// on specific ports: 22 (SSH), 5432 (Postgres), 5678 (n8n/other), 6379 (Redis).
+		// Studios (tag:studio) can only reach the control plane (tag:admin)
+		// on specific ports: 22 (SSH), 5432 (Postgres), 5678 (n8n), 6379 (Redis).
+		// Studios CANNOT communicate with each other (client isolation).
 		{
 			"action": "accept",
 			"src":    ["tag:studio"],
 			"dst":    [
-				"tag:admin:22,5432,5678,6379",
-				"tag:studio:22,5432,5678,6379"
+				"tag:admin:22,5432,5678,6379"
 			]
+		}
+	],
+
+	// SSH access: key-only, no passwords
+	"ssh": [
+		{
+			"action": "accept",
+			"src":    ["tag:admin"],
+			"dst":    ["tag:studio"],
+			"users":  ["autogroup:nonroot"]
 		}
 	]
 }

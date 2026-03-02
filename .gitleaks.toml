@@ -1,0 +1,14 @@
+title = "mismo gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+  '''\.env\.example$''',
+  '''\.gitleaks\.toml$''',
+  '''pnpm-lock\.yaml$''',
+  '''packages/ai/src/code-review/secret-scanner\.ts$''',
+  '''packages/templates/src/configs\.ts$''',
+]

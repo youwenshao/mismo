@@ -7,6 +7,14 @@ COPY packages/gsd-dependency ./packages/gsd-dependency
 RUN pnpm install --frozen-lockfile
 WORKDIR /app/packages/db
 RUN pnpm db:generate
-WORKDIR /app/packages/gsd-dependency
+
+FROM node:22-alpine
+RUN addgroup -S app && adduser -S app -G app
+WORKDIR /app
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages/db ./packages/db
+COPY --from=builder /app/packages/gsd-dependency ./packages/gsd-dependency
+USER app
 EXPOSE 3000
-CMD ["pnpm", "start"]
+WORKDIR /app/packages/gsd-dependency
+CMD ["npx", "pnpm", "start"]

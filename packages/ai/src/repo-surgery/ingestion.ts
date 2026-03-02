@@ -9,9 +9,11 @@ const EXEC_OPTIONS = { encoding: 'utf-8' as const, timeout: 120_000 }
 export class RepoIngestion {
   private workspaceDir: string
   private astParser: ASTParser
+  private shallowClone: boolean
 
-  constructor(opts?: { workspaceDir?: string }) {
+  constructor(opts?: { workspaceDir?: string; shallowClone?: boolean }) {
     this.workspaceDir = opts?.workspaceDir ?? '/tmp/mismo-surgery'
+    this.shallowClone = opts?.shallowClone ?? true
     this.astParser = new ASTParser()
   }
 
@@ -19,9 +21,10 @@ export class RepoIngestion {
     const targetDir = path.join(workspaceDir, path.basename(repoUrl, '.git'))
     fs.mkdirSync(workspaceDir, { recursive: true })
 
+    const depth = this.shallowClone ? 1 : 100
     try {
       execSync(
-        `git clone --branch ${branch} --depth=100 ${repoUrl} ${targetDir}`,
+        `git clone --branch ${branch} --depth=${depth} ${repoUrl} ${targetDir}`,
         { ...EXEC_OPTIONS, stdio: 'pipe' },
       )
     } catch (err) {

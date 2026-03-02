@@ -1,7 +1,7 @@
-import { FARM_THRESHOLDS } from '@mismo/shared'
+import { FARM_THRESHOLDS, CAPACITY_THRESHOLDS } from '@mismo/shared'
 
 export const config = {
-  thresholds: FARM_THRESHOLDS,
+  thresholds: { ...FARM_THRESHOLDS, ...CAPACITY_THRESHOLDS },
 
   studios: [
     { id: 'studio-1', host: process.env.STUDIO_1_SSH_HOST || '192.168.1.101', role: 'control-plane' as const },
@@ -39,6 +39,12 @@ export const config = {
     buildTracker: 30_000,
     securityScanner: 5 * 60_000,
     containerHealth: 2 * 60_000,
+  },
+
+  redis: {
+    host: process.env.REDIS_HOST || process.env.MAIN_NODE_IP || '127.0.0.1',
+    port: parseInt(process.env.REDIS_PORT || '6379', 10),
+    password: process.env.REDIS_PASSWORD || '',
   },
 
   localQueuePath: process.env.FARM_MONITOR_QUEUE_PATH || '/tmp/mismo-build-queue.db',

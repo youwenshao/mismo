@@ -24,6 +24,7 @@ export interface ApiState {
 export interface BuildState {
   recentResults: Array<{ commissionId: string; success: boolean; timestamp: number }>
   commissionFailures: Map<string, number>
+  queueDepthHighSince: number | null
 }
 
 interface SentAlert {
@@ -46,6 +47,7 @@ export class MonitorState {
   builds: BuildState = {
     recentResults: [],
     commissionFailures: new Map(),
+    queueDepthHighSince: null,
   }
   private sentAlerts: Map<string, SentAlert> = new Map()
   private alertCooldownMs: Record<AlertPriority, number> = {

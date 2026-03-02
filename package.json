@@ -12,7 +12,10 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "quickstart": "bash scripts/quickstart.sh",
     "n8n:verify": "bash scripts/n8n-pipeline-verify.sh",
-    "repo-surgery:cleanup": "bash scripts/repo-surgery-cleanup.sh"
+    "repo-surgery:cleanup": "bash scripts/repo-surgery-cleanup.sh",
+    "prepare": "husky",
+    "security:audit": "pnpm audit --audit-level=high",
+    "security:secrets": "gitleaks detect --source . --verbose"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -25,8 +28,14 @@
     ]
   },
   "devDependencies": {
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0",
     "prettier": "^3.5.0",
     "turbo": "^2.4.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": ["prettier --write"],
+    "*.{json,md}": ["prettier --write"]
   },
   "dependencies": {
     "lucide-react": "^0.575.0"

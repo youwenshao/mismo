@@ -184,7 +184,7 @@ Generates the four BMAD handoff documents from build artifacts:
 
 - `**architecture_decision_record.md`**: Uses PRD's `archTemplate`, stack choices, and build metadata. LLM-assisted (via existing `generateObject` pattern) to produce structured ADR with context/decision/consequences sections.
 - `**api_contracts.json`**: Machine-readable interface definitions extracted from the built codebase (API routes, request/response types). Reuses contract extraction logic from repo-surgery's `ContractExtractor`.
-- `**data_boundary_documentation.md**`: Maps what data resides where (client DB, third-party APIs, cookies, localStorage). Derived from PRD's `dataBoundaries` field.
+- `**data_boundary_documentation.md`**: Maps what data resides where (client DB, third-party APIs, cookies, localStorage). Derived from PRD's `dataBoundaries` field.
 - `**operational_runbook.md**`: How to deploy, monitor, troubleshoot, rotate secrets, scale. Generated from the DevOps agent output (Vercel config, env requirements).
 - `**hosting_contract.json**`: SLA terms, backup policy, monitoring access, scaling limits from PRD constraints.
 

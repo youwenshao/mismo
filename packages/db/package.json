@@ -11,6 +11,8 @@
     "db:seed": "tsx src/seed.ts",
     "db:seed-mission-control": "tsx src/seed-mission-control.ts",
     "db:setup-pgsodium": "dotenv -e ../../.env -- sh -c 'psql \"$DIRECT_URL\" -f scripts/setup-pgsodium.sql'",
+    "db:retention": "tsx scripts/data-retention.ts",
+    "db:test-rls": "tsx scripts/test-rls.ts",
     "type-check": "tsc --noEmit",
     "lint": "eslint src/"
   },

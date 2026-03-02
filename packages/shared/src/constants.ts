@@ -127,3 +127,9 @@ export const STUDIOS = {
   STUDIO_2: { id: 'studio-2', role: 'worker' },
   STUDIO_3: { id: 'studio-3', role: 'worker' },
 } as const
+
+export const CAPACITY_THRESHOLDS = {
+  QUEUE_DEPTH_SCALE_TRIGGER: 20,
+  QUEUE_DEPTH_SCALE_DURATION_MS: 60 * 60_000,
+  DAILY_BUILD_CAPACITY_WARNING: 40,
+} as const

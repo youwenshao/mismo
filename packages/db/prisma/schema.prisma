@@ -389,6 +389,8 @@ model HostingTransfer {
 
   clientAccountId        String?
   clientCredentials      Json?
+  credentialNonce        String?
+  credentialKeyId        String?
   transferOutput         Json?
 
   monitoringEnabled      Boolean         @default(false)

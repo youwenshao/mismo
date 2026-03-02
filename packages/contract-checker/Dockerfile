@@ -7,6 +7,14 @@ COPY packages/contract-checker ./packages/contract-checker
 RUN pnpm install --frozen-lockfile
 WORKDIR /app/packages/db
 RUN pnpm db:generate
-WORKDIR /app/packages/contract-checker
+
+FROM node:22-alpine
+RUN addgroup -S app && adduser -S app -G app
+WORKDIR /app
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages/db ./packages/db
+COPY --from=builder /app/packages/contract-checker ./packages/contract-checker
+USER app
 EXPOSE 3000
-CMD ["pnpm", "start"]
+WORKDIR /app/packages/contract-checker
+CMD ["npx", "pnpm", "start"]

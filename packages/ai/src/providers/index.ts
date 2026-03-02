@@ -2,6 +2,7 @@ import { createDeepSeek } from '@ai-sdk/deepseek'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { MODEL_PROVIDERS } from '@mismo/shared'
 import { LanguageModel } from 'ai'
+import { withRateLimit } from './rate-limiter'
 
 type ProviderId = keyof typeof MODEL_PROVIDERS
 
@@ -24,7 +25,7 @@ const providerFactories: Record<
       apiKey,
       baseURL: 'https://api.moonshot.ai/v1',
     })
-    return provider(modelId) as ReturnType<ReturnType<typeof createDeepSeek>>
+    return withRateLimit(provider(modelId)) as ReturnType<ReturnType<typeof createDeepSeek>>
   },
   minimax: (modelId, apiKey) => {
     const provider = createOpenAICompatible({

@@ -45,13 +45,28 @@ pass quick on lo0 all
 pass in quick on utun* all
 pass out quick on utun* all
 
-# Allow essential outbound traffic:
-# HTTPS (443) for GitHub/Supabase/Kimi
-# DNS (53) tcp/udp
-# DHCP (67, 68) udp
-# NTP (123) udp
-pass out quick proto tcp to any port { 443, 53 }
-pass out quick proto udp to any port { 53, 67, 68, 123 }
+# Allowed HTTPS destinations (principle of least privilege)
+# Supabase (AWS Global Accelerator ranges)
+pass out quick proto tcp to 13.248.0.0/16 port 443
+pass out quick proto tcp to 76.223.0.0/16 port 443
+# GitHub
+pass out quick proto tcp to 140.82.112.0/20 port 443
+pass out quick proto tcp to 185.199.108.0/22 port 443
+pass out quick proto tcp to 143.55.64.0/20 port 443
+# Kimi API (Moonshot AI)
+pass out quick proto tcp to 47.236.0.0/16 port 443
+# npm registry (for package installs)
+pass out quick proto tcp to 104.16.0.0/12 port 443
+
+# DNS (restrict to Tailscale MagicDNS + system resolver)
+pass out quick proto udp to 100.100.100.100 port 53
+pass out quick proto tcp to 100.100.100.100 port 53
+# Fallback DNS (Cloudflare)
+pass out quick proto udp to 1.1.1.1 port 53
+pass out quick proto udp to 1.0.0.1 port 53
+
+# DHCP and NTP (required for network operation)
+pass out quick proto udp to any port { 67, 68, 123 }
 
 # Block all other outbound internet traffic
 block out quick all

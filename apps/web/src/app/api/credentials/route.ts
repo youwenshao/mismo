@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@mismo/db'
 
 interface CredentialPayload {
   commissionId: string
@@ -7,6 +8,25 @@ interface CredentialPayload {
     service: string
     token: string
   }>
+}
+
+async function resolveUserId(supabaseAuthId: string): Promise<string | null> {
+  const user = await prisma.user.findUnique({
+    where: { supabaseAuthId },
+    select: { id: true },
+  })
+  return user?.id ?? null
+}
+
+async function verifyCommissionOwnership(
+  commissionId: string,
+  userId: string,
+): Promise<boolean> {
+  const commission = await prisma.commission.findFirst({
+    where: { id: commissionId, userId },
+    select: { id: true },
+  })
+  return commission !== null
 }
 
 export async function POST(request: NextRequest) {
@@ -20,6 +40,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const prismaUserId = await resolveUserId(user.id)
+    if (!prismaUserId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const body = (await request.json()) as CredentialPayload
 
     if (!body.commissionId || !Array.isArray(body.credentials) || body.credentials.length === 0) {
@@ -29,13 +54,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { data: commission } = await supabase
-      .from('Commission')
-      .select('id, userId')
-      .eq('id', body.commissionId)
-      .single()
-
-    if (!commission || commission.userId !== user.id) {
+    const isOwner = await verifyCommissionOwnership(body.commissionId, prismaUserId)
+    if (!isOwner) {
       return NextResponse.json({ error: 'Commission not found' }, { status: 404 })
     }
 
@@ -43,23 +63,26 @@ export async function POST(request: NextRequest) {
     for (const cred of body.credentials) {
       if (!cred.service || !cred.token) continue
 
-      const { data, error } = await supabase
-        .from('Credential')
-        .upsert(
-          {
+      try {
+        const saved = await prisma.credential.upsert({
+          where: {
+            commissionId_service: {
+              commissionId: body.commissionId,
+              service: cred.service,
+            },
+          },
+          update: { encryptedTokens: cred.token },
+          create: {
             commissionId: body.commissionId,
             service: cred.service,
             encryptedTokens: cred.token,
           },
-          { onConflict: 'commissionId,service' },
-        )
-        .select('id, service')
-        .single()
-
-      if (error) {
-        results.push({ service: cred.service, saved: false, error: error.message })
-      } else {
-        results.push({ service: cred.service, saved: true, id: data.id })
+          select: { id: true, service: true },
+        })
+        results.push({ service: cred.service, saved: true, id: saved.id })
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Unknown error'
+        results.push({ service: cred.service, saved: false, error: message })
       }
     }
 
@@ -81,6 +104,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const prismaUserId = await resolveUserId(user.id)
+    if (!prismaUserId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const commissionId = request.nextUrl.searchParams.get('commissionId')
     if (!commissionId) {
       return NextResponse.json(
@@ -89,12 +117,17 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const { data: credentials } = await supabase
-      .from('Credential')
-      .select('id, service, rotationDate')
-      .eq('commissionId', commissionId)
+    const isOwner = await verifyCommissionOwnership(commissionId, prismaUserId)
+    if (!isOwner) {
+      return NextResponse.json({ error: 'Commission not found' }, { status: 404 })
+    }
 
-    const status = (credentials || []).map((c) => ({
+    const credentials = await prisma.credential.findMany({
+      where: { commissionId },
+      select: { id: true, service: true, rotationDate: true },
+    })
+
+    const status = credentials.map((c) => ({
       id: c.id,
       service: c.service,
       configured: true,

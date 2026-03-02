@@ -12,6 +12,8 @@ interface FarmConfig {
     BUILD_MAX_RETRIES: number
     SUCCESS_RATE_CRITICAL: number
     SUCCESS_RATE_WINDOW_MS: number
+    QUEUE_DEPTH_SCALE_TRIGGER?: number
+    QUEUE_DEPTH_SCALE_DURATION_MS?: number
   }
 }
 
@@ -37,6 +39,7 @@ export class BuildRecoveryResponder {
     await this.handleRepeatedFailures(builds.recentFailures, state)
     this.updateSuccessRate(builds.recentResults, state)
     await this.checkSuccessRate(state)
+    await this.checkQueueDepth(builds.queueDepth, state)
   }
 
   private async handleStuckBuilds(
@@ -128,6 +131,31 @@ export class BuildRecoveryResponder {
           `${failures}/${total} builds failed in the last hour. Threshold: ${this.config.thresholds.SUCCESS_RATE_CRITICAL * 100}%`)
         state.recordAlert('low-success-rate', 'P0')
       }
+    }
+  }
+
+  private async checkQueueDepth(queueDepth: number, state: MonitorState): Promise<void> {
+    const trigger = this.config.thresholds.QUEUE_DEPTH_SCALE_TRIGGER ?? 20
+    const durationMs = this.config.thresholds.QUEUE_DEPTH_SCALE_DURATION_MS ?? 60 * 60_000
+
+    if (queueDepth < 0) return
+
+    if (queueDepth > trigger) {
+      if (!state.builds.queueDepthHighSince) {
+        state.builds.queueDepthHighSince = Date.now()
+      }
+
+      const elapsed = Date.now() - state.builds.queueDepthHighSince
+      if (elapsed >= durationMs && state.shouldAlert('queue-depth-high', 'P1')) {
+        await this.alertRouter.send(
+          'P1', 'BUILD',
+          `Queue depth sustained >${trigger} for >${Math.round(elapsed / 60_000)}min`,
+          `Current queue depth: ${queueDepth}. Consider adding Studio 4 to increase build capacity.`,
+        )
+        state.recordAlert('queue-depth-high', 'P1')
+      }
+    } else {
+      state.builds.queueDepthHighSince = null
     }
   }
 

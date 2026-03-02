@@ -12,6 +12,10 @@ const SECURITY_HEADERS: Record<string, string> = {
   'X-Frame-Options': 'DENY',
   'X-XSS-Protection': '1; mode=block',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Content-Security-Policy':
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self' data:; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
 }
 
 const PUBLIC_ROUTES = ['/', '/auth', '/auth/callback']
@@ -24,6 +28,10 @@ function getClientIp(request: NextRequest): string {
   )
 }
 
+if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH) {
+  throw new Error('FATAL: NEXT_PUBLIC_DEV_BYPASS_AUTH must not be set in production')
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const isApiRoute = pathname.startsWith('/api/')
@@ -32,7 +40,6 @@ export async function middleware(request: NextRequest) {
 
   let { supabaseResponse, user } = await updateSession(request)
 
-  // Development mode: bypass auth if flag is set
   if (
     process.env.NODE_ENV === 'development' &&
     process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true' &&
