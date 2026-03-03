@@ -61,6 +61,8 @@ model User {
   interviewSessions InterviewSession[]
   prdComments       PRDComment[]
   reviewTasks       ReviewTask[]       @relation("AssignedEngineer")
+  grants            UserGrant[]        @relation("GrantRecipient")
+  grantedGrants     UserGrant[]        @relation("GrantedBy")
 }
 
 model Project {
@@ -235,6 +237,29 @@ enum AgentType {
   COORDINATOR
 }
 
+// ============ PAYMENT GATEWAY ENUMS ============
+
+enum PaymentGateway {
+  STRIPE
+  PAYMENTASIA
+}
+
+enum PaymentMethod {
+  CARD
+  FPS
+  ALIPAYHK
+  WECHATPAY
+  PAYME
+  OCTOPUS
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
 model ProjectArchetype {
   id          String       @id @default(cuid())
   slug        String       @unique // e.g., 'landing_page', 'saas_mvp'
@@ -254,7 +279,7 @@ model Commission {
   prdJson          Json?
   archetypeId      String?
   paymentState     PaymentState     @default(UNPAID)
-  stripeCustomerId String?
+  stripeCustomerId String?          // Kept for backward compatibility
   userId           String // Link to auth user for RLS
   feasibilityScore Float?
   riskAssessment   Json?
@@ -273,6 +298,7 @@ model Commission {
   notifications     Notification[]
   feedbacks         Feedback[]
   maintenancePlan   MaintenancePlan?
+  payments          Payment[]         // New unified payment records
 }
 
 model Build {
@@ -380,7 +406,7 @@ model HostingTransfer {
   provider               HostingProvider
   status                 TransferStatus  @default(PENDING_PAYMENT)
 
-  stripePaymentIntentId  String?         @unique
+  stripePaymentIntentId  String?         @unique  // DEPRECATED: Use paymentId instead
   paymentConfirmedAt     DateTime?
 
   deploymentUrl          String?
@@ -404,11 +430,79 @@ model HostingTransfer {
 
   idempotencyKey         String?         @unique
 
+  // New unified payment reference
+  paymentId              String?
+  payment                Payment?        @relation(fields: [paymentId], references: [id])
+
   createdAt              DateTime        @default(now())
   updatedAt              DateTime        @updatedAt
 
   commission             Commission      @relation(fields: [commissionId], references: [id])
   build                  Build?          @relation(fields: [buildId], references: [id])
+
+  @@index([paymentId])
+}
+
+// ============ USER GRANTS (Admin-issued free trials) ============
+
+enum GrantType {
+  UNLIMITED_7DAY
+  FREE_SOURCE
+  FREE_SOURCE_OR_DEPLOY
+}
+
+model UserGrant {
+  id        String    @id @default(cuid())
+  userId    String
+  grantType GrantType
+  usedAt    DateTime?
+  expiresAt DateTime?
+  grantedBy String
+  createdAt DateTime  @default(now())
+
+  user          User @relation("GrantRecipient", fields: [userId], references: [id])
+  grantedByUser User @relation("GrantedBy", fields: [grantedBy], references: [id])
+
+  @@index([userId, usedAt])
+  @@index([grantedBy])
+}
+
+// ============ UNIFIED PAYMENT MODEL ============
+
+model Payment {
+  id            String        @id @default(cuid())
+  transactionId String
+  gateway       PaymentGateway
+  method        PaymentMethod
+  amount        Int           // in smallest currency unit (cents)
+  currency      String        @default("HKD")
+  status        PaymentStatus @default(PENDING)
+  description   String?
+  metadata      Json          @default("{}")
+  
+  // Relations
+  commissionId  String?
+  commission    Commission?   @relation(fields: [commissionId], references: [id])
+  
+  // Hosting transfers that use this payment
+  hostingTransfers HostingTransfer[]
+  
+  // Timestamps
+  completedAt   DateTime?
+  failedAt      DateTime?
+  refundedAt    DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Unique constraint: transactionId + gateway
+  @@unique([transactionId, gateway])
+  
+  // Indexes
+  @@index([commissionId])
+  @@index([status])
+  @@index([gateway])
+  @@index([method])
+  @@index([createdAt])
 }
 
 model ClientPreference {

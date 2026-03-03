@@ -20,9 +20,9 @@ function DifficultyDots({ score }: { score: number }) {
 }
 
 function formatPrice(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('zh-HK', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'HKD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount)

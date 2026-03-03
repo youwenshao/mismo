@@ -1,0 +1,91 @@
+// Add to packages/db/prisma/schema.prisma
+
+// ============ ADD THESE ENUMS ============
+
+enum PaymentGateway {
+  STRIPE
+  PAYMENTASIA
+}
+
+enum PaymentMethod {
+  CARD
+  FPS
+  ALIPAYHK
+  WECHATPAY
+  PAYME
+  OCTOPUS
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+// ============ ADD THIS MODEL ============
+
+model Payment {
+  id            String        @id @default(cuid())
+  transactionId String
+  gateway       PaymentGateway
+  method        PaymentMethod
+  amount        Int           // in smallest currency unit (cents)
+  currency      String        @default("HKD")
+  status        PaymentStatus @default(PENDING)
+  description   String?
+  metadata      Json          @default("{}")
+  
+  // Relations
+  commissionId  String?
+  commission    Commission?   @relation(fields: [commissionId], references: [id])
+  
+  // Hosting transfers that use this payment
+  hostingTransfers HostingTransfer[]
+  
+  // Timestamps
+  completedAt   DateTime?
+  failedAt      DateTime?
+  refundedAt    DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Unique constraint: transactionId + gateway
+  @@unique([transactionId, gateway])
+  
+  // Indexes
+  @@index([commissionId])
+  @@index([status])
+  @@index([gateway])
+  @@index([method])
+  @@index([createdAt])
+}
+
+// ============ UPDATE EXISTING MODELS ============
+
+model Commission {
+  // ... existing fields ...
+  
+  // Keep for backward compatibility during transition
+  stripeCustomerId String?
+  
+  // New relation to payments
+  payments Payment[]
+  
+  // ... rest of existing fields ...
+}
+
+model HostingTransfer {
+  // ... existing fields ...
+  
+  // Existing field - kept for backward compatibility
+  stripePaymentIntentId String? @unique
+  
+  // New reference to unified Payment model
+  paymentId String?
+  payment   Payment? @relation(fields: [paymentId], references: [id])
+  
+  // ... rest of existing fields ...
+  
+  @@index([paymentId])
+}

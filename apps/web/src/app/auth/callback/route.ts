@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { prisma } from '@mismo/db'
-import { hashEmail, isWhitelistedAdmin } from '@/lib/auth'
+import { hashEmail, isWhitelistedAdminWithDb } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
   const email = data.user.email
   const emailHash = email ? await hashEmail(email) : null
-  const isAdmin = emailHash ? isWhitelistedAdmin(emailHash) : false
+  const isAdmin = emailHash ? await isWhitelistedAdminWithDb(emailHash) : false
 
   let dbUser = await prisma.user.findUnique({
     where: { supabaseAuthId: data.user.id },

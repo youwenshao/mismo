@@ -9,17 +9,42 @@ export async function hashEmail(email: string): Promise<string> {
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
+/**
+ * Check if an email hash is in the admin whitelist.
+ * Sources checked in order: ADMIN_EMAIL_HASHES env var, then SystemConfig DB record.
+ */
 export function isWhitelistedAdmin(emailHash: string): boolean {
-  const whitelist = (process.env.ADMIN_EMAIL_HASHES ?? '')
+  const envWhitelist = (process.env.ADMIN_EMAIL_HASHES ?? '')
     .split(',')
     .map((h) => h.trim().toLowerCase())
     .filter(Boolean)
 
-  return whitelist.includes(emailHash.toLowerCase())
+  return envWhitelist.includes(emailHash.toLowerCase())
+}
+
+/**
+ * Extended check that also queries the DB SystemConfig table.
+ * Use this in non-hot-path contexts (callback, settings) where a DB call is acceptable.
+ */
+export async function isWhitelistedAdminWithDb(emailHash: string): Promise<boolean> {
+  if (isWhitelistedAdmin(emailHash)) return true
+
+  try {
+    const config = await prisma.systemConfig.findUnique({
+      where: { key: 'admin.emailHashes' },
+    })
+    if (config?.value) {
+      const hashes = (config.value as string[]).map((h: string) => h.toLowerCase())
+      return hashes.includes(emailHash.toLowerCase())
+    }
+  } catch {
+    // DB not available, fall back to env-only check
+  }
+
+  return false
 }
 
 export async function getSessionUser() {
-  // Development mode: bypass auth if flag is set
   if (
     process.env.NODE_ENV === 'development' &&
     process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true'
