@@ -1,0 +1,59 @@
+---
+- name: Deploy Environment Variables to Mac Studios
+  hosts: mac_studios
+  vars:
+    # Load shared secrets from the MBP's n8n-ha/.env
+    n8n_ha_env: "{{ lookup('file', '../../docker/n8n-ha/.env') }}"
+    n8n_encryption_key: "{{ n8n_ha_env | regex_search('N8N_ENCRYPTION_KEY=(.*)', '\\1') | first }}"
+    postgres_user: "{{ n8n_ha_env | regex_search('POSTGRES_USER=(.*)', '\\1') | first }}"
+    postgres_password: "{{ n8n_ha_env | regex_search('POSTGRES_PASSWORD=(.*)', '\\1') | first }}"
+    postgres_db: "{{ n8n_ha_env | regex_search('POSTGRES_DB=(.*)', '\\1') | first }}"
+    redis_password: "{{ n8n_ha_env | regex_search('REDIS_PASSWORD=(.*)', '\\1') | first }}"
+    n8n_admin_email: "{{ n8n_ha_env | regex_search('N8N_ADMIN_EMAIL=(.*)', '\\1') | first }}"
+    n8n_admin_password: "{{ n8n_ha_env | regex_search('N8N_ADMIN_PASSWORD=(.*)', '\\1') | first }}"
+    n8n_host: "{{ n8n_ha_env | regex_search('N8N_HOST=(.*)', '\\1') | first }}"
+    generic_timezone: "{{ n8n_ha_env | regex_search('GENERIC_TIMEZONE=(.*)', '\\1') | first }}"
+
+    # Load root .env for Supabase and API keys
+    root_env: "{{ lookup('file', '../../.env') }}"
+    root_supabase_url: "{{ root_env | regex_search('NEXT_PUBLIC_SUPABASE_URL=(.*)', '\\1') | first }}"
+    root_supabase_service_role_key: "{{ root_env | regex_search('SUPABASE_SERVICE_ROLE_KEY=(.*)', '\\1') | first }}"
+    root_kimi_api_key: "{{ root_env | regex_search('KIMI_API_KEY=(.*)', '\\1') | first }}"
+    root_deepseek_api_key: "{{ root_env | regex_search('DEEPSEEK_API_KEY=(.*)', '\\1') | first }}"
+    root_github_token: "{{ root_env | regex_search('GITHUB_TOKEN=(.*)', '\\1') | first }}"
+
+  tasks:
+    - name: Ensure target directories exist
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - ~/Projects/mismo
+        - ~/Projects/mismo/docker/n8n-ha
+
+    - name: Deploy root .env to all studios
+      copy:
+        src: ../../.env
+        dest: ~/Projects/mismo/.env
+        mode: '0600'
+
+    - name: Deploy n8n-ha docker-compose.main.yml
+      copy:
+        src: ../../docker/n8n-ha/docker-compose.main.yml
+        dest: ~/Projects/mismo/docker/n8n-ha/docker-compose.main.yml
+        mode: '0644'
+      when: "'control_plane' in group_names"
+
+    - name: Generate and deploy n8n-ha .env using template
+      template:
+        src: templates/n8n-env.j2
+        dest: ~/Projects/mismo/docker/n8n-ha/.env
+        mode: '0600'
+
+    - name: Deploy private SSH key for Farm Monitor
+      copy:
+        src: ~/.ssh/mismo_ed25519
+        dest: ~/.ssh/id_ed25519
+        mode: '0600'
+      when: "'control_plane' in group_names"
