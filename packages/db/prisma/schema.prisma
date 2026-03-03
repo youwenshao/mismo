@@ -510,18 +510,32 @@ model MonitoringAlert {
 }
 
 model StudioMetrics {
-  id         String   @id @default(cuid())
-  studioId   String
-  studioName String
-  cpuPercent Float
-  ramPercent Float
-  diskPercent Float
-  networkIn  Float
-  networkOut Float
-  queueDepth Int      @default(0)
-  createdAt  DateTime @default(now())
+  id                 String   @id @default(cuid())
+  studioId           String
+  studioName         String
+  cpuPercent         Float
+  ramPercent         Float
+  diskPercent        Float
+  networkIn          Float
+  networkOut         Float
+  queueDepth         Int      @default(0)
+  containerCount     Int      @default(0)
+  workerRunning      Boolean  @default(false)
+  workerRestartCount Int      @default(0)
+  createdAt          DateTime @default(now())
 
   @@index([studioId, createdAt])
+}
+
+model ApiHealthSnapshot {
+  id        String   @id @default(cuid())
+  provider  String
+  status    String
+  latencyMs Int      @default(0)
+  details   Json?
+  createdAt DateTime @default(now())
+
+  @@index([provider, createdAt])
 }
 
 model AuditLog {

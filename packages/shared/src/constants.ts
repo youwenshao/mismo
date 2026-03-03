@@ -114,7 +114,7 @@ export const FARM_THRESHOLDS = {
   SUPABASE_RETRY_INTERVAL_MS: 30_000,
   BUILD_MAX_RETRIES: 3,
   BUILD_STUCK_TIMEOUT_MS: 60 * 60_000,
-  SUCCESS_RATE_CRITICAL: 0.80,
+  SUCCESS_RATE_CRITICAL: 0.8,
   SUCCESS_RATE_WINDOW_MS: 60 * 60_000,
   CRED_ROTATION_WARNING_DAYS: 30,
   WORKER_RESTART_THRESHOLD: 5,
@@ -127,6 +127,46 @@ export const STUDIOS = {
   STUDIO_2: { id: 'studio-2', role: 'worker' },
   STUDIO_3: { id: 'studio-3', role: 'worker' },
 } as const
+
+export const FLEET_CONFIG = {
+  'studio-1': {
+    id: 'studio-1',
+    name: 'Studio 1 (Main)',
+    role: 'control-plane' as const,
+    chip: 'M4 Max',
+    ram: '128 GB',
+    workerConcurrency: 0,
+    services: [
+      'n8n-main',
+      'PostgreSQL',
+      'Redis',
+      'BMAD-Validator',
+      'GSD-Dependency',
+      'Farm-Monitor',
+      'Docker Registry',
+    ],
+  },
+  'studio-2': {
+    id: 'studio-2',
+    name: 'Studio 2 (Build)',
+    role: 'worker' as const,
+    chip: 'M2 Ultra',
+    ram: '192 GB',
+    workerConcurrency: 25,
+    services: ['n8n-worker', 'Contract-Checker'],
+  },
+  'studio-3': {
+    id: 'studio-3',
+    name: 'Studio 3 (QA)',
+    role: 'worker' as const,
+    chip: 'M2 Ultra',
+    ram: '192 GB',
+    workerConcurrency: 25,
+    services: ['n8n-worker', 'Contract-Checker'],
+  },
+} as const
+
+export const FLEET_STALENESS_THRESHOLD_MS = 5 * 60_000
 
 export const CAPACITY_THRESHOLDS = {
   QUEUE_DEPTH_SCALE_TRIGGER: 20,

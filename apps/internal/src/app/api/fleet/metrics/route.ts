@@ -9,8 +9,8 @@ export async function GET() {
       prisma.studioMetrics.findFirst({
         where: { studioId },
         orderBy: { createdAt: 'desc' },
-      })
-    )
+      }),
+    ),
   )
 
   const activeBuilds = await prisma.build.findMany({
@@ -35,14 +35,15 @@ export async function GET() {
     networkIn: 0,
     networkOut: 0,
     queueDepth: 0,
+    containerCount: 0,
+    workerRunning: false,
+    workerRestartCount: 0,
     createdAt: new Date(),
   }))
 
   const result = defaults.map((def, i) => ({
     ...(latestMetrics[i] ?? def),
-    activeBuilds: activeBuilds.filter(
-      (b) => b.studioAssignment === def.studioId
-    ),
+    activeBuilds: activeBuilds.filter((b) => b.studioAssignment === def.studioId),
   }))
 
   // Fetch recent queue history (last 30 data points per studio)

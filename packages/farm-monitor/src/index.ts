@@ -9,9 +9,11 @@ import { ResourceResponder } from './responders/resource-actions'
 import { ApiFailoverResponder } from './responders/api-failover'
 import { BuildRecoveryResponder } from './responders/build-recovery'
 import { SecurityResponder } from './responders/security-actions'
+import { MetricsWriter } from './writers/metrics-writer'
 
 const state = new MonitorState()
 const alertRouter = new AlertRouter(config.alerts, config.supabase)
+const metricsWriter = new MetricsWriter(config.supabase)
 
 const resourceCollector = new ResourceCollector(config)
 const apiHealthCollector = new ApiHealthCollector(config)
@@ -23,12 +25,15 @@ const apiFailoverResponder = new ApiFailoverResponder(config, alertRouter)
 const buildRecoveryResponder = new BuildRecoveryResponder(config, alertRouter)
 const securityResponder = new SecurityResponder(config, alertRouter)
 
+let lastQueueDepth = 0
+
 async function runResourceCheck() {
   try {
     for (const studio of config.studios) {
       const metrics = await resourceCollector.collect(studio)
       if (metrics) {
         await resourceResponder.evaluate(studio.id, metrics, state)
+        await metricsWriter.writeStudioMetrics(studio.id, metrics, lastQueueDepth)
       }
     }
   } catch (err) {
@@ -40,6 +45,7 @@ async function runApiHealthCheck() {
   try {
     const health = await apiHealthCollector.collectAll()
     await apiFailoverResponder.evaluate(health, state)
+    await metricsWriter.writeApiHealthSnapshots(health)
   } catch (err) {
     console.error('[farm-monitor] API health check failed:', err)
   }
@@ -48,6 +54,7 @@ async function runApiHealthCheck() {
 async function runBuildTrackerCheck() {
   try {
     const builds = await buildTracker.collect()
+    if (builds) lastQueueDepth = builds.queueDepth
     await buildRecoveryResponder.evaluate(builds, state)
   } catch (err) {
     console.error('[farm-monitor] Build tracker check failed:', err)
