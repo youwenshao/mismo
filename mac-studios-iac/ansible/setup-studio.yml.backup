@@ -2,7 +2,7 @@
 - name: Setup Mac Studios
   hosts: mac_studios
   vars:
-    # ansible_become_pass: "{{ lookup('env', 'SUDO_PASSWORD') }}"
+    ansible_become_pass: "{{ lookup('env', 'SUDO_PASSWORD') }}"
     dotfiles_src: "../dotfiles"
     dotfiles_dest: "~/.dotfiles"
 
@@ -13,7 +13,7 @@
       register: brew_check
 
     - name: Install Homebrew if missing
-      shell: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh )"
+      shell: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
       when: not brew_check.stat.exists
 
     - name: Ensure Homebrew is in PATH
@@ -34,16 +34,15 @@
       environment:
         PATH: "/opt/homebrew/bin:{{ ansible_env.PATH }}"
 
-    # COMMENTED OUT: Docker and Tailscale already installed manually
-    # - name: Install required Homebrew casks
-    #   community.general.homebrew_cask:
-    #     name:
-    #       - docker
-    #       - tailscale
-    #     state: present
-    #     accept_external_apps: yes
-    #   environment:
-    #     PATH: "/opt/homebrew/bin:{{ ansible_env.PATH }}"
+    - name: Install required Homebrew casks
+      community.general.homebrew_cask:
+        name:
+          - docker
+          - tailscale
+        state: present
+        accept_external_apps: yes
+      environment:
+        PATH: "/opt/homebrew/bin:{{ ansible_env.PATH }}"
 
     - name: Install n8n globally via npm
       npm:
@@ -53,21 +52,20 @@
       environment:
         PATH: "/opt/homebrew/opt/node@20/bin:/opt/homebrew/bin:{{ ansible_env.PATH }}"
 
-    # COMMENTED OUT: Hostnames already set during Tailscale setup
-    # - name: Set Hostname dynamically using scutil
-    #   become: yes
-    #   shell: |
-    #     current_hostname=$(scutil --get HostName)
-    #     if [ "$current_hostname" != "{{ desired_hostname }}" ]; then
-    #       scutil --set HostName {{ desired_hostname }}
-    #       scutil --set LocalHostName {{ desired_hostname }}
-    #       scutil --set ComputerName {{ desired_hostname }}
-    #       echo "changed"
-    #     else
-    #       echo "unchanged"
-    #     fi
-    #   register: hostname_result
-    #   changed_when: hostname_result.stdout == 'changed'
+    - name: Set Hostname dynamically using scutil
+      become: yes
+      shell: |
+        current_hostname=$(scutil --get HostName)
+        if [ "$current_hostname" != "{{ desired_hostname }}" ]; then
+          scutil --set HostName {{ desired_hostname }}
+          scutil --set LocalHostName {{ desired_hostname }}
+          scutil --set ComputerName {{ desired_hostname }}
+          echo "changed"
+        else
+          echo "unchanged"
+        fi
+      register: hostname_result
+      changed_when: hostname_result.stdout == 'changed'
 
     - name: Disable macOS auto-updates
       become: yes
