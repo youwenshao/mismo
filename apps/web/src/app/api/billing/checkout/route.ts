@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getPaymentRouter, PaymentMethod, getGatewayForMethod, GATEWAY_FEES } from '@mismo/payment'
 import { prisma } from '@mismo/db'
 import { getSessionUser } from '@/lib/auth'
+import { advanceCommissionPaymentState } from '@/lib/commission-lifecycle'
 import { SOURCE_TIER_PRICING, DEPLOY_BASE_MULTIPLIER, ONSITE_PRICING } from '@mismo/shared'
 
 type TierKey = string
@@ -46,10 +47,13 @@ function resolveTierPrice(tier: string): TierConfig | null {
 
 const VALID_METHODS: PaymentMethod[] = ['card', 'fps', 'alipayhk', 'wechatpay', 'payme', 'octopus']
 
+type PaymentPhaseInput = 'DEPOSIT' | 'FINAL' | 'HOSTING'
+
 interface CheckoutRequest {
   tier: TierKey
   commissionId: string
   method: PaymentMethod
+  phase?: PaymentPhaseInput
 }
 
 export async function POST(request: NextRequest) {
@@ -60,7 +64,8 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { tier, commissionId, method } = body as CheckoutRequest
+    const { tier, commissionId, method, phase: requestedPhase } = body as CheckoutRequest
+    const phase = requestedPhase ?? 'DEPOSIT'
 
     if (!tier || !commissionId || !method) {
       return NextResponse.json(
@@ -73,6 +78,14 @@ export async function POST(request: NextRequest) {
     if (!tierConfig) {
       return NextResponse.json({ error: 'Invalid tier' }, { status: 400 })
     }
+
+    const depositRatio = parseFloat(process.env.DECIDENDI_DEPOSIT_RATIO || '0.40')
+    const chargeAmount =
+      phase === 'DEPOSIT'
+        ? Math.round(tierConfig.amount * depositRatio)
+        : phase === 'FINAL'
+          ? Math.round(tierConfig.amount * (1 - depositRatio))
+          : tierConfig.amount
 
     if (!VALID_METHODS.includes(method)) {
       return NextResponse.json({ error: 'Invalid payment method' }, { status: 400 })
@@ -100,6 +113,7 @@ export async function POST(request: NextRequest) {
           amount: 0,
           currency: 'HKD',
           status: 'COMPLETED',
+          phase: 'DEPOSIT',
           description: `${tierConfig.label} (admin bypass)`,
           metadata: { tier: tier.toUpperCase(), commissionId, adminBypass: 'true' },
           commissionId,
@@ -107,10 +121,25 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      await prisma.commission.update({
-        where: { id: commissionId },
-        data: { paymentState: 'FINAL' },
+      await advanceCommissionPaymentState(commissionId)
+
+      await prisma.payment.create({
+        data: {
+          transactionId: `admin_bypass_final_${Date.now()}`,
+          gateway: 'STRIPE',
+          method: 'CARD',
+          amount: 0,
+          currency: 'HKD',
+          status: 'COMPLETED',
+          phase: 'FINAL',
+          description: `${tierConfig.label} (admin bypass - final)`,
+          metadata: { tier: tier.toUpperCase(), commissionId, adminBypass: 'true' },
+          commissionId,
+          completedAt: new Date(),
+        },
       })
+
+      await advanceCommissionPaymentState(commissionId)
 
       const origin = request.nextUrl.origin
       return NextResponse.json({
@@ -156,6 +185,7 @@ export async function POST(request: NextRequest) {
             amount: 0,
             currency: 'HKD',
             status: 'COMPLETED',
+            phase: 'DEPOSIT',
             description: `${tierConfig.label} (grant: ${grant.grantType})`,
             metadata: {
               tier: tierKey,
@@ -176,10 +206,30 @@ export async function POST(request: NextRequest) {
           })
         }
 
-        await prisma.commission.update({
-          where: { id: commissionId },
-          data: { paymentState: 'FINAL' },
+        await advanceCommissionPaymentState(commissionId)
+
+        await prisma.payment.create({
+          data: {
+            transactionId: `grant_${grant.id}_final_${Date.now()}`,
+            gateway: 'STRIPE',
+            method: 'CARD',
+            amount: 0,
+            currency: 'HKD',
+            status: 'COMPLETED',
+            phase: 'FINAL',
+            description: `${tierConfig.label} (grant: ${grant.grantType} - final)`,
+            metadata: {
+              tier: tierKey,
+              commissionId,
+              grantId: grant.id,
+              grantType: grant.grantType,
+            },
+            commissionId,
+            completedAt: new Date(),
+          },
         })
+
+        await advanceCommissionPaymentState(commissionId)
 
         const origin = request.nextUrl.origin
         return NextResponse.json({
@@ -227,18 +277,19 @@ export async function POST(request: NextRequest) {
         transactionId: `pending_${Date.now()}`,
         gateway: getGatewayForMethod(method).toUpperCase() as any,
         method: method.toUpperCase() as any,
-        amount: tierConfig.amount,
+        amount: chargeAmount,
         currency: tierConfig.currency.toUpperCase(),
         status: 'PENDING',
-        description: tierConfig.label,
-        metadata: { tier: tierKey, commissionId },
+        phase,
+        description: `${tierConfig.label} (${phase.toLowerCase()})`,
+        metadata: { tier: tierKey, commissionId, phase },
         commissionId,
       },
     })
 
     const origin = request.nextUrl.origin
     const paymentResult = await router.processPayment({
-      amount: tierConfig.amount,
+      amount: chargeAmount,
       currency: tierConfig.currency as 'hkd' | 'usd',
       method,
       description: tierConfig.label,

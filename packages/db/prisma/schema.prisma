@@ -172,6 +172,11 @@ model Commission {
   updatedAt        DateTime          @updatedAt
   feasibilityScore Float?
   riskAssessment   Json?
+  clientAcceptedAt DateTime?
+  clientRejectedAt DateTime?
+  rejectionReason  String?
+  escrowTxHash     String?
+  escrowChainId    Int?
   builds           Build[]
   clientPreference ClientPreference?
   archetype        ProjectArchetype? @relation(fields: [archetypeId], references: [id])
@@ -305,6 +310,7 @@ model Payment {
   amount           Int
   currency         String            @default("HKD")
   status           PaymentStatus     @default(PENDING)
+  phase            PaymentPhase      @default(DEPOSIT)
   description      String?
   metadata         Json              @default("{}")
   commissionId     String?
@@ -574,6 +580,13 @@ enum PaymentStatus {
   COMPLETED
   FAILED
   REFUNDED
+}
+
+enum PaymentPhase {
+  DEPOSIT
+  FINAL
+  HOSTING
+  REFUND
 }
 
 enum RepoSurgeryStatus {

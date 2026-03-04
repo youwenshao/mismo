@@ -1,12 +1,12 @@
 # Payment System & Admin Whitelist Documentation
 
-This document provides a comprehensive overview of Mismo's unified payment system, admin whitelist management, and user grant (free trial) system.
+This document provides a comprehensive overview of Mismo's unified payment system, admin whitelist management, user grant (free trial) system, and hybrid Decidendi escrow flow.
 
 ---
 
 ## 1. Architecture Overview
 
-Mismo uses a **Hybrid Gateway** architecture to optimize for both international reach and local Hong Kong payment methods.
+Mismo uses a **Hybrid Gateway** architecture to optimize for both international reach and local Hong Kong payment methods. Payment flow can be **traditional** (Stripe/PaymentAsia only) or **Decidendi** (on-chain escrow on Base L2). See [Decidendi Escrow](decidendi-escrow.md) for Web3 details.
 
 ### Components
 
@@ -41,7 +41,9 @@ The core logic resides in `packages/payment/`.
 
 ### 2.2 Database Schema (`packages/db/prisma/schema.prisma`)
 
-- **`Payment`**: Stores `transactionId`, `gateway`, `method`, `amount`, `status`, and `metadata`.
+- **`Payment`**: Stores `transactionId`, `gateway`, `method`, `amount`, `status`, `phase`, and `metadata`.
+  - **`phase`**: `DEPOSIT` (40% pre-build), `FINAL` (60% post-build), `HOSTING`, or `REFUND`
+  - Amount charged is tier-dependent; deposit and final use `DECIDENDI_DEPOSIT_RATIO` (default 0.40)
 - **`UserGrant`**: Stores admin-issued credits (`UNLIMITED_7DAY`, `FREE_SOURCE`, `FREE_SOURCE_OR_DEPLOY`).
 - **`SystemConfig`**: Stores the dynamic admin whitelist under the key `admin.emailHashes`.
 
@@ -61,8 +63,10 @@ Admins are identified by the SHA-256 hash of their email address. The system che
 When an authenticated user with the `ADMIN` role initiates a checkout:
 
 - The payment flow is skipped.
-- A `Payment` record is created with `amount: 0` and `metadata: { adminBypass: "true" }`.
-- The `Commission.paymentState` is immediately set to `FINAL`.
+- Two `Payment` records are created (deposit + final) with `amount: 0` and `metadata: { adminBypass: "true" }`.
+- `advanceCommissionPaymentState()` is called twice to simulate the full lifecycle:
+  - Triggers build pipeline (`UNPAID` → `PARTIAL` → build starts)
+  - Decidendi relayer runs if `ENABLE_DECIDENDI=true`
 
 ---
 
@@ -76,13 +80,20 @@ Admins can issue grants to users via the **Internal Dashboard (Settings > User G
 - **`FREE_SOURCE`**: One-time credit for a "Source" tier commission.
 - **`FREE_SOURCE_OR_DEPLOY`**: One-time credit for either a "Source" or "Deploy" tier commission.
 
+### Deposit vs Final Amount
+
+Checkout charges based on `phase`:
+
+- **DEPOSIT** (pre-build): 40% of tier price (`DECIDENDI_DEPOSIT_RATIO` default 0.40)
+- **FINAL** (post-build, after client acceptance): 60% of tier price
+
 ### Checkout Logic
 
 The checkout API (`/api/billing/checkout`) checks for valid, unused grants before processing any payment. If a matching grant is found:
 
-- The grant is marked as `usedAt = now()`.
-- A $0 payment is recorded.
-- The commission is marked as paid.
+- The grant is marked as `usedAt = now()` (unless `UNLIMITED_7DAY`).
+- Two $0 payment records are created (deposit + final).
+- `advanceCommissionPaymentState()` is called twice to trigger the full lifecycle (build pipeline, Decidendi if enabled).
 
 ---
 

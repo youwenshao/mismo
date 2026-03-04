@@ -54,46 +54,47 @@ flowchart TB
 
 ### Core Library (`packages/ai/src/delivery/`)
 
-| Module | Description |
-|--------|-------------|
-| `GitHubClient` | Raw fetch wrapper for GitHub REST API: createRepo, pushTreeCommit, setupBranchProtection, inviteCollaborator, transferRepo, createTag |
-| `PreTransferValidator` | Secret scan (reuses `scanForSecrets`), .env file gate, BMAD acceptance, contract diff |
-| `DocGenerator` | Generates ADR, api_contracts.json, data_boundary_documentation.md, operational_runbook.md, hosting_contract.json |
-| `TransferAgent` | Orchestrates create → push → protect → tag → invite → poll (24h, 3 retries) → transfer → verify |
-| `PostTransferVerifier` | Admin access check, repo accessibility, env contract validation, optional health check, rollback plan |
+| Module                 | Description                                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `GitHubClient`         | Raw fetch wrapper for GitHub REST API: createRepo, pushTreeCommit, setupBranchProtection, inviteCollaborator, transferRepo, createTag |
+| `PreTransferValidator` | Secret scan (reuses `scanForSecrets`), .env file gate, BMAD acceptance, contract diff                                                 |
+| `DocGenerator`         | Generates ADR, api_contracts.json, data_boundary_documentation.md, operational_runbook.md, hosting_contract.json                      |
+| `TransferAgent`        | Orchestrates create → push → protect → tag → invite → poll (24h, 3 retries) → transfer → verify                                       |
+| `PostTransferVerifier` | Admin access check, repo accessibility, env contract validation, optional health check, rollback plan                                 |
 
 ### n8n Custom Nodes
 
-| Node | n8n Name | Description |
-|------|----------|-------------|
-| **PreTransferValidator** | `n8n-nodes-mismo.preTransferValidator` | Runs validation gates (secret, BMAD, contract, .env) |
-| **RepoCreator** | `n8n-nodes-mismo.repoCreator` | Creates repo under agency org, pushes code |
-| **DocGenerator** | `n8n-nodes-mismo.docGenerator` | Generates BMAD handoff documents |
+| Node                      | n8n Name                                | Description                                           |
+| ------------------------- | --------------------------------------- | ----------------------------------------------------- |
+| **PreTransferValidator**  | `n8n-nodes-mismo.preTransferValidator`  | Runs validation gates (secret, BMAD, contract, .env)  |
+| **RepoCreator**           | `n8n-nodes-mismo.repoCreator`           | Creates repo under agency org, pushes code            |
+| **DocGenerator**          | `n8n-nodes-mismo.docGenerator`          | Generates BMAD handoff documents                      |
 | **DeliveryTransferAgent** | `n8n-nodes-mismo.deliveryTransferAgent` | Invites client, polls acceptance, transfers ownership |
-| **PostTransferVerifier** | `n8n-nodes-mismo.postTransferVerifier` | Verifies admin access, env contract |
+| **PostTransferVerifier**  | `n8n-nodes-mismo.postTransferVerifier`  | Verifies admin access, env contract                   |
 
 ### Internal API Routes
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/delivery/validate` | POST | Run pre-transfer validation |
-| `/api/delivery/create-repo` | POST | Create repo + push code |
-| `/api/delivery/generate-docs` | POST | Generate BMAD documentation |
-| `/api/delivery/transfer` | POST | Execute transfer protocol |
-| `/api/delivery/verify` | POST | Run post-transfer verification |
-| `/api/delivery/pipeline` | POST | Full end-to-end pipeline |
+| Endpoint                         | Method | Description                                                                            |
+| -------------------------------- | ------ | -------------------------------------------------------------------------------------- |
+| `/api/delivery/validate`         | POST   | Run pre-transfer validation                                                            |
+| `/api/delivery/create-repo`      | POST   | Create repo + push code                                                                |
+| `/api/delivery/generate-docs`    | POST   | Generate BMAD documentation                                                            |
+| `/api/delivery/transfer`         | POST   | Execute transfer protocol                                                              |
+| `/api/delivery/verify`           | POST   | Run post-transfer verification                                                         |
+| `/api/delivery/pipeline`         | POST   | Full end-to-end pipeline                                                               |
+| `/api/delivery/accept` (web app) | POST   | Client accepts or rejects deliverables; triggers Decidendi `clientAccept` when enabled |
 
 ---
 
 ## Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `GITHUB_TOKEN` | — | Required. GitHub PAT with repo + org + user scope |
-| `GITHUB_ORG` | — | Fallback org (used if GITHUB_DELIVERY_ORG not set) |
-| `GITHUB_DELIVERY_ORG` | `mismo-agency` | Org under which repos are created |
-| `DELIVERY_AGENT_URL` | `http://localhost:3001` | Internal app base URL for n8n nodes |
-| `CONTRACT_CHECKER_URL` | `http://localhost:3012` | Contract checker for diff gate |
+| Variable               | Default                 | Description                                        |
+| ---------------------- | ----------------------- | -------------------------------------------------- |
+| `GITHUB_TOKEN`         | —                       | Required. GitHub PAT with repo + org + user scope  |
+| `GITHUB_ORG`           | —                       | Fallback org (used if GITHUB_DELIVERY_ORG not set) |
+| `GITHUB_DELIVERY_ORG`  | `mismo-agency`          | Org under which repos are created                  |
+| `DELIVERY_AGENT_URL`   | `http://localhost:3001` | Internal app base URL for n8n nodes                |
+| `CONTRACT_CHECKER_URL` | `http://localhost:3012` | Contract checker for diff gate                     |
 
 ---
 
@@ -101,18 +102,18 @@ flowchart TB
 
 The `Delivery` model stores audit trail and status:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `commissionId` | string | Links to Commission |
-| `buildId` | string | Links to Build |
-| `repoName` | string | Repository name |
-| `githubOrg` | string | Agency org |
-| `clientGithubUsername` | string? | Client to transfer to |
-| `status` | DeliveryStatus | VALIDATING, CREATING_REPO, TRANSFERRING, COMPLETED, FAILED, etc. |
-| `repoUrl` | string? | URL under agency org |
-| `transferredRepoUrl` | string? | URL after transfer |
-| `inviteRetryCount` | int | Retry count for invitation |
-| `auditLog` | Json | Array of `{ timestamp, step, status, details }` |
+| Field                  | Type           | Description                                                      |
+| ---------------------- | -------------- | ---------------------------------------------------------------- |
+| `commissionId`         | string         | Links to Commission                                              |
+| `buildId`              | string         | Links to Build                                                   |
+| `repoName`             | string         | Repository name                                                  |
+| `githubOrg`            | string         | Agency org                                                       |
+| `clientGithubUsername` | string?        | Client to transfer to                                            |
+| `status`               | DeliveryStatus | VALIDATING, CREATING_REPO, TRANSFERRING, COMPLETED, FAILED, etc. |
+| `repoUrl`              | string?        | URL under agency org                                             |
+| `transferredRepoUrl`   | string?        | URL after transfer                                               |
+| `inviteRetryCount`     | int            | Retry count for invitation                                       |
+| `auditLog`             | Json           | Array of `{ timestamp, step, status, details }`                  |
 
 ---
 
@@ -130,12 +131,12 @@ Every delivery includes:
 
 ## Pre-Transfer Validation Gates
 
-| Gate | Pass Criteria |
-|------|---------------|
-| **Secret scan** | No critical/high secrets in workspace (uses existing `scanForSecrets`) |
-| **.env file** | No `.env`, `.env.local`, `.env.production` in file list |
-| **BMAD acceptance** | Build status = SUCCESS, Commission status = COMPLETED |
-| **Contract diff** | API contracts match implemented routes (calls contract-checker) |
+| Gate                | Pass Criteria                                                          |
+| ------------------- | ---------------------------------------------------------------------- |
+| **Secret scan**     | No critical/high secrets in workspace (uses existing `scanForSecrets`) |
+| **.env file**       | No `.env`, `.env.local`, `.env.production` in file list                |
+| **BMAD acceptance** | Build status = SUCCESS, Commission status = COMPLETED                  |
+| **Contract diff**   | API contracts match implemented routes (calls contract-checker)        |
 
 ---
 
@@ -150,6 +151,15 @@ Every delivery includes:
 7. Poll every 4 hours for 24 hours (max 3 retry cycles with fresh invites)
 8. On acceptance: transfer repo to client's account
 9. Verify client has admin access via GitHub API
+
+### Post-Delivery: Client Acceptance & Decidendi
+
+After ownership transfer, the client reviews deliverables in the dashboard. When satisfied:
+
+- **`POST /api/delivery/accept`** — Client submits `{ commissionId, accepted: true }`. Updates `clientAcceptedAt` and, if `ENABLE_DECIDENDI=true`, relays `clientAccept()` and `recordAccepted()` on-chain.
+- **Final invoice** — Issued after acceptance; client pays remaining 60% via Stripe/PaymentAsia.
+
+To relay delivery completion on-chain, the n8n delivery workflow (or equivalent) should call `POST /api/decidendi/milestone` with `{ commissionId, milestone: "DELIVERED", deliveryHash?: "0x..." }` after transfer completes. See [Decidendi Escrow](decidendi-escrow.md) and [API Webhook Specifications](api/webhook-specifications.md).
 
 ---
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@mismo/db'
 
 export async function GET(request: NextRequest) {
   const projectId = request.nextUrl.searchParams.get('projectId')
@@ -10,14 +11,28 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  // Mock response — in production this would query the database / e-signature provider
+  const contract = await prisma.contract.findFirst({
+    where: { projectId, status: { not: 'VOIDED' } },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  if (!contract) {
+    return NextResponse.json({
+      projectId,
+      status: 'NONE' as const,
+      acknowledgments: { ip: false, age: false, aup: false },
+    })
+  }
+
   return NextResponse.json({
     projectId,
-    status: 'PENDING' as 'PENDING' | 'SENT' | 'SIGNED',
+    contractId: contract.id,
+    status: contract.status,
+    signedAt: contract.signedAt?.toISOString() ?? null,
     acknowledgments: {
-      ip: false,
-      age: false,
-      aup: false,
+      ip: contract.ipAcknowledged,
+      age: contract.ageAcknowledged,
+      aup: contract.aupAcknowledged,
     },
   })
 }

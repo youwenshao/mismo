@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { prisma } from '@mismo/db'
 import { HostingTransferOrchestrator } from '@mismo/ai'
+import { advanceCommissionPaymentState } from '@/lib/commission-lifecycle'
 
 const TERMINAL_STATUSES = new Set(['COMPLETED', 'FAILED', 'REFUNDED'])
 
@@ -44,6 +45,7 @@ export async function POST(request: NextRequest) {
             where: { id: paymentId },
             data: { status: 'COMPLETED', completedAt: new Date() },
           })
+          await advanceCommissionPaymentState(existing.commissionId)
         }
       }
 

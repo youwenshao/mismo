@@ -245,6 +245,17 @@ curl -X POST http://localhost:3005/log \
 
 ---
 
+## Decidendi Milestone Relay
+
+When `ENABLE_DECIDENDI=true`, the pipeline should relay milestones on-chain:
+
+- **Build success**: After the build workflow completes successfully, call `POST /api/decidendi/milestone` with `{ commissionId, milestone: "BUILD_COMPLETE" }`.
+- **Delivery complete**: After the delivery pipeline creates the repo and transfers ownership, call with `{ commissionId, milestone: "DELIVERED", deliveryHash?: "0x..." }`.
+
+Both calls require the `x-internal-secret` header. See [API Webhook Specifications](api/webhook-specifications.md) and [Decidendi Escrow](decidendi-escrow.md) for details.
+
+---
+
 ## Post-Build: Delivery Pipeline
 
 When a build completes successfully, the `Commission` status transitions to `COMPLETED`. This triggers the **GitHub Delivery Pipeline** (via `notify_n8n_commission_completed` DB trigger):

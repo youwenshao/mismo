@@ -9,6 +9,7 @@ This document defines the webhook interfaces for the Mismo platform, including s
 All internal webhook routes are protected by a shared secret (`COMMS_WEBHOOK_SECRET`).
 
 **Verification Logic (Node.js/Next.js):**
+
 ```typescript
 function verifyWebhookSecret(req: NextRequest): boolean {
   const secret = process.env.COMMS_WEBHOOK_SECRET
@@ -19,6 +20,7 @@ function verifyWebhookSecret(req: NextRequest): boolean {
 ```
 
 **Required Header:**
+
 - `x-webhook-secret`: The shared secret configured in `.env`.
 
 ---
@@ -30,6 +32,7 @@ Receives status changes from the `Build` and `Commission` tables in Supabase (vi
 ### Payload Type: `build_stage_change`
 
 **Example:**
+
 ```json
 {
   "type": "build_stage_change",
@@ -44,6 +47,7 @@ Receives status changes from the `Build` and `Commission` tables in Supabase (vi
 ```
 
 **Mapped Events:**
+
 - `BUILD_STARTED`: `old_status=PENDING`, `new_status=RUNNING`.
 - `BUILD_COMPLETE`: `new_status=SUCCESS`.
 - `SUPPORT_REQUIRED`: `new_status=FAILED` and `failure_count >= 3`.
@@ -53,6 +57,7 @@ Receives status changes from the `Build` and `Commission` tables in Supabase (vi
 ### Payload Type: `commission_status_change`
 
 **Example:**
+
 ```json
 {
   "type": "commission_status_change",
@@ -63,6 +68,7 @@ Receives status changes from the `Build` and `Commission` tables in Supabase (vi
 ```
 
 **Mapped Events:**
+
 - `FEEDBACK_REQUEST`: `new_status=COMPLETED`.
 - `SUPPORT_REQUIRED`: `new_status=ESCALATED`.
 
@@ -73,6 +79,7 @@ Receives status changes from the `Build` and `Commission` tables in Supabase (vi
 The main entry point for the n8n delivery pipeline after a successful build.
 
 **Example Payload:**
+
 ```json
 {
   "buildId": "clxxx",
@@ -85,6 +92,7 @@ The main entry point for the n8n delivery pipeline after a successful build.
 ```
 
 **Response:**
+
 ```json
 {
   "status": "SUCCESS",
@@ -100,6 +108,7 @@ The main entry point for the n8n delivery pipeline after a successful build.
 Used by the monthly maintenance cron to audit repository health.
 
 **Example Payload:**
+
 ```json
 {
   "githubUrl": "https://github.com/client/repo",
@@ -109,10 +118,62 @@ Used by the monthly maintenance cron to audit repository health.
 ```
 
 **Response:**
+
 ```json
 {
   "vulnerabilities": 2,
   "outdatedPackages": 5,
   "prsCreated": 1
+}
+```
+
+---
+
+## Decidendi Internal Routes
+
+### POST /api/decidendi/milestone
+
+Relays build or delivery milestone completion to the Decidendi smart contracts (when `ENABLE_DECIDENDI=true`). Used by the n8n pipeline after build success or delivery completion.
+
+**Security:** Header `x-internal-secret` must equal `DECIDENDI_INTERNAL_SECRET`.
+
+**Body:**
+
+```json
+{
+  "commissionId": "clxxx",
+  "milestone": "BUILD_COMPLETE",
+  "deliveryHash": "0x1234..."
+}
+```
+
+- `milestone`: `BUILD_COMPLETE` or `DELIVERED`
+- `deliveryHash`: Optional; auto-generated for `DELIVERED` if omitted
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "onChain": true,
+  "txHash": "0x...",
+  "milestone": "BUILD_COMPLETE",
+  "explorerUrl": "https://basescan.org/tx/0x..."
+}
+```
+
+### GET /api/cron/decidendi-release
+
+Cron endpoint to auto-release final payments after the 3-day grace period. Intended for hourly execution (Vercel Cron or external scheduler).
+
+**Security:** Header `Authorization: Bearer <CRON_SECRET>`.
+
+**Response:**
+
+```json
+{
+  "released": 2,
+  "total": 2,
+  "errors": []
 }
 ```
