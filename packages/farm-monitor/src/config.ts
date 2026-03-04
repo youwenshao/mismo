@@ -1,22 +1,46 @@
-import { FARM_THRESHOLDS, CAPACITY_THRESHOLDS } from '@mismo/shared'
+import { FARM_THRESHOLDS, CAPACITY_THRESHOLDS, FLEET_CONFIG } from '@mismo/shared'
 
 export const config = {
   thresholds: { ...FARM_THRESHOLDS, ...CAPACITY_THRESHOLDS },
 
   studios: [
-    { id: 'studio-1', host: process.env.STUDIO_1_SSH_HOST || '192.168.1.101', role: 'control-plane' as const },
-    { id: 'studio-2', host: process.env.STUDIO_2_SSH_HOST || '192.168.1.102', role: 'worker' as const },
-    { id: 'studio-3', host: process.env.STUDIO_3_SSH_HOST || '192.168.1.103', role: 'worker' as const },
+    {
+      id: 'studio-1',
+      host: process.env.STUDIO_1_SSH_HOST || '192.168.31.78',
+      role: 'control-plane' as const,
+      ramGb: 48,
+      workerConcurrency: FLEET_CONFIG['studio-1'].workerConcurrency,
+    },
+    {
+      id: 'studio-2',
+      host: process.env.STUDIO_2_SSH_HOST || '192.168.31.242',
+      role: 'worker' as const,
+      ramGb: 64,
+      workerConcurrency: FLEET_CONFIG['studio-2'].workerConcurrency,
+    },
+    {
+      id: 'studio-3',
+      host: process.env.STUDIO_3_SSH_HOST || '192.168.31.153',
+      role: 'worker' as const,
+      ramGb: 64,
+      workerConcurrency: FLEET_CONFIG['studio-3'].workerConcurrency,
+    },
   ],
 
-  ssh: {
-    user: process.env.SSH_USER || 'admin',
-    keyPath: process.env.SSH_KEY_PATH || `${process.env.HOME}/.ssh/id_ed25519`,
+  get ssh() {
+    return {
+      user: process.env.SSH_USER || 'admin',
+      keyPath: process.env.SSH_KEY_PATH || `${process.env.HOME}/.ssh/mismo_ed25519`,
+      passphrase: process.env.SSH_PASSPHRASE || '',
+    }
   },
 
-  supabase: {
-    url: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+  get supabase() {
+    return {
+      url: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      serviceRoleKey:
+        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+    }
   },
 
   apis: {

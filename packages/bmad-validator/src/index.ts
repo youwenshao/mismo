@@ -1,8 +1,7 @@
 import express from 'express'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@mismo/db'
 import { z } from 'zod'
 
-const prisma = new PrismaClient()
 const app = express()
 app.use(express.json())
 
@@ -29,7 +28,10 @@ app.post('/validate', async (req, res) => {
             data: {
               status: 'FAILED',
               failureCount: { increment: 1 },
-              errorLogs: [...newLogs, { source: 'bmad-validator', errors: parsed.error.errors }],
+              errorLogs: [
+                ...newLogs,
+                { source: 'bmad-validator', errors: parsed.error.errors },
+              ] as any,
             },
           })
         }

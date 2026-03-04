@@ -48,15 +48,15 @@ start_service "contract-checker" "@mismo/contract-checker" 3012
 sleep 1
 
 # Agents
-start_service "db-architect" "@mismo/agent-db-architect" 3001
+start_service "db-architect" "@mismo/agent-db-architect" 3030
 sleep 1
-start_service "backend-engineer" "@mismo/agent-backend-engineer" 3002
+start_service "backend-engineer" "@mismo/agent-backend-engineer" 3031
 sleep 1
-start_service "frontend-developer" "@mismo/agent-frontend-developer" 3003
+start_service "frontend-developer" "@mismo/agent-frontend-developer" 3032
 sleep 1
-start_service "devops" "@mismo/agent-devops" 3004
+start_service "devops" "@mismo/agent-devops" 3033
 sleep 1
-start_service "error-logger" "@mismo/error-logger" 3005
+start_service "error-logger" "@mismo/error-logger" 3034
 
 echo ""
 echo "GSD Build Pipeline services started."
@@ -65,11 +65,11 @@ echo "Ports:"
 echo "  GSD Dependency:     http://localhost:3010"
 echo "  BMAD Validator:     http://localhost:3011"
 echo "  Contract Checker:  http://localhost:3012"
-echo "  DB Architect:      http://localhost:3001"
-echo "  Backend Engineer:  http://localhost:3002"
-echo "  Frontend Developer: http://localhost:3003"
-echo "  DevOps Agent:      http://localhost:3004"
-echo "  Error Logger:      http://localhost:3005"
+echo "  DB Architect:      http://localhost:3030"
+echo "  Backend Engineer:  http://localhost:3031"
+echo "  Frontend Developer: http://localhost:3032"
+echo "  DevOps Agent:      http://localhost:3033"
+echo "  Error Logger:      http://localhost:3034"
 echo ""
 echo "Logs: .build-pipeline-<service>.log"
 echo "PIDs: $PIDFILE"

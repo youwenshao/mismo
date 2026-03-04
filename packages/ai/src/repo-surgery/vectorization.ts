@@ -175,7 +175,7 @@ export class CodeChunker {
   }
 
   private async walkDir(dir: string, files: string[]): Promise<void> {
-    let entries: Awaited<ReturnType<typeof fs.readdir>>
+    let entries
     try {
       entries = await fs.readdir(dir, { withFileTypes: true })
     } catch {
@@ -196,11 +196,7 @@ export class CodeChunker {
     }
   }
 
-  private splitIntoChunks(
-    content: string,
-    filePath: string,
-    language: string,
-  ): CodeChunk[] {
+  private splitIntoChunks(content: string, filePath: string, language: string): CodeChunk[] {
     const lines = content.split('\n')
     if (lines.length === 0) return []
 
@@ -254,9 +250,7 @@ export class CodeEmbedder {
     this.dimensions = config.dimensions ?? 3072
     this.apiKey = config.apiKey ?? process.env.OPENAI_API_KEY ?? ''
     if (!this.apiKey) {
-      throw new Error(
-        'OpenAI API key is required. Set OPENAI_API_KEY or pass apiKey in config.',
-      )
+      throw new Error('OpenAI API key is required. Set OPENAI_API_KEY or pass apiKey in config.')
     }
   }
 
@@ -280,9 +274,7 @@ export class CodeEmbedder {
     return embedding
   }
 
-  private async callEmbeddingAPI(
-    input: string[],
-  ): Promise<OpenAIEmbeddingResponse> {
+  private async callEmbeddingAPI(input: string[]): Promise<OpenAIEmbeddingResponse> {
     const response = await fetch('https://api.openai.com/v1/embeddings', {
       method: 'POST',
       headers: {
@@ -298,9 +290,7 @@ export class CodeEmbedder {
 
     if (!response.ok) {
       const errorBody = await response.text()
-      throw new Error(
-        `OpenAI Embeddings API error (${response.status}): ${errorBody}`,
-      )
+      throw new Error(`OpenAI Embeddings API error (${response.status}): ${errorBody}`)
     }
 
     return (await response.json()) as OpenAIEmbeddingResponse
@@ -324,16 +314,11 @@ export class CodeVectorStore {
     })
   }
 
-  async createCollection(
-    surgeryId: string,
-    dimensions: number,
-  ): Promise<string> {
+  async createCollection(surgeryId: string, dimensions: number): Promise<string> {
     const collectionName = `repo_surgery_${surgeryId}`
 
     const collections = await this.client.getCollections()
-    const exists = collections.collections.some(
-      (c) => c.name === collectionName,
-    )
+    const exists = collections.collections.some((c) => c.name === collectionName)
 
     if (!exists) {
       await this.client.createCollection(collectionName, {
@@ -353,9 +338,7 @@ export class CodeVectorStore {
     embeddings: number[][],
   ): Promise<void> {
     if (chunks.length !== embeddings.length) {
-      throw new Error(
-        `Mismatch: ${chunks.length} chunks but ${embeddings.length} embeddings`,
-      )
+      throw new Error(`Mismatch: ${chunks.length} chunks but ${embeddings.length} embeddings`)
     }
 
     const batchSize = 100
@@ -372,8 +355,8 @@ export class CodeVectorStore {
           startLine: chunk.startLine,
           endLine: chunk.endLine,
           content: chunk.content,
-          ...(chunk.functionName && { functionName: chunk.functionName }),
-          ...(chunk.className && { className: chunk.className }),
+          functionName: chunk.functionName,
+          className: chunk.className,
         },
       }))
 
@@ -406,12 +389,8 @@ export class CodeVectorStore {
         startLine: result.payload?.startLine as number,
         endLine: result.payload?.endLine as number,
         content: result.payload?.content as string,
-        ...(result.payload?.functionName && {
-          functionName: result.payload.functionName as string,
-        }),
-        ...(result.payload?.className && {
-          className: result.payload.className as string,
-        }),
+        functionName: result.payload?.functionName as string | undefined,
+        className: result.payload?.className as string | undefined,
       },
       score: result.score,
     }))
@@ -421,9 +400,10 @@ export class CodeVectorStore {
     await this.client.deleteCollection(collectionName)
   }
 
-  private buildFilter(
-    filter?: { language?: string; filePath?: string },
-  ): { must: Array<{ key: string; match: { value: string } }> } | undefined {
+  private buildFilter(filter?: {
+    language?: string
+    filePath?: string
+  }): { must: Array<{ key: string; match: { value: string } }> } | undefined {
     if (!filter) return undefined
 
     const must: Array<{ key: string; match: { value: string } }> = []
@@ -452,10 +432,7 @@ export async function vectorizeRepo(
   const chunks = await chunker.chunkDirectory(cloneDir)
 
   if (chunks.length === 0) {
-    const collectionName = await store.createCollection(
-      surgeryId,
-      embedder['dimensions'],
-    )
+    const collectionName = await store.createCollection(surgeryId, embedder['dimensions'])
     return {
       surgeryId,
       collectionName,
@@ -468,10 +445,7 @@ export async function vectorizeRepo(
   const texts = chunks.map((c) => c.content)
   const embeddings = await embedder.embedBatch(texts)
 
-  const collectionName = await store.createCollection(
-    surgeryId,
-    embedder['dimensions'],
-  )
+  const collectionName = await store.createCollection(surgeryId, embedder['dimensions'])
   await store.insertChunks(collectionName, chunks, embeddings)
 
   return {

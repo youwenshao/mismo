@@ -27,7 +27,8 @@ export class DevOpsAgent implements INodeType {
         name: 'hostingConfig',
         type: 'json',
         default: '{}',
-        description: 'PRD architecture hosting: provider, region, framework, buildCommand, outputDir',
+        description:
+          'PRD architecture hosting: provider, region, framework, buildCommand, outputDir',
       },
       {
         displayName: 'Env Requirements',
@@ -49,10 +50,14 @@ export class DevOpsAgent implements INodeType {
       const envRequirementsRaw = this.getNodeParameter('envRequirements', i) as string
 
       try {
-        const hostingConfig = typeof hostingConfigRaw === 'string' ? JSON.parse(hostingConfigRaw) : hostingConfigRaw
-        const envRequirements = typeof envRequirementsRaw === 'string' ? JSON.parse(envRequirementsRaw) : envRequirementsRaw
+        const hostingConfig =
+          typeof hostingConfigRaw === 'string' ? JSON.parse(hostingConfigRaw) : hostingConfigRaw
+        const envRequirements =
+          typeof envRequirementsRaw === 'string'
+            ? JSON.parse(envRequirementsRaw)
+            : envRequirementsRaw
 
-        const uri = (process.env.DEVOPS_AGENT_URL || 'http://devops-agent:3004') + '/generate'
+        const uri = (process.env.DEVOPS_AGENT_URL || 'http://devops-agent:3033') + '/generate'
 
         const response = await this.helpers.request({
           method: 'POST',

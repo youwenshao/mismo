@@ -28,10 +28,6 @@ function getClientIp(request: NextRequest): string {
   )
 }
 
-if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH) {
-  throw new Error('FATAL: NEXT_PUBLIC_DEV_BYPASS_AUTH must not be set in production')
-}
-
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const isApiRoute = pathname.startsWith('/api/')
@@ -39,17 +35,6 @@ export async function middleware(request: NextRequest) {
   const start = Date.now()
 
   let { supabaseResponse, user } = await updateSession(request)
-
-  if (
-    process.env.NODE_ENV === 'development' &&
-    process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true' &&
-    !user
-  ) {
-    user = {
-      id: '9b7acb0c-5947-4451-bd31-2f44284623f2',
-      email: 'dev@mismo.test',
-    } as any
-  }
 
   for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
     supabaseResponse.headers.set(key, value)

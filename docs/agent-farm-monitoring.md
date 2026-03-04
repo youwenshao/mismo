@@ -45,43 +45,43 @@ Two main components:
 
 ### Resource Alerts
 
-| Condition | Duration | Action | Priority |
-|-----------|----------|--------|----------|
-| RAM >85% | >5 min | Alert + reduce n8n worker concurrency to 10 | P1 |
-| Disk >90% | immediate | Alert + run `docker system prune -af` | P1 |
-| CPU >95% | >10 min | Alert + kill containers running >90 min | P0 |
+| Condition | Duration  | Action                                      | Priority |
+| --------- | --------- | ------------------------------------------- | -------- |
+| RAM >85%  | >5 min    | Alert + reduce n8n worker concurrency to 10 | P1       |
+| Disk >90% | immediate | Alert + run `docker system prune -af`       | P1       |
+| CPU >95%  | >10 min   | Alert + kill containers running >90 min     | P0       |
 
 ### API Health
 
-| Condition | Action |
-|-----------|--------|
-| Kimi API latency >3s | Switch to DeepSeek temporarily; revert after 5 healthy checks |
-| Supabase connection drops | Queue builds locally; retry every 30s; alert on reconnect |
+| Condition                          | Action                                                                                   |
+| ---------------------------------- | ---------------------------------------------------------------------------------------- |
+| Kimi API latency >3s               | Switch to DeepSeek temporarily; revert after 5 healthy checks                            |
+| Supabase connection drops          | Queue builds locally; retry every 30s; alert on reconnect                                |
 | GitHub rate limit (<100 remaining) | Pause new repo creation; set `github_builds_paused` in SystemConfig; queue for next hour |
 
 ### Build Failures
 
-| Condition | Action |
-|-----------|--------|
-| Same commission fails 3 times | Escalate to human via SMS; set status ESCALATED |
-| Build stuck >1 hour | Auto-kill container; mark Build FAILED; notify client (P1) |
-| Success rate <80% in last hour | Page developer (P0 critical) |
+| Condition                      | Action                                                     |
+| ------------------------------ | ---------------------------------------------------------- |
+| Same commission fails 3 times  | Escalate to human via SMS; set status ESCALATED            |
+| Build stuck >1 hour            | Auto-kill container; mark Build FAILED; notify client (P1) |
+| Success rate <80% in last hour | Page developer (P0 critical)                               |
 
 ### Security
 
-| Condition | Action |
-|-----------|--------|
-| Unauthorized SSH attempt | Ban IP immediately via `pfctl -t blocked_ips -T add` |
-| Strange outbound traffic | Alert (P0 possible breach) |
-| Credential expiry <30 days | P1 alert with rotation reminder |
+| Condition                  | Action                                               |
+| -------------------------- | ---------------------------------------------------- |
+| Unauthorized SSH attempt   | Ban IP immediately via `pfctl -t blocked_ips -T add` |
+| Strange outbound traffic   | Alert (P0 possible breach)                           |
+| Credential expiry <30 days | P1 alert with rotation reminder                      |
 
 ## Notification Channels
 
-| Priority | Channels |
-|----------|----------|
+| Priority          | Channels                                     |
+| ----------------- | -------------------------------------------- |
 | **P0 (Critical)** | SMS + Phone call + Slack + Email + Dashboard |
-| **P1 (Warning)** | Slack + Email + Dashboard |
-| **P2 (Info)** | Dashboard only |
+| **P1 (Warning)**  | Slack + Email + Dashboard                    |
+| **P2 (Info)**     | Dashboard only                               |
 
 ## Deployment
 
@@ -129,16 +129,20 @@ The `setup-monitoring.yml` playbook also deploys a daily backup verification job
 
 ## Monitoring Intervals
 
-| Collector | Interval | Notes |
-|-----------|----------|-------|
-| Resource watchdog (local) | 60s | launchd on each Studio |
-| Resource collector (central) | 2 min | SSH from Studio 1 |
-| API health (Kimi, Supabase) | 30s | Direct HTTP |
-| API health (GitHub) | 60s | Rate limit check |
-| Build tracker | 30s | Supabase query |
-| Security scanner | 5 min | Log parsing via SSH |
-| n8n container health | 2 min | Docker ps via SSH |
-| Backup verification | Daily 3am | launchd on Studio 3 |
+| Collector                    | Interval  | Notes                  |
+| ---------------------------- | --------- | ---------------------- |
+| Resource watchdog (local)    | 60s       | launchd on each Studio |
+| Resource collector (central) | 2 min     | SSH from Studio 1      |
+| API health (Kimi, Supabase)  | 30s       | Direct HTTP            |
+| API health (GitHub)          | 60s       | Rate limit check       |
+| Build tracker                | 30s       | Supabase query         |
+| Security scanner             | 5 min     | Log parsing via SSH    |
+| n8n container health         | 2 min     | Docker ps via SSH      |
+| Backup verification          | Daily 3am | launchd on Studio 3    |
+
+## Dashboard and Status Interpretation
+
+For interpreting fleet status in the Mission Control dashboard (worker vs no-worker, container counts, expected idle state), see [fleet-dashboard-reference.md](./fleet-dashboard-reference.md).
 
 ## Dashboard API
 
@@ -164,3 +168,7 @@ For ad-hoc checks without the full farm-monitor:
 # n8n queue depth per Studio
 ./mac-studios-iac/scripts/monitoring/build-status.sh
 ```
+
+## See Also
+
+- [Data Management & Retention](ops/data-management.md) — DB pruning, in-memory alert cooldown pruning, write resilience, and automated retention for long-running stability.

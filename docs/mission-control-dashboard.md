@@ -4,15 +4,15 @@ The Mission Control Dashboard is an internal operations view for managing the ag
 
 ## Overview
 
-| Feature | Route | Description |
-|---------|-------|-------------|
-| Fleet Status | `/fleet` | Studio grid (Main, Build, QA), CPU/RAM/Disk gauges, active builds, queue depth |
-| Commission Pipeline | `/commissions` | Kanban board with drag-and-drop status changes |
-| Commission Detail | `/commissions/[id]` | PRD summary, build history, risk panel, verification status, ETA prediction |
-| Dependency Graph | `/commissions/[id]/graph` | GSD task DAG visualization with critical path |
-| Agent Performance | `/agents` | Success rate by type, build time by archetype, error heatmap, quality scores |
-| Financials | `/financials` | Revenue, cost breakdown, profit margins, cost alerts |
-| Alerts | `/alerts` | Active alert history (critical path blocked, architecture drift, cost overrun) |
+| Feature             | Route                     | Description                                                                                                                                                                   |
+| ------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fleet Status        | `/fleet`                  | Studio grid (Main, Build, QA), CPU/RAM/Disk gauges, active builds, queue depth. See [fleet-dashboard-reference.md](./fleet-dashboard-reference.md) for status interpretation. |
+| Commission Pipeline | `/commissions`            | Kanban board with drag-and-drop status changes                                                                                                                                |
+| Commission Detail   | `/commissions/[id]`       | PRD summary, build history, risk panel, verification status, ETA prediction                                                                                                   |
+| Dependency Graph    | `/commissions/[id]/graph` | GSD task DAG visualization with critical path                                                                                                                                 |
+| Agent Performance   | `/agents`                 | Success rate by type, build time by archetype, error heatmap, quality scores                                                                                                  |
+| Financials          | `/financials`             | Revenue, cost breakdown, profit margins, cost alerts                                                                                                                          |
+| Alerts              | `/alerts`                 | Active alert history (critical path blocked, architecture drift, cost overrun)                                                                                                |
 
 ## Prerequisites
 
@@ -23,14 +23,14 @@ The Mission Control Dashboard is an internal operations view for managing the ag
 
 ## Data Sources
 
-| Data | Source |
-|------|--------|
-| Studio metrics | `StudioMetrics` table (populated by metrics agent or seed) |
-| Active builds | `Build` where `status = 'RUNNING'` |
-| Queue depth | `StudioMetrics.queueDepth` (or Redis when metrics agent pushes) |
-| Revenue | Approximated from tier pricing (`SERVICE_TIER_PRICING`) and `Commission.paymentState` |
-| Costs | `Build.kimiqTokensUsed` × cost/1k tokens + infrastructure overhead |
-| GSD graph | `Commission.prdJson.gsd_decomposition.tasks` or default task graph |
+| Data           | Source                                                                                |
+| -------------- | ------------------------------------------------------------------------------------- |
+| Studio metrics | `StudioMetrics` table (populated by metrics agent or seed)                            |
+| Active builds  | `Build` where `status = 'RUNNING'`                                                    |
+| Queue depth    | `StudioMetrics.queueDepth` (or Redis when metrics agent pushes)                       |
+| Revenue        | Approximated from tier pricing (`SERVICE_TIER_PRICING`) and `Commission.paymentState` |
+| Costs          | `Build.kimiqTokensUsed` × cost/1k tokens + infrastructure overhead                    |
+| GSD graph      | `Commission.prdJson.gsd_decomposition.tasks` or default task graph                    |
 
 ## Seed Data
 
@@ -49,15 +49,15 @@ This creates:
 
 ## API Routes
 
-| Route | Method | Purpose |
-|-------|--------|---------|
-| `/api/fleet/metrics` | GET | Studio metrics, active builds, queue history |
-| `/api/commissions/[id]/status` | PATCH | Update commission status (with audit log) |
-| `/api/financials` | GET | Revenue, cost breakdown, profit by archetype, cost alerts |
-| `/api/gsd/[id]/graph` | GET | GSD task graph nodes/edges for DAG visualization |
-| `/api/alerts` | GET | Evaluate and return active alerts |
-| `/api/predictions/[id]` | GET | ETA prediction for running builds |
-| `/api/audit` | GET/POST | Audit log read/write |
+| Route                          | Method   | Purpose                                                   |
+| ------------------------------ | -------- | --------------------------------------------------------- |
+| `/api/fleet/metrics`           | GET      | Studio metrics, active builds, queue history              |
+| `/api/commissions/[id]/status` | PATCH    | Update commission status (with audit log)                 |
+| `/api/financials`              | GET      | Revenue, cost breakdown, profit by archetype, cost alerts |
+| `/api/gsd/[id]/graph`          | GET      | GSD task graph nodes/edges for DAG visualization          |
+| `/api/alerts`                  | GET      | Evaluate and return active alerts                         |
+| `/api/predictions/[id]`        | GET      | ETA prediction for running builds                         |
+| `/api/audit`                   | GET/POST | Audit log read/write                                      |
 
 ## Realtime
 
@@ -71,12 +71,12 @@ Fleet and Commission pages refresh automatically when data changes.
 
 ## Alert Conditions
 
-| Alert | Condition | Severity |
-|-------|-----------|----------|
-| Critical path blocked | Build RUNNING >15 min with no progress | error |
-| Expected risk materializing | `feasibilityScore < 80` AND build FAILED | warning |
-| Architecture drift | Any `Delivery.contractCheckPassed === false` | error |
-| Cost overrun | Build tokens > 3× estimate | warning |
+| Alert                       | Condition                                    | Severity |
+| --------------------------- | -------------------------------------------- | -------- |
+| Critical path blocked       | Build RUNNING >15 min with no progress       | error    |
+| Expected risk materializing | `feasibilityScore < 80` AND build FAILED     | warning  |
+| Architecture drift          | Any `Delivery.contractCheckPassed === false` | error    |
+| Cost overrun                | Build tokens > 3× estimate                   | warning  |
 
 Alerts appear in the layout `AlertBar` (polls every 30s) and on `/alerts`.
 

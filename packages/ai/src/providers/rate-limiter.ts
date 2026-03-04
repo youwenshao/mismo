@@ -35,8 +35,12 @@ export class ApiRateLimiter {
     this.maxRetries = opts.maxRetries ?? 3
   }
 
-  get pending(): number { return this.queue.length }
-  get activeCount(): number { return this.active }
+  get pending(): number {
+    return this.queue.length
+  }
+  get activeCount(): number {
+    return this.active
+  }
 
   private async acquire(priority = 0): Promise<void> {
     if (this.active < this.maxConcurrent) {
@@ -77,10 +81,7 @@ export class ApiRateLimiter {
         lastError = err
         if (!this.isRetryable(err) || attempt === this.maxRetries) break
 
-        const delay = Math.min(
-          this.backoffBaseMs * Math.pow(2, attempt),
-          this.backoffMaxMs,
-        )
+        const delay = Math.min(this.backoffBaseMs * Math.pow(2, attempt), this.backoffMaxMs)
         await new Promise((r) => setTimeout(r, delay))
       }
     }
@@ -116,7 +117,8 @@ let _instance: ApiRateLimiter | null = null
 
 export function getKimiRateLimiter(): ApiRateLimiter {
   if (!_instance) {
-    const maxConcurrent = parseInt(getEnv('KIMI_MAX_CONCURRENT') || '', 10) || DEFAULT_MAX_CONCURRENT
+    const maxConcurrent =
+      parseInt(getEnv('KIMI_MAX_CONCURRENT') || '', 10) || DEFAULT_MAX_CONCURRENT
     _instance = new ApiRateLimiter({ maxConcurrent })
   }
   return _instance
@@ -131,7 +133,7 @@ export function getKimiRateLimiter(): ApiRateLimiter {
 export function withRateLimit(model: LanguageModel, limiter?: ApiRateLimiter): LanguageModel {
   const rl = limiter ?? getKimiRateLimiter()
 
-  return new Proxy(model, {
+  return new Proxy(model as object, {
     get(target, prop, receiver) {
       const value = Reflect.get(target, prop, receiver)
 
@@ -145,5 +147,5 @@ export function withRateLimit(model: LanguageModel, limiter?: ApiRateLimiter): L
 
       return value.bind(target)
     },
-  })
+  }) as LanguageModel
 }

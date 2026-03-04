@@ -8,7 +8,8 @@ export class FrontendDeveloperAgent implements INodeType {
     icon: 'fa:paint-brush',
     group: ['transform'],
     version: 1,
-    description: 'Generates React components, pages, and typed API client from design DNA and content',
+    description:
+      'Generates React components, pages, and typed API client from design DNA and content',
     defaults: {
       name: 'Frontend Developer Agent',
     },
@@ -58,10 +59,13 @@ export class FrontendDeveloperAgent implements INodeType {
 
       try {
         const designDna = typeof designDnaRaw === 'string' ? JSON.parse(designDnaRaw) : designDnaRaw
-        const contentJson = typeof contentJsonRaw === 'string' ? JSON.parse(contentJsonRaw) : contentJsonRaw
-        const backendTypes = typeof backendTypesRaw === 'string' ? JSON.parse(backendTypesRaw) : backendTypesRaw
+        const contentJson =
+          typeof contentJsonRaw === 'string' ? JSON.parse(contentJsonRaw) : contentJsonRaw
+        const backendTypes =
+          typeof backendTypesRaw === 'string' ? JSON.parse(backendTypesRaw) : backendTypesRaw
 
-        const uri = (process.env.FRONTEND_DEVELOPER_URL || 'http://frontend-developer:3003') + '/generate'
+        const uri =
+          (process.env.FRONTEND_DEVELOPER_URL || 'http://frontend-developer:3032') + '/generate'
 
         const response = await this.helpers.request({
           method: 'POST',

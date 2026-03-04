@@ -8,6 +8,7 @@ export type NotificationEvent =
   | 'SUPPORT_REQUIRED'
   | 'FEEDBACK_REQUEST'
   | 'MAINTENANCE_REPORT'
+  | 'FARM_ALERT'
 
 export interface TemplateData {
   clientName: string
@@ -62,6 +63,7 @@ export type EventDataMap = {
   SUPPORT_REQUIRED: SupportRequiredData
   FEEDBACK_REQUEST: FeedbackRequestData
   MAINTENANCE_REPORT: TemplateData
+  FARM_ALERT: TemplateData
 }
 
 export type AnyEventData = EventDataMap[keyof EventDataMap]
@@ -83,7 +85,7 @@ export const STAGE_LABELS: Record<string, Record<Locale, string>> = {
 }
 
 export function stageToProgress(status: string): number {
-  const idx = BUILD_STAGE_ORDER.indexOf(status as typeof BUILD_STAGE_ORDER[number])
+  const idx = BUILD_STAGE_ORDER.indexOf(status as (typeof BUILD_STAGE_ORDER)[number])
   if (idx === -1) return 0
   return Math.round(((idx + 1) / BUILD_STAGE_ORDER.length) * 100)
 }

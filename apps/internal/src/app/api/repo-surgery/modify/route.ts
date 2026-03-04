@@ -34,25 +34,27 @@ export async function POST(req: NextRequest) {
     }
 
     if (body.operation === 'impact') {
-      const agent = new ImpactAnalysisAgent()
-      const report = await agent.analyze({
-        changeRequest: body.changeRequest,
-        boundaryMap: body.boundaryMap,
-        contracts: body.contracts,
+      const agent = new ImpactAnalysisAgent({
         collectionName: body.collectionName,
         forbiddenFiles: body.forbiddenFiles,
       })
+      const report = await agent.analyze(
+        body.changeRequest,
+        body.boundaryMap as any,
+        body.contracts as any,
+      )
       return NextResponse.json({ impactReport: report })
     }
 
     if (body.operation === 'diff') {
-      const agent = new DiffGenerationAgent()
-      const diffs = await agent.generate({
-        impactReport: body.impactReport,
-        contracts: body.contracts,
-        changeRequest: body.changeRequest,
+      const agent = new DiffGenerationAgent({
         cloneDir: body.cloneDir,
       })
+      const diffs = await agent.generate(
+        body.impactReport as any,
+        body.contracts as any,
+        body.changeRequest,
+      )
       return NextResponse.json({ diffs })
     }
 

@@ -2,7 +2,12 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import * as net from 'net'
 
 export interface BuildStatus {
-  stuckBuilds: Array<{ id: string; commissionId: string; studioAssignment: string | null; createdAt: string }>
+  stuckBuilds: Array<{
+    id: string
+    commissionId: string
+    studioAssignment: string | null
+    createdAt: string
+  }>
   recentFailures: Array<{ commissionId: string; failureCount: number; buildId: string }>
   recentResults: Array<{ id: string; commissionId: string; status: string; updatedAt: string }>
   queueDepth: number
@@ -28,6 +33,9 @@ export class BuildTracker {
   }
 
   private getClient(): SupabaseClient {
+    if (!this.config.supabase.url) {
+      throw new Error('SUPABASE_URL is not configured. Check .env or environment variables.')
+    }
     if (!this.supabase) {
       this.supabase = createClient(this.config.supabase.url, this.config.supabase.serviceRoleKey)
     }
@@ -36,7 +44,7 @@ export class BuildTracker {
 
   private async getRedisQueueDepth(): Promise<number> {
     const redis = this.config.redis
-    if (!redis) return -1
+    if (!redis) return 0
 
     return new Promise((resolve) => {
       const socket = net.createConnection({ host: redis.host, port: redis.port }, () => {
@@ -46,15 +54,17 @@ export class BuildTracker {
       })
 
       let data = ''
-      socket.on('data', (chunk) => { data += chunk.toString() })
+      socket.on('data', (chunk) => {
+        data += chunk.toString()
+      })
       socket.on('end', () => {
         const match = data.match(/:(\d+)/)
         resolve(match ? parseInt(match[1], 10) : 0)
       })
-      socket.on('error', () => resolve(-1))
+      socket.on('error', () => resolve(0))
       socket.setTimeout(5000, () => {
         socket.destroy()
-        resolve(-1)
+        resolve(0)
       })
     })
   }
@@ -62,8 +72,12 @@ export class BuildTracker {
   async collect(): Promise<BuildStatus | null> {
     try {
       const client = this.getClient()
-      const stuckCutoff = new Date(Date.now() - this.config.thresholds.BUILD_STUCK_TIMEOUT_MS).toISOString()
-      const windowCutoff = new Date(Date.now() - this.config.thresholds.SUCCESS_RATE_WINDOW_MS).toISOString()
+      const stuckCutoff = new Date(
+        Date.now() - this.config.thresholds.BUILD_STUCK_TIMEOUT_MS,
+      ).toISOString()
+      const windowCutoff = new Date(
+        Date.now() - this.config.thresholds.SUCCESS_RATE_WINDOW_MS,
+      ).toISOString()
 
       const [stuckResult, failureResult, recentResult, queueDepth] = await Promise.all([
         client
@@ -86,7 +100,7 @@ export class BuildTracker {
 
       return {
         stuckBuilds: stuckResult.data || [],
-        recentFailures: (failureResult.data || []).map(b => ({
+        recentFailures: (failureResult.data || []).map((b) => ({
           commissionId: b.commissionId,
           failureCount: b.failureCount,
           buildId: b.id,

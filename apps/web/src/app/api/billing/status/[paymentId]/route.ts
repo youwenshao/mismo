@@ -3,15 +3,19 @@ import { getPaymentRouter } from '@mismo/payment'
 import { prisma } from '@mismo/db'
 import { getSessionUser } from '@/lib/auth'
 
-export async function GET(request: NextRequest, { params }: { params: { paymentId: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ paymentId: string }> },
+) {
   try {
+    const { paymentId } = await params
     const user = await getSessionUser()
     if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
     const payment = await prisma.payment.findUnique({
-      where: { id: params.paymentId },
+      where: { id: paymentId },
       include: { commission: { select: { id: true, userId: true } } },
     })
 

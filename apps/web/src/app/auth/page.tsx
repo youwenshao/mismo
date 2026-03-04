@@ -47,11 +47,14 @@ export default function AuthPage() {
     setLoading(provider)
     setError(null)
 
+    const searchParams = new URLSearchParams(window.location.search)
+    const next = searchParams.get('next')
+
     const supabase = createClient()
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback${next ? `?next=${encodeURIComponent(next)}` : ''}`,
       },
     })
 

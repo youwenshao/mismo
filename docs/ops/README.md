@@ -11,3 +11,4 @@ This section contains runbooks and guides for managing the Mismo system in produ
 ## Maintenance
 
 - [Maintenance & Initial Setup](./maintenance-and-setup.md) — Recurring maintenance and first-time installation steps.
+- [Data Management & Retention](./data-management.md) — DB pruning, in-memory cleanup, write resilience, and automated retention.

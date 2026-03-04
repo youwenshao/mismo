@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     }
 
     const ingestion = new RepoIngestion()
-    const result = await ingestion.ingest(body.surgeryId, body.repoUrl, body.branch)
+    const result = await ingestion.ingest(body.surgeryId, body.repoUrl, body.branch ?? 'main')
 
     return NextResponse.json(result)
   } catch (err) {

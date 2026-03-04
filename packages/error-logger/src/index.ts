@@ -39,7 +39,9 @@ app.post('/log', async (req: Request, res: Response) => {
       return
     }
 
-    const existingLogs: ErrorEntry[] = Array.isArray(build.errorLogs) ? (build.errorLogs as ErrorEntry[]) : []
+    const existingLogs: ErrorEntry[] = Array.isArray(build.errorLogs)
+      ? (build.errorLogs as unknown as ErrorEntry[])
+      : []
 
     const entry: ErrorEntry = {
       source: source || extractSource(serviceUrl),
@@ -56,7 +58,7 @@ app.post('/log', async (req: Request, res: Response) => {
     await prisma.build.update({
       where: { id: buildId },
       data: {
-        errorLogs: updatedLogs,
+        errorLogs: updatedLogs as any,
         failureCount: newFailureCount,
         ...(circuitBroken && { status: 'FAILED', humanReview: true }),
       },
@@ -75,7 +77,9 @@ app.post('/log-batch', async (req: Request, res: Response) => {
     const { buildId, entries } = req.body
 
     if (!buildId || !Array.isArray(entries) || entries.length === 0) {
-      res.status(400).json({ success: false, error: 'buildId and a non-empty entries array are required' })
+      res
+        .status(400)
+        .json({ success: false, error: 'buildId and a non-empty entries array are required' })
       return
     }
 
@@ -85,7 +89,9 @@ app.post('/log-batch', async (req: Request, res: Response) => {
       return
     }
 
-    const existingLogs: ErrorEntry[] = Array.isArray(build.errorLogs) ? (build.errorLogs as ErrorEntry[]) : []
+    const existingLogs: ErrorEntry[] = Array.isArray(build.errorLogs)
+      ? (build.errorLogs as unknown as ErrorEntry[])
+      : []
 
     const newEntries: ErrorEntry[] = entries.map((e: ErrorEntry) => ({
       source: e.source || 'unknown',
@@ -101,7 +107,7 @@ app.post('/log-batch', async (req: Request, res: Response) => {
     await prisma.build.update({
       where: { id: buildId },
       data: {
-        errorLogs: updatedLogs,
+        errorLogs: updatedLogs as any,
         failureCount: newFailureCount,
         ...(circuitBroken && { status: 'FAILED', humanReview: true }),
       },

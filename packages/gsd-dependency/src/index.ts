@@ -1,7 +1,6 @@
 import express from 'express'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@mismo/db'
 
-const prisma = new PrismaClient()
 const app = express()
 app.use(express.json())
 
@@ -49,9 +48,7 @@ function topologicalSort(agents: AgentTask[]): AgentTask[] {
   for (const agent of agents) {
     for (const dep of agent.dependencies) {
       if (!idSet.has(dep)) {
-        throw new Error(
-          `Agent "${agent.id}" depends on unknown agent "${dep}"`,
-        )
+        throw new Error(`Agent "${agent.id}" depends on unknown agent "${dep}"`)
       }
     }
   }
@@ -90,16 +87,17 @@ function topologicalSort(agents: AgentTask[]): AgentTask[] {
   }
 
   if (sorted.length !== agents.length) {
-    const remaining = agents
-      .filter((a) => !sorted.some((s) => s.id === a.id))
-      .map((a) => a.id)
+    const remaining = agents.filter((a) => !sorted.some((s) => s.id === a.id)).map((a) => a.id)
     throw new CycleError(remaining)
   }
 
   return sorted
 }
 
-const MOBILE_TASK_DEFAULTS: Record<string, { dependencies: string[]; config?: Record<string, unknown> }> = {
+const MOBILE_TASK_DEFAULTS: Record<
+  string,
+  { dependencies: string[]; config?: Record<string, unknown> }
+> = {
   'mobile-scaffold': {
     dependencies: [],
     config: { parallelSafe: true },
@@ -127,22 +125,19 @@ const MOBILE_TASK_DEFAULTS: Record<string, { dependencies: string[]; config?: Re
 function parsePrdToAgents(prd: PrdDecomposition): AgentTask[] {
   const decomposition = prd?.gsd_decomposition
   if (!decomposition?.tasks || !Array.isArray(decomposition.tasks)) {
-    throw new Error(
-      'Invalid PRD: missing gsd_decomposition.tasks array',
-    )
+    throw new Error('Invalid PRD: missing gsd_decomposition.tasks array')
   }
 
   return decomposition.tasks.map((task) => {
     if (!task.id || !task.type) {
-      throw new Error(
-        `Invalid task in PRD: each task requires "id" and "type"`,
-      )
+      throw new Error(`Invalid task in PRD: each task requires "id" and "type"`)
     }
 
     const mobileDefaults = MOBILE_TASK_DEFAULTS[task.type]
-    const dependencies = Array.isArray(task.dependencies) && task.dependencies.length > 0
-      ? task.dependencies
-      : mobileDefaults?.dependencies ?? []
+    const dependencies =
+      Array.isArray(task.dependencies) && task.dependencies.length > 0
+        ? task.dependencies
+        : (mobileDefaults?.dependencies ?? [])
 
     return {
       id: task.id,
@@ -161,7 +156,9 @@ function parseMobilePrdToAgents(prd: PrdDecomposition): AgentTask[] {
   const hasMobileTasks = agents.some((a) => mobileTypes.includes(a.type))
 
   if (!hasMobileTasks) {
-    throw new Error('No mobile task types found in PRD. Expected at least one of: ' + mobileTypes.join(', '))
+    throw new Error(
+      'No mobile task types found in PRD. Expected at least one of: ' + mobileTypes.join(', '),
+    )
   }
 
   return agents
@@ -182,7 +179,10 @@ async function logError(buildId: string | undefined, error: unknown) {
         data: {
           status: 'FAILED',
           failureCount: { increment: 1 },
-          errorLogs: [...(existing as any[]), { source: 'gsd-dependency', error: message, timestamp: new Date().toISOString() }],
+          errorLogs: [
+            ...(existing as any[]),
+            { source: 'gsd-dependency', error: message, timestamp: new Date().toISOString() },
+          ],
         },
       })
     }

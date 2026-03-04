@@ -37,4 +37,4 @@ services:
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
     ports:
-      - "3003:3000"
+      - "3012:3000"

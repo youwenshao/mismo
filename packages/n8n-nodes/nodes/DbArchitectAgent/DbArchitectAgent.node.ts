@@ -27,7 +27,8 @@ export class DbArchitectAgent implements INodeType {
         name: 'dataContracts',
         type: 'json',
         default: '{}',
-        description: 'The PRD architecture.contracts.data describing entities, fields, and relations',
+        description:
+          'The PRD architecture.contracts.data describing entities, fields, and relations',
       },
       {
         displayName: 'Data Boundaries',
@@ -49,10 +50,12 @@ export class DbArchitectAgent implements INodeType {
       const dataBoundariesRaw = this.getNodeParameter('dataBoundaries', i) as string
 
       try {
-        const dataContracts = typeof dataContractsRaw === 'string' ? JSON.parse(dataContractsRaw) : dataContractsRaw
-        const dataBoundaries = typeof dataBoundariesRaw === 'string' ? JSON.parse(dataBoundariesRaw) : dataBoundariesRaw
+        const dataContracts =
+          typeof dataContractsRaw === 'string' ? JSON.parse(dataContractsRaw) : dataContractsRaw
+        const dataBoundaries =
+          typeof dataBoundariesRaw === 'string' ? JSON.parse(dataBoundariesRaw) : dataBoundariesRaw
 
-        const uri = (process.env.DB_ARCHITECT_URL || 'http://db-architect:3001') + '/generate'
+        const uri = (process.env.DB_ARCHITECT_URL || 'http://db-architect:3030') + '/generate'
 
         const response = await this.helpers.request({
           method: 'POST',

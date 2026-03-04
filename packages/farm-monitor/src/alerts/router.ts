@@ -21,10 +21,14 @@ export class AlertRouter {
     private alertConfig: AlertConfig,
     private supabaseConfig: SupabaseConfig,
   ) {
-    this.commsAvailable = !!alertConfig.slackWebhookUrl || !!alertConfig.alertEmail || !!alertConfig.alertPhone
+    this.commsAvailable =
+      !!alertConfig.slackWebhookUrl || !!alertConfig.alertEmail || !!alertConfig.alertPhone
   }
 
   private getClient(): SupabaseClient {
+    if (!this.supabaseConfig.url) {
+      throw new Error('SUPABASE_URL is not configured. Check .env or environment variables.')
+    }
     if (!this.supabase) {
       this.supabase = createClient(this.supabaseConfig.url, this.supabaseConfig.serviceRoleKey)
     }
@@ -66,13 +70,15 @@ export class AlertRouter {
     studio?: string,
   ): Promise<void> {
     try {
-      await this.getClient().from('MonitoringAlert').insert({
-        priority,
-        category,
-        title,
-        details: { message: details },
-        studio: studio || null,
-      })
+      await this.getClient()
+        .from('MonitoringAlert')
+        .insert({
+          priority,
+          category,
+          title,
+          details: { message: details },
+          studio: studio || null,
+        })
     } catch (err) {
       console.error('[alert-router] Failed to write alert to dashboard:', err)
     }
@@ -90,27 +96,29 @@ export class AlertRouter {
       const emoji = priority === 'P0' ? ':rotating_light:' : ':warning:'
       const color = priority === 'P0' ? '#FF0000' : '#FFA500'
       const payload = {
-        attachments: [{
-          color,
-          blocks: [
-            {
-              type: 'header',
-              text: { type: 'plain_text', text: `${emoji} [${priority}] ${title}` },
-            },
-            {
-              type: 'section',
-              fields: [
-                { type: 'mrkdwn', text: `*Category:*\n${category}` },
-                { type: 'mrkdwn', text: `*Studio:*\n${studio || 'N/A'}` },
-                { type: 'mrkdwn', text: `*Time:*\n${timestamp}` },
-              ],
-            },
-            {
-              type: 'section',
-              text: { type: 'mrkdwn', text: details },
-            },
-          ],
-        }],
+        attachments: [
+          {
+            color,
+            blocks: [
+              {
+                type: 'header',
+                text: { type: 'plain_text', text: `${emoji} [${priority}] ${title}` },
+              },
+              {
+                type: 'section',
+                fields: [
+                  { type: 'mrkdwn', text: `*Category:*\n${category}` },
+                  { type: 'mrkdwn', text: `*Studio:*\n${studio || 'N/A'}` },
+                  { type: 'mrkdwn', text: `*Time:*\n${timestamp}` },
+                ],
+              },
+              {
+                type: 'section',
+                text: { type: 'mrkdwn', text: details },
+              },
+            ],
+          },
+        ],
       }
       await fetch(this.alertConfig.slackWebhookUrl, {
         method: 'POST',
@@ -158,7 +166,11 @@ export class AlertRouter {
       if (!sid || !token || !from) return
 
       const body = `[P0] ${title}: ${details}`.slice(0, 1600)
-      const params = new URLSearchParams({ To: this.alertConfig.alertPhone, From: from, Body: body })
+      const params = new URLSearchParams({
+        To: this.alertConfig.alertPhone,
+        From: from,
+        Body: body,
+      })
 
       await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
         method: 'POST',
@@ -182,7 +194,11 @@ export class AlertRouter {
 
       const message = `Priority zero farm alert: ${title}. ${details}`.replace(/[<>&"']/g, '')
       const twiml = `<Response><Say voice="alice" loop="2">${message}</Say></Response>`
-      const params = new URLSearchParams({ To: this.alertConfig.alertPhone, From: from, Twiml: twiml })
+      const params = new URLSearchParams({
+        To: this.alertConfig.alertPhone,
+        From: from,
+        Twiml: twiml,
+      })
 
       await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Calls.json`, {
         method: 'POST',

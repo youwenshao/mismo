@@ -13,8 +13,8 @@ interface FarmConfig {
     WORKER_RESTART_THRESHOLD: number
     WORKER_RESTART_WINDOW_MS: number
   }
-  ssh: { user: string; keyPath: string }
-  studios: Array<{ id: string; host: string; role: string }>
+  ssh: { user: string; keyPath: string; passphrase?: string }
+  studios: Array<{ id: string; host: string; role: string; workerConcurrency: number }>
 }
 
 export class ResourceResponder {
@@ -40,7 +40,13 @@ export class ResourceResponder {
       const duration = now - studioState.ramHighSince
       if (duration >= this.config.thresholds.RAM_WARN_DURATION_MS) {
         if (state.shouldAlert(`ram-high-${studioId}`, 'P1')) {
-          await this.alertRouter.send('P1', 'RESOURCE', `High RAM on ${studioId}`, `RAM at ${metrics.ramPercent}% for ${Math.round(duration / 60_000)}min`, studioId)
+          await this.alertRouter.send(
+            'P1',
+            'RESOURCE',
+            `High RAM on ${studioId}`,
+            `RAM at ${metrics.ramPercent}% for ${Math.round(duration / 60_000)}min`,
+            studioId,
+          )
           state.recordAlert(`ram-high-${studioId}`, 'P1')
           await this.reduceWorkerConcurrency(studioId)
         }
@@ -51,7 +57,13 @@ export class ResourceResponder {
 
     if (metrics.diskPercent > this.config.thresholds.DISK_CRITICAL_PERCENT) {
       if (state.shouldAlert(`disk-high-${studioId}`, 'P1')) {
-        await this.alertRouter.send('P1', 'RESOURCE', `Disk critical on ${studioId}`, `Disk at ${metrics.diskPercent}%. Running docker prune.`, studioId)
+        await this.alertRouter.send(
+          'P1',
+          'RESOURCE',
+          `Disk critical on ${studioId}`,
+          `Disk at ${metrics.diskPercent}%. Running docker prune.`,
+          studioId,
+        )
         state.recordAlert(`disk-high-${studioId}`, 'P1')
         await this.dockerPrune(studioId)
       }
@@ -62,7 +74,13 @@ export class ResourceResponder {
       const duration = now - studioState.cpuHighSince
       if (duration >= this.config.thresholds.CPU_CRITICAL_DURATION_MS) {
         if (state.shouldAlert(`cpu-high-${studioId}`, 'P0')) {
-          await this.alertRouter.send('P0', 'RESOURCE', `Sustained high CPU on ${studioId}`, `CPU at ${metrics.cpuPercent}% for ${Math.round(duration / 60_000)}min. Killing hung builds.`, studioId)
+          await this.alertRouter.send(
+            'P0',
+            'RESOURCE',
+            `Sustained high CPU on ${studioId}`,
+            `CPU at ${metrics.cpuPercent}% for ${Math.round(duration / 60_000)}min. Killing hung builds.`,
+            studioId,
+          )
           state.recordAlert(`cpu-high-${studioId}`, 'P0')
           await this.killHungBuilds(studioId)
         }
@@ -72,12 +90,22 @@ export class ResourceResponder {
     }
 
     const cutoff = now - this.config.thresholds.WORKER_RESTART_WINDOW_MS
-    studioState.workerRestarts = studioState.workerRestarts.filter(t => t > cutoff)
-    if (!metrics.n8nWorkerRunning) {
+    studioState.workerRestarts = studioState.workerRestarts.filter((t) => t > cutoff)
+
+    const studio = this.config.studios.find((s) => s.id === studioId)
+    const hasWorker = studio && studio.workerConcurrency > 0
+
+    if (hasWorker && !metrics.n8nWorkerRunning) {
       studioState.workerRestarts.push(now)
       if (studioState.workerRestarts.length >= this.config.thresholds.WORKER_RESTART_THRESHOLD) {
         if (state.shouldAlert(`worker-crash-loop-${studioId}`, 'P0')) {
-          await this.alertRouter.send('P0', 'RESOURCE', `n8n worker crash loop on ${studioId}`, `Worker restarted ${studioState.workerRestarts.length} times in ${Math.round(this.config.thresholds.WORKER_RESTART_WINDOW_MS / 60_000)}min`, studioId)
+          await this.alertRouter.send(
+            'P0',
+            'RESOURCE',
+            `n8n worker crash loop on ${studioId}`,
+            `Worker restarted ${studioState.workerRestarts.length} times in ${Math.round(this.config.thresholds.WORKER_RESTART_WINDOW_MS / 60_000)}min`,
+            studioId,
+          )
           state.recordAlert(`worker-crash-loop-${studioId}`, 'P0')
         }
       } else {
@@ -87,7 +115,7 @@ export class ResourceResponder {
   }
 
   private getStudioHost(studioId: string): string {
-    return this.config.studios.find(s => s.id === studioId)?.host || studioId
+    return this.config.studios.find((s) => s.id === studioId)?.host || studioId
   }
 
   private async sshExec(studioId: string, command: string): Promise<string> {
@@ -97,7 +125,8 @@ export class ResourceResponder {
         host: this.getStudioHost(studioId),
         username: this.config.ssh.user,
         privateKeyPath: this.config.ssh.keyPath,
-        readyTimeout: 10_000,
+        passphrase: this.config.ssh.passphrase,
+        readyTimeout: 30_000,
       })
       const result = await ssh.execCommand(command)
       return result.stdout
@@ -109,8 +138,9 @@ export class ResourceResponder {
   private async reduceWorkerConcurrency(studioId: string): Promise<void> {
     try {
       console.log(`[resource-responder] Reducing worker concurrency on ${studioId}`)
-      await this.sshExec(studioId,
-        'cd /opt/mismo && docker compose -f docker/n8n-ha/docker-compose.worker.yml down && QUEUE_BULL_CONCURRENCY=10 docker compose -f docker/n8n-ha/docker-compose.worker.yml up -d'
+      await this.sshExec(
+        studioId,
+        'cd /opt/mismo && docker compose -f docker/n8n-ha/docker-compose.worker.yml down && QUEUE_BULL_CONCURRENCY=10 docker compose -f docker/n8n-ha/docker-compose.worker.yml up -d',
       )
     } catch (err) {
       console.error(`[resource-responder] Failed to reduce concurrency on ${studioId}:`, err)
@@ -129,8 +159,9 @@ export class ResourceResponder {
   private async killHungBuilds(studioId: string): Promise<void> {
     try {
       console.log(`[resource-responder] Killing hung builds on ${studioId}`)
-      await this.sshExec(studioId,
-        "docker ps --filter status=running --format '{{.ID}} {{.RunningFor}}' | while read cid rf; do echo \"$rf\" | grep -qE '([2-9]|[0-9]{2,}) hours|About an hour' && docker kill \"$cid\"; done"
+      await this.sshExec(
+        studioId,
+        'docker ps --filter status=running --format \'{{.ID}} {{.RunningFor}}\' | while read cid rf; do echo "$rf" | grep -qE \'([2-9]|[0-9]{2,}) hours|About an hour\' && docker kill "$cid"; done',
       )
     } catch (err) {
       console.error(`[resource-responder] Failed to kill hung builds on ${studioId}:`, err)
@@ -140,8 +171,9 @@ export class ResourceResponder {
   private async restartWorker(studioId: string): Promise<void> {
     try {
       console.log(`[resource-responder] Restarting n8n worker on ${studioId}`)
-      await this.sshExec(studioId,
-        'cd /opt/mismo && docker compose -f docker/n8n-ha/docker-compose.worker.yml up -d'
+      await this.sshExec(
+        studioId,
+        'cd /opt/mismo && docker compose -f docker/n8n-ha/docker-compose.worker.yml up -d',
       )
     } catch (err) {
       console.error(`[resource-responder] Failed to restart worker on ${studioId}:`, err)

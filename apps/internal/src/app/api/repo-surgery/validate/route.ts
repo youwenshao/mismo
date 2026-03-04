@@ -20,14 +20,14 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const gates = new ValidationGates(body.cloneDir)
+    const gates = new ValidationGates({ cloneDir: body.cloneDir })
 
     if (typeof body.gate === 'number') {
-      const result = await gates.runGate(body.gate, body.diffs, body.contracts)
+      const result = await gates.runGate(body.gate, body.diffs as any, body.contracts as any)
       return NextResponse.json(result)
     }
 
-    const result = await gates.runAll(body.diffs, body.contracts)
+    const result = await gates.runAll(body.diffs as any, body.contracts as any)
     return NextResponse.json(result)
   } catch (err) {
     console.error('[repo-surgery/validate] Validation failed:', err)

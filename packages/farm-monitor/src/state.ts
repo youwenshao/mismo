@@ -21,9 +21,14 @@ export interface ApiState {
   activeProvider: string
 }
 
+export interface CommissionFailure {
+  count: number
+  lastSeen: number
+}
+
 export interface BuildState {
   recentResults: Array<{ commissionId: string; success: boolean; timestamp: number }>
-  commissionFailures: Map<string, number>
+  commissionFailures: Map<string, CommissionFailure>
   queueDepthHighSince: number | null
 }
 
@@ -79,13 +84,53 @@ export class MonitorState {
 
   pruneOldBuildResults(windowMs: number): void {
     const cutoff = Date.now() - windowMs
-    this.builds.recentResults = this.builds.recentResults.filter(r => r.timestamp > cutoff)
+    this.builds.recentResults = this.builds.recentResults.filter((r) => r.timestamp > cutoff)
   }
 
   getSuccessRate(): number {
     const results = this.builds.recentResults
     if (results.length === 0) return 1
-    const successes = results.filter(r => r.success).length
+    const successes = results.filter((r) => r.success).length
     return successes / results.length
+  }
+
+  pruneSentAlerts(): number {
+    const now = Date.now()
+    let pruned = 0
+    for (const [key, alert] of this.sentAlerts) {
+      if (now - alert.sentAt > this.alertCooldownMs[alert.priority] * 2) {
+        this.sentAlerts.delete(key)
+        pruned++
+      }
+    }
+    return pruned
+  }
+
+  pruneCommissionFailures(maxAgeMs: number): number {
+    const cutoff = Date.now() - maxAgeMs
+    let pruned = 0
+    for (const [key, failure] of this.builds.commissionFailures) {
+      if (failure.lastSeen < cutoff) {
+        this.builds.commissionFailures.delete(key)
+        pruned++
+      }
+    }
+    return pruned
+  }
+
+  recordCommissionFailure(commissionId: string): void {
+    const existing = this.builds.commissionFailures.get(commissionId)
+    this.builds.commissionFailures.set(commissionId, {
+      count: (existing?.count ?? 0) + 1,
+      lastSeen: Date.now(),
+    })
+  }
+
+  getCommissionFailureCount(commissionId: string): number {
+    return this.builds.commissionFailures.get(commissionId)?.count ?? 0
+  }
+
+  sentAlertsCount(): number {
+    return this.sentAlerts.size
   }
 }

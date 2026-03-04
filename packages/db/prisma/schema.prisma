@@ -8,81 +8,40 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-enum Role {
-  CLIENT
-  ENGINEER
-  ADMIN
-}
-
-enum AgeTier {
-  MINOR
-  ADULT
-}
-
-enum ProjectStatus {
-  DISCOVERY
-  REVIEW
-  CONTRACTED
-  DEVELOPMENT
-  VERIFICATION
-  DELIVERED
-  CANCELLED
-}
-
-enum ServiceTier {
-  VIBE
-  VERIFIED
-  FOUNDRY
-}
-
-enum SafetyTier {
-  GREEN
-  YELLOW
-  RED
-}
-
-enum ArchTemplate {
-  SERVERLESS_SAAS
-  MONOLITHIC_MVP
-  MICROSERVICES_SCALE
-}
-
 model User {
-  id                     String   @id @default(cuid())
-  supabaseAuthId         String   @unique
-  role                   Role     @default(CLIENT)
-  hasCompletedOnboarding Boolean  @default(false)
+  id                     String             @id @default(cuid())
+  supabaseAuthId         String             @unique
+  role                   Role               @default(CLIENT)
+  hasCompletedOnboarding Boolean            @default(false)
   stripeCustomerId       String?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-
-  projects          Project[]
-  commissions       Commission[]
-  interviewSessions InterviewSession[]
-  prdComments       PRDComment[]
-  reviewTasks       ReviewTask[]       @relation("AssignedEngineer")
-  grants            UserGrant[]        @relation("GrantRecipient")
-  grantedGrants     UserGrant[]        @relation("GrantedBy")
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  commissions            Commission[]
+  interviewSessions      InterviewSession[]
+  prdComments            PRDComment[]
+  projects               Project[]
+  reviewTasks            ReviewTask[]       @relation("AssignedEngineer")
+  grantedGrants          UserGrant[]        @relation("GrantedBy")
+  grants                 UserGrant[]        @relation("GrantRecipient")
 }
 
 model Project {
-  id             String        @id @default(cuid())
-  name           String
-  status         ProjectStatus @default(DISCOVERY)
-  tier           ServiceTier
-  safetyScore    SafetyTier    @default(GREEN)
-  userId         String
-  assignedEngId  String?
-  contractSigned Boolean       @default(false)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-
-  user              User               @relation(fields: [userId], references: [id])
-  prd               PRD?
-  interviewSessions InterviewSession[]
-  contracts         Contract[]
-  reviewTasks       ReviewTask[]
+  id                String             @id @default(cuid())
+  name              String
+  status            ProjectStatus      @default(DISCOVERY)
+  tier              ServiceTier
+  safetyScore       SafetyTier         @default(GREEN)
+  userId            String
+  assignedEngId     String?
+  contractSigned    Boolean            @default(false)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
   buildLogs         BuildLog[]
+  contracts         Contract[]
+  interviewSessions InterviewSession[]
+  prd               PRD?
+  user              User               @relation(fields: [userId], references: [id])
+  reviewTasks       ReviewTask[]
   tokenUsages       TokenUsage[]
 }
 
@@ -98,9 +57,8 @@ model PRD {
   lockedAt       DateTime?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
-
-  project  Project      @relation(fields: [projectId], references: [id])
-  comments PRDComment[]
+  project        Project      @relation(fields: [projectId], references: [id])
+  comments       PRDComment[]
 }
 
 model PRDComment {
@@ -112,9 +70,8 @@ model PRDComment {
   resolved  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  prd  PRD  @relation(fields: [prdId], references: [id])
-  user User @relation(fields: [userId], references: [id])
+  prd       PRD      @relation(fields: [prdId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model InterviewSession {
@@ -126,9 +83,8 @@ model InterviewSession {
   startedAt   DateTime  @default(now())
   completedAt DateTime?
   expiresAt   DateTime
-
-  user    User     @relation(fields: [userId], references: [id])
-  project Project? @relation(fields: [projectId], references: [id])
+  project     Project?  @relation(fields: [projectId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
 }
 
 model Contract {
@@ -143,8 +99,7 @@ model Contract {
   aupAcknowledged Boolean   @default(false)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
-
-  project Project @relation(fields: [projectId], references: [id])
+  project         Project   @relation(fields: [projectId], references: [id])
 }
 
 model ReviewTask {
@@ -159,9 +114,8 @@ model ReviewTask {
   completedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-
-  project  Project @relation(fields: [projectId], references: [id])
-  engineer User?   @relation("AssignedEngineer", fields: [engineerId], references: [id])
+  engineer    User?     @relation("AssignedEngineer", fields: [engineerId], references: [id])
+  project     Project   @relation(fields: [projectId], references: [id])
 }
 
 model SystemConfig {
@@ -179,8 +133,7 @@ model BuildLog {
   status    String
   output    String
   createdAt DateTime @default(now())
-
-  project Project @relation(fields: [projectId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id])
 }
 
 model TokenUsage {
@@ -191,176 +144,93 @@ model TokenUsage {
   cost      Float
   agent     String
   createdAt DateTime @default(now())
-
-  project Project @relation(fields: [projectId], references: [id])
-}
-
-enum CommissionStatus {
-  DRAFT
-  DISCOVERY
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-  ESCALATED
-}
-
-enum NotificationChannel {
-  EMAIL
-  SLACK
-  SMS
-  PHONE
-}
-
-enum NotificationEvent {
-  BUILD_STARTED
-  BUILD_PROGRESS
-  BUILD_COMPLETE
-  TRANSFER_READY
-  SUPPORT_REQUIRED
-  FEEDBACK_REQUEST
-  MAINTENANCE_REPORT
-  FARM_ALERT
-}
-
-enum PaymentState {
-  UNPAID
-  PARTIAL
-  FINAL
-}
-
-enum AgentType {
-  DATABASE
-  BACKEND
-  FRONTEND
-  DEVOPS
-  QA
-  COORDINATOR
-}
-
-// ============ PAYMENT GATEWAY ENUMS ============
-
-enum PaymentGateway {
-  STRIPE
-  PAYMENTASIA
-}
-
-enum PaymentMethod {
-  CARD
-  FPS
-  ALIPAYHK
-  WECHATPAY
-  PAYME
-  OCTOPUS
-}
-
-enum PaymentStatus {
-  PENDING
-  COMPLETED
-  FAILED
-  REFUNDED
+  project   Project  @relation(fields: [projectId], references: [id])
 }
 
 model ProjectArchetype {
   id          String       @id @default(cuid())
-  slug        String       @unique // e.g., 'landing_page', 'saas_mvp'
+  slug        String       @unique
   name        String
   description String?
-  metadata    Json?        @default("{}") // Agent-extensible metadata
+  metadata    Json?        @default("{}")
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-  DesignDNA   DesignDNA[]
   Commission  Commission[]
+  DesignDNA   DesignDNA[]
 }
 
 model Commission {
-  id               String           @id @default(cuid())
+  id               String            @id @default(cuid())
   clientEmail      String
-  status           CommissionStatus @default(DRAFT)
+  status           CommissionStatus  @default(DRAFT)
   prdJson          Json?
   archetypeId      String?
-  paymentState     PaymentState     @default(UNPAID)
-  stripeCustomerId String?          // Kept for backward compatibility
-  userId           String // Link to auth user for RLS
+  paymentState     PaymentState      @default(UNPAID)
+  stripeCustomerId String?
+  userId           String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
   feasibilityScore Float?
   riskAssessment   Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user        User              @relation(fields: [userId], references: [id])
-  archetype   ProjectArchetype? @relation(fields: [archetypeId], references: [id])
-  builds            Build[]
-  credentials       Credential[]
-  repoSurgeries     RepoSurgery[]
-  deliveries        Delivery[]
-  hostingTransfers  HostingTransfer[]
-  clientPreference  ClientPreference?
-  notifications     Notification[]
-  feedbacks         Feedback[]
-  maintenancePlan   MaintenancePlan?
-  payments          Payment[]         // New unified payment records
+  builds           Build[]
+  clientPreference ClientPreference?
+  archetype        ProjectArchetype? @relation(fields: [archetypeId], references: [id])
+  user             User              @relation(fields: [userId], references: [id])
+  credentials      Credential[]
+  deliveries       Delivery[]
+  feedbacks        Feedback[]
+  hostingTransfers HostingTransfer[]
+  maintenancePlan  MaintenancePlan?
+  notifications    Notification[]
+  payments         Payment[]
+  repoSurgeries    RepoSurgery[]
 }
 
 model Build {
-  id               String  @id @default(cuid())
+  id               String            @id @default(cuid())
   commissionId     String
-  executionIds     Json    @default("[]") // JSON array for swarm
-  studioAssignment String? // which Mac handled it
-  kimiqTokensUsed  Int     @default(0)
+  executionIds     Json              @default("[]")
+  studioAssignment String?
+  kimiqTokensUsed  Int               @default(0)
   githubUrl        String?
   vercelUrl        String?
-  status           String  @default("PENDING") // PENDING, RUNNING, FAILED, SUCCESS
+  status           String            @default("PENDING")
   errorLogs        Json?
-  failureCount     Int     @default(0) // Track failures for trigger
-  humanReview      Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  failureCount     Int               @default(0)
+  humanReview      Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
   commission       Commission        @relation(fields: [commissionId], references: [id])
   deliveries       Delivery[]
-  hostingTransfers HostingTransfer[]
   deliveryPackage  DeliveryPackage?
+  hostingTransfers HostingTransfer[]
 }
 
 model Agent {
   id             String    @id @default(cuid())
   type           AgentType
   currentLoad    Int       @default(0)
-  studioLocation String // studio-1/2/3
+  studioLocation String
   lastHeartbeat  DateTime  @default(now())
   status         String    @default("ACTIVE")
 }
 
 model DesignDNA {
-  id                  String   @id @default(cuid())
+  id                  String           @id @default(cuid())
   archetypeId         String
-  tokens              Json     @default("{}") // JSON for tokens
-  forbiddenPatterns   String[] // Array of forbidden pattern strings
-  componentReferences String[] // URLs to approved components
-
-  archetype ProjectArchetype @relation(fields: [archetypeId], references: [id])
-}
-
-enum RepoSurgeryStatus {
-  INGESTING
-  VECTORIZING
-  ANALYZING
-  MODIFYING
-  VALIDATING
-  REVIEWING
-  COMPLETED
-  FAILED
-  HALTED
+  tokens              Json             @default("{}")
+  forbiddenPatterns   String[]
+  componentReferences String[]
+  archetype           ProjectArchetype @relation(fields: [archetypeId], references: [id])
 }
 
 model RepoSurgery {
-  id               String             @id @default(cuid())
+  id               String            @id @default(cuid())
   commissionId     String?
   repoUrl          String
-  branch           String             @default("main")
+  branch           String            @default("main")
   surgeryBranch    String?
-  status           RepoSurgeryStatus  @default(INGESTING)
+  status           RepoSurgeryStatus @default(INGESTING)
   changeRequest    String
   boundaryMap      Json?
   contracts        Json?
@@ -371,133 +241,82 @@ model RepoSurgery {
   cloneDir         String?
   qdrantCollection String?
   errorLogs        Json?
-  failureCount     Int                @default(0)
-  humanReview      Boolean            @default(false)
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-
-  commission Commission? @relation(fields: [commissionId], references: [id])
-}
-
-enum TransferStatus {
-  PENDING_PAYMENT
-  PAYMENT_CONFIRMED
-  DEPLOYING
-  DEPLOYED
-  TRANSFERRING
-  COMPLETED
-  FAILED
-  MONITORING
-}
-
-enum HostingProvider {
-  VERCEL
-  RAILWAY
-  RENDER
-  AWS
-  GCP
-  SELF_HOSTED
+  failureCount     Int               @default(0)
+  humanReview      Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  commission       Commission?       @relation(fields: [commissionId], references: [id])
 }
 
 model HostingTransfer {
-  id                     String          @id @default(cuid())
-  commissionId           String
-  buildId                String?
-  provider               HostingProvider
-  status                 TransferStatus  @default(PENDING_PAYMENT)
-
-  stripePaymentIntentId  String?         @unique  // DEPRECATED: Use paymentId instead
-  paymentConfirmedAt     DateTime?
-
-  deploymentUrl          String?
-  deploymentConfig       Json?
-  deploymentOutput       Json?
-
-  clientAccountId        String?
-  clientCredentials      Json?
-  credentialNonce        String?
-  credentialKeyId        String?
-  transferOutput         Json?
-
-  monitoringEnabled      Boolean         @default(false)
-  monitoringUntil        DateTime?
-  lastHealthCheck        DateTime?
-  healthStatus           Json?
-
-  errorLogs              Json?
-  failureCount           Int             @default(0)
-  retryCount             Int             @default(0)
-
-  idempotencyKey         String?         @unique
-
-  // New unified payment reference
-  paymentId              String?
-  payment                Payment?        @relation(fields: [paymentId], references: [id])
-
-  createdAt              DateTime        @default(now())
-  updatedAt              DateTime        @updatedAt
-
-  commission             Commission      @relation(fields: [commissionId], references: [id])
-  build                  Build?          @relation(fields: [buildId], references: [id])
+  id                    String          @id @default(cuid())
+  commissionId          String
+  buildId               String?
+  provider              HostingProvider
+  status                TransferStatus  @default(PENDING_PAYMENT)
+  stripePaymentIntentId String?         @unique
+  paymentConfirmedAt    DateTime?
+  deploymentUrl         String?
+  deploymentConfig      Json?
+  deploymentOutput      Json?
+  clientAccountId       String?
+  clientCredentials     Json?
+  credentialNonce       String?
+  credentialKeyId       String?
+  transferOutput        Json?
+  monitoringEnabled     Boolean         @default(false)
+  monitoringUntil       DateTime?
+  lastHealthCheck       DateTime?
+  healthStatus          Json?
+  errorLogs             Json?
+  failureCount          Int             @default(0)
+  retryCount            Int             @default(0)
+  idempotencyKey        String?         @unique
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  paymentId             String?
+  build                 Build?          @relation(fields: [buildId], references: [id])
+  commission            Commission      @relation(fields: [commissionId], references: [id])
+  payment               Payment?        @relation(fields: [paymentId], references: [id])
 
   @@index([paymentId])
 }
 
-// ============ USER GRANTS (Admin-issued free trials) ============
-
-enum GrantType {
-  UNLIMITED_7DAY
-  FREE_SOURCE
-  FREE_SOURCE_OR_DEPLOY
-}
-
 model UserGrant {
-  id        String    @id @default(cuid())
-  userId    String
-  grantType GrantType
-  usedAt    DateTime?
-  expiresAt DateTime?
-  grantedBy String
-  createdAt DateTime  @default(now())
-
-  user          User @relation("GrantRecipient", fields: [userId], references: [id])
-  grantedByUser User @relation("GrantedBy", fields: [grantedBy], references: [id])
+  id            String    @id @default(cuid())
+  userId        String
+  grantType     GrantType
+  usedAt        DateTime?
+  expiresAt     DateTime?
+  grantedBy     String
+  createdAt     DateTime  @default(now())
+  grantedByUser User      @relation("GrantedBy", fields: [grantedBy], references: [id])
+  user          User      @relation("GrantRecipient", fields: [userId], references: [id])
 
   @@index([userId, usedAt])
   @@index([grantedBy])
 }
 
-// ============ UNIFIED PAYMENT MODEL ============
-
 model Payment {
-  id            String        @id @default(cuid())
-  transactionId String
-  gateway       PaymentGateway
-  method        PaymentMethod
-  amount        Int           // in smallest currency unit (cents)
-  currency      String        @default("HKD")
-  status        PaymentStatus @default(PENDING)
-  description   String?
-  metadata      Json          @default("{}")
-  
-  // Relations
-  commissionId  String?
-  commission    Commission?   @relation(fields: [commissionId], references: [id])
-  
-  // Hosting transfers that use this payment
+  id               String            @id @default(cuid())
+  transactionId    String
+  gateway          PaymentGateway
+  method           PaymentMethod
+  amount           Int
+  currency         String            @default("HKD")
+  status           PaymentStatus     @default(PENDING)
+  description      String?
+  metadata         Json              @default("{}")
+  commissionId     String?
+  completedAt      DateTime?
+  failedAt         DateTime?
+  refundedAt       DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
   hostingTransfers HostingTransfer[]
-  
-  // Timestamps
-  completedAt   DateTime?
-  failedAt      DateTime?
-  refundedAt    DateTime?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  commission       Commission?       @relation(fields: [commissionId], references: [id])
 
-  // Unique constraint: transactionId + gateway
   @@unique([transactionId, gateway])
-  
-  // Indexes
   @@index([commissionId])
   @@index([status])
   @@index([gateway])
@@ -549,43 +368,28 @@ model Feedback {
 }
 
 model MaintenancePlan {
-  id              String    @id @default(cuid())
-  commissionId    String    @unique
+  id              String     @id @default(cuid())
+  commissionId    String     @unique
   githubUrl       String
   lastCheckAt     DateTime?
   nextCheckAt     DateTime?
   dependencyState Json?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
   commission      Commission @relation(fields: [commissionId], references: [id])
 }
 
 model Credential {
-  id              String    @id @default(cuid())
+  id              String     @id @default(cuid())
   commissionId    String
-  service         String // github/vercel/stripe
-  encryptedTokens String // Will be encrypted via pgsodium
-  nonce           String? // For pgsodium if needed by implementation
-  keyId           String? // References pgsodium key
+  service         String
+  encryptedTokens String
+  nonce           String?
+  keyId           String?
   rotationDate    DateTime?
-
-  commission Commission @relation(fields: [commissionId], references: [id])
+  commission      Commission @relation(fields: [commissionId], references: [id])
 
   @@unique([commissionId, service])
-}
-
-enum AlertPriority {
-  P0
-  P1
-  P2
-}
-
-enum AlertCategory {
-  RESOURCE
-  API
-  BUILD
-  SECURITY
-  BACKUP
 }
 
 model MonitoringAlert {
@@ -613,10 +417,10 @@ model StudioMetrics {
   networkIn          Float
   networkOut         Float
   queueDepth         Int      @default(0)
-  containerCount     Int      @default(0)
-  workerRunning      Boolean  @default(false)
-  workerRestartCount Int      @default(0)
   createdAt          DateTime @default(now())
+  containerCount     Int      @default(0)
+  workerRestartCount Int      @default(0)
+  workerRunning      Boolean  @default(false)
 
   @@index([studioId, createdAt])
 }
@@ -645,6 +449,185 @@ model AuditLog {
   @@index([createdAt])
 }
 
+model Delivery {
+  id                   String         @id @default(cuid())
+  commissionId         String
+  buildId              String
+  repoName             String
+  githubOrg            String
+  clientGithubUsername String?
+  clientGithubOrg      String?
+  status               DeliveryStatus @default(VALIDATING)
+  repoUrl              String?
+  transferredRepoUrl   String?
+  inviteId             Int?
+  inviteRetryCount     Int            @default(0)
+  secretScanPassed     Boolean        @default(false)
+  bmadChecksPassed     Boolean        @default(false)
+  contractCheckPassed  Boolean        @default(false)
+  deliverables         Json?
+  auditLog             Json           @default("[]")
+  errorMessage         String?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  build                Build          @relation(fields: [buildId], references: [id])
+  commission           Commission     @relation(fields: [commissionId], references: [id])
+}
+
+enum Role {
+  CLIENT
+  ENGINEER
+  ADMIN
+}
+
+enum AgeTier {
+  MINOR
+  ADULT
+}
+
+enum ProjectStatus {
+  DISCOVERY
+  REVIEW
+  CONTRACTED
+  DEVELOPMENT
+  VERIFICATION
+  DELIVERED
+  CANCELLED
+}
+
+enum ServiceTier {
+  VIBE
+  VERIFIED
+  FOUNDRY
+}
+
+enum SafetyTier {
+  GREEN
+  YELLOW
+  RED
+}
+
+enum ArchTemplate {
+  SERVERLESS_SAAS
+  MONOLITHIC_MVP
+  MICROSERVICES_SCALE
+}
+
+enum CommissionStatus {
+  DRAFT
+  DISCOVERY
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  ESCALATED
+}
+
+enum NotificationChannel {
+  EMAIL
+  SLACK
+  SMS
+  PHONE
+}
+
+enum NotificationEvent {
+  BUILD_STARTED
+  BUILD_PROGRESS
+  BUILD_COMPLETE
+  TRANSFER_READY
+  SUPPORT_REQUIRED
+  FEEDBACK_REQUEST
+  MAINTENANCE_REPORT
+  FARM_ALERT
+}
+
+enum PaymentState {
+  UNPAID
+  PARTIAL
+  FINAL
+}
+
+enum AgentType {
+  DATABASE
+  BACKEND
+  FRONTEND
+  DEVOPS
+  QA
+  COORDINATOR
+}
+
+enum PaymentGateway {
+  STRIPE
+  PAYMENTASIA
+}
+
+enum PaymentMethod {
+  CARD
+  FPS
+  ALIPAYHK
+  WECHATPAY
+  PAYME
+  OCTOPUS
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum RepoSurgeryStatus {
+  INGESTING
+  VECTORIZING
+  ANALYZING
+  MODIFYING
+  VALIDATING
+  REVIEWING
+  COMPLETED
+  FAILED
+  HALTED
+}
+
+enum TransferStatus {
+  PENDING_PAYMENT
+  PAYMENT_CONFIRMED
+  DEPLOYING
+  DEPLOYED
+  TRANSFERRING
+  COMPLETED
+  FAILED
+  MONITORING
+}
+
+enum HostingProvider {
+  VERCEL
+  RAILWAY
+  RENDER
+  AWS
+  GCP
+  SELF_HOSTED
+}
+
+enum GrantType {
+  UNLIMITED_7DAY
+  FREE_SOURCE
+  FREE_SOURCE_OR_DEPLOY
+}
+
+enum AlertPriority {
+  P0
+  P1
+  P2
+}
+
+enum AlertCategory {
+  RESOURCE
+  API
+  BUILD
+  SECURITY
+  BACKUP
+}
+
 enum DeliveryStatus {
   VALIDATING
   CREATING_REPO
@@ -655,30 +638,4 @@ enum DeliveryStatus {
   COMPLETED
   FAILED
   ROLLBACK
-}
-
-model Delivery {
-  id                  String         @id @default(cuid())
-  commissionId        String
-  buildId             String
-  repoName            String
-  githubOrg           String
-  clientGithubUsername String?
-  clientGithubOrg     String?
-  status              DeliveryStatus @default(VALIDATING)
-  repoUrl             String?
-  transferredRepoUrl  String?
-  inviteId            Int?
-  inviteRetryCount    Int            @default(0)
-  secretScanPassed    Boolean        @default(false)
-  bmadChecksPassed    Boolean        @default(false)
-  contractCheckPassed Boolean        @default(false)
-  deliverables        Json?
-  auditLog            Json           @default("[]")
-  errorMessage        String?
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
-
-  commission Commission @relation(fields: [commissionId], references: [id])
-  build      Build      @relation(fields: [buildId], references: [id])
 }

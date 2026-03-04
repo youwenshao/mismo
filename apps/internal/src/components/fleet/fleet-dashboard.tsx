@@ -160,11 +160,18 @@ function mergeQueueHistory(
     const key = studioKeys[studioId]
     if (!key) continue
     for (const point of points) {
-      const timeKey = point.timestamp.slice(11, 16)
+      const date = new Date(point.timestamp)
+      const timeKey = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Hong_Kong',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }).format(date)
+
       if (!timeMap.has(timeKey)) {
         timeMap.set(timeKey, { studio1: 0, studio2: 0, studio3: 0 })
       }
-      timeMap.get(timeKey)![key] = point.queueDepth
+      timeMap.get(timeKey)![key] = Math.max(0, point.queueDepth)
     }
   }
 

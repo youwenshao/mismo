@@ -12,7 +12,7 @@ export function FleetOverviewHeader({ studios, alertCounts }: FleetOverviewHeade
     studios.reduce((sum, s) => sum + (s.metrics?.cpuPercent || 0), 0) / (studios.length || 1)
   const totalRam =
     studios.reduce((sum, s) => sum + (s.metrics?.ramPercent || 0), 0) / (studios.length || 1)
-  const totalQueue = studios.reduce((sum, s) => sum + (s.metrics?.queueDepth || 0), 0)
+  const totalQueue = Math.max(0, ...studios.map((s) => s.metrics?.queueDepth ?? 0))
   const totalBuilds = studios.reduce((sum, s) => sum + s.activeBuilds.length, 0)
   const onlineCount = studios.filter((s) => s.online).length
 

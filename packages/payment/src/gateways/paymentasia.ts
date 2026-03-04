@@ -85,7 +85,7 @@ export class PaymentAsiaGateway implements PaymentGatewayAdapter {
       throw new Error(`PaymentAsia API error: ${response.status} - ${error}`)
     }
 
-    const data: PaymentAsiaPaymentResponse = await response.json()
+    const data = (await response.json()) as PaymentAsiaPaymentResponse
 
     if (data.error_code) {
       throw new Error(`PaymentAsia error: ${data.error_code} - ${data.error_message}`)
@@ -137,7 +137,7 @@ export class PaymentAsiaGateway implements PaymentGatewayAdapter {
       throw new Error(`Failed to get payment status: ${response.status}`)
     }
 
-    const data: PaymentAsiaPaymentResponse = await response.json()
+    const data = (await response.json()) as PaymentAsiaPaymentResponse
 
     switch (data.status) {
       case 'completed':
@@ -171,7 +171,7 @@ export class PaymentAsiaGateway implements PaymentGatewayAdapter {
         return { success: false, amount: amount || 0, error }
       }
 
-      const data = await response.json()
+      const data = (await response.json()) as any
 
       return {
         success: data.status === 'refunded' || data.status === 'pending',

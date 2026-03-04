@@ -5,8 +5,8 @@ import type { AlertRouter } from '../alerts/router'
 import type { BuildStatus } from '../collectors/build-tracker'
 
 interface FarmConfig {
-  ssh: { user: string; keyPath: string }
-  studios: Array<{ id: string; host: string; role: string }>
+  ssh: { user: string; keyPath: string; passphrase?: string }
+  studios: Array<{ id: string; host: string; role: string; workerConcurrency: number }>
   supabase: { url: string; serviceRoleKey: string }
   thresholds: {
     BUILD_MAX_RETRIES: number
@@ -50,8 +50,13 @@ export class BuildRecoveryResponder {
       const alertKey = `stuck-build-${build.id}`
       if (!state.shouldAlert(alertKey, 'P1')) continue
 
-      await this.alertRouter.send('P1', 'BUILD', `Build stuck >1hr`,
-        `Build ${build.id} for commission ${build.commissionId} on ${build.studioAssignment || 'unknown'}`, build.studioAssignment || undefined)
+      await this.alertRouter.send(
+        'P1',
+        'BUILD',
+        `Build stuck >1hr`,
+        `Build ${build.id} for commission ${build.commissionId} on ${build.studioAssignment || 'unknown'}`,
+        build.studioAssignment || undefined,
+      )
       state.recordAlert(alertKey, 'P1')
 
       if (build.studioAssignment) {
@@ -59,10 +64,16 @@ export class BuildRecoveryResponder {
       }
 
       try {
-        await this.getClient().from('Build').update({
-          status: 'FAILED',
-          errorLogs: { reason: 'Auto-killed: exceeded 1-hour timeout', killedAt: new Date().toISOString() },
-        }).eq('id', build.id)
+        await this.getClient()
+          .from('Build')
+          .update({
+            status: 'FAILED',
+            errorLogs: {
+              reason: 'Auto-killed: exceeded 1-hour timeout',
+              killedAt: new Date().toISOString(),
+            },
+          })
+          .eq('id', build.id)
       } catch (err) {
         console.error(`[build-recovery] Failed to update build ${build.id}:`, err)
       }
@@ -78,21 +89,33 @@ export class BuildRecoveryResponder {
         const alertKey = `escalate-${build.commissionId}`
         if (!state.shouldAlert(alertKey, 'P0')) continue
 
-        await this.alertRouter.send('P0', 'BUILD',
+        await this.alertRouter.send(
+          'P0',
+          'BUILD',
           `Commission ${build.commissionId} failed ${build.failureCount} times — escalating`,
-          `Build ${build.buildId} has failed ${build.failureCount} times. Escalating to human review.`)
+          `Build ${build.buildId} has failed ${build.failureCount} times. Escalating to human review.`,
+        )
         state.recordAlert(alertKey, 'P0')
 
         try {
-          await this.getClient().from('Commission').update({
-            status: 'ESCALATED',
-          }).eq('id', build.commissionId)
+          await this.getClient()
+            .from('Commission')
+            .update({
+              status: 'ESCALATED',
+            })
+            .eq('id', build.commissionId)
 
-          await this.getClient().from('Build').update({
-            humanReview: true,
-          }).eq('id', build.buildId)
+          await this.getClient()
+            .from('Build')
+            .update({
+              humanReview: true,
+            })
+            .eq('id', build.buildId)
         } catch (err) {
-          console.error(`[build-recovery] Failed to escalate commission ${build.commissionId}:`, err)
+          console.error(
+            `[build-recovery] Failed to escalate commission ${build.commissionId}:`,
+            err,
+          )
         }
       }
     }
@@ -105,8 +128,10 @@ export class BuildRecoveryResponder {
     state.pruneOldBuildResults(this.config.thresholds.SUCCESS_RATE_WINDOW_MS)
 
     for (const result of recentResults) {
-      const existing = state.builds.recentResults.find(r =>
-        r.commissionId === result.commissionId && r.timestamp === new Date(result.updatedAt).getTime()
+      const existing = state.builds.recentResults.find(
+        (r) =>
+          r.commissionId === result.commissionId &&
+          r.timestamp === new Date(result.updatedAt).getTime(),
       )
       if (!existing) {
         state.builds.recentResults.push({
@@ -125,10 +150,13 @@ export class BuildRecoveryResponder {
     if (rate < this.config.thresholds.SUCCESS_RATE_CRITICAL) {
       if (state.shouldAlert('low-success-rate', 'P0')) {
         const total = state.builds.recentResults.length
-        const failures = state.builds.recentResults.filter(r => !r.success).length
-        await this.alertRouter.send('P0', 'BUILD',
+        const failures = state.builds.recentResults.filter((r) => !r.success).length
+        await this.alertRouter.send(
+          'P0',
+          'BUILD',
           `Build success rate critical: ${Math.round(rate * 100)}%`,
-          `${failures}/${total} builds failed in the last hour. Threshold: ${this.config.thresholds.SUCCESS_RATE_CRITICAL * 100}%`)
+          `${failures}/${total} builds failed in the last hour. Threshold: ${this.config.thresholds.SUCCESS_RATE_CRITICAL * 100}%`,
+        )
         state.recordAlert('low-success-rate', 'P0')
       }
     }
@@ -148,7 +176,8 @@ export class BuildRecoveryResponder {
       const elapsed = Date.now() - state.builds.queueDepthHighSince
       if (elapsed >= durationMs && state.shouldAlert('queue-depth-high', 'P1')) {
         await this.alertRouter.send(
-          'P1', 'BUILD',
+          'P1',
+          'BUILD',
           `Queue depth sustained >${trigger} for >${Math.round(elapsed / 60_000)}min`,
           `Current queue depth: ${queueDepth}. Consider adding Studio 4 to increase build capacity.`,
         )
@@ -160,7 +189,7 @@ export class BuildRecoveryResponder {
   }
 
   private async killBuildOnStudio(studioId: string, buildId: string): Promise<void> {
-    const host = this.config.studios.find(s => s.id === studioId)?.host
+    const host = this.config.studios.find((s) => s.id === studioId)?.host
     if (!host) return
 
     const ssh = new NodeSSH()
@@ -169,10 +198,11 @@ export class BuildRecoveryResponder {
         host,
         username: this.config.ssh.user,
         privateKeyPath: this.config.ssh.keyPath,
-        readyTimeout: 10_000,
+        passphrase: this.config.ssh.passphrase,
+        readyTimeout: 30_000,
       })
       await ssh.execCommand(
-        `docker ps --filter label=build_id=${buildId} -q | xargs -r docker kill 2>/dev/null || true`
+        `docker ps --filter label=build_id=${buildId} -q | xargs -r docker kill 2>/dev/null || true`,
       )
     } catch (err) {
       console.error(`[build-recovery] Failed to kill build on ${studioId}:`, err)

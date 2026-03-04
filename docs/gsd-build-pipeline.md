@@ -49,30 +49,30 @@ flowchart LR
 
 ### n8n Custom Nodes
 
-| Node | Package | Description |
-|------|---------|-------------|
-| **BmadValidator** | `n8n-nodes-mismo.bmadValidator` | Validates PRD completeness (tech_stack, api_contracts, data_boundaries) |
-| **GsdDependencyChecker** | `n8n-nodes-mismo.gsdDependencyChecker` | Parses PRD, builds dependency graph, topologically sorts tasks |
-| **GsdRetryWrapper** | `n8n-nodes-mismo.gsdRetryWrapper` | Wraps agent calls with retry (3x) + exponential backoff + circuit breaker |
-| **ContractChecker** | `n8n-nodes-mismo.contractChecker` | API contract validation and type safety checks |
-| **DbArchitectAgent** | `n8n-nodes-mismo.dbArchitectAgent` | Generates SQL schema + Zod schemas from data contracts |
-| **BackendEngineerAgent** | `n8n-nodes-mismo.backendEngineerAgent` | Generates Next.js API routes + OpenAPI spec |
-| **FrontendDeveloperAgent** | `n8n-nodes-mismo.frontendDeveloperAgent` | Generates React components + typed API client |
-| **DevOpsAgent** | `n8n-nodes-mismo.devOpsAgent` | Generates Vercel/Terraform config + env template |
-| **ErrorLogger** | `n8n-nodes-mismo.errorLogger` | Logs failures to centralized service with circuit breaker |
+| Node                       | Package                                  | Description                                                               |
+| -------------------------- | ---------------------------------------- | ------------------------------------------------------------------------- |
+| **BmadValidator**          | `n8n-nodes-mismo.bmadValidator`          | Validates PRD completeness (tech_stack, api_contracts, data_boundaries)   |
+| **GsdDependencyChecker**   | `n8n-nodes-mismo.gsdDependencyChecker`   | Parses PRD, builds dependency graph, topologically sorts tasks            |
+| **GsdRetryWrapper**        | `n8n-nodes-mismo.gsdRetryWrapper`        | Wraps agent calls with retry (3x) + exponential backoff + circuit breaker |
+| **ContractChecker**        | `n8n-nodes-mismo.contractChecker`        | API contract validation and type safety checks                            |
+| **DbArchitectAgent**       | `n8n-nodes-mismo.dbArchitectAgent`       | Generates SQL schema + Zod schemas from data contracts                    |
+| **BackendEngineerAgent**   | `n8n-nodes-mismo.backendEngineerAgent`   | Generates Next.js API routes + OpenAPI spec                               |
+| **FrontendDeveloperAgent** | `n8n-nodes-mismo.frontendDeveloperAgent` | Generates React components + typed API client                             |
+| **DevOpsAgent**            | `n8n-nodes-mismo.devOpsAgent`            | Generates Vercel/Terraform config + env template                          |
+| **ErrorLogger**            | `n8n-nodes-mismo.errorLogger`            | Logs failures to centralized service with circuit breaker                 |
 
 ### Microservices
 
-| Service | Package | Port (local) | Description |
-|---------|---------|--------------|-------------|
-| **GSD Dependency** | `@mismo/gsd-dependency` | 3010 | Topological sort, PRD parsing, cycle detection |
-| **BMAD Validator** | `@mismo/bmad-validator` | 3011 | PRD schema validation |
-| **Contract Checker** | `@mismo/contract-checker` | 3012 | API contract and type safety validation |
-| **DB Architect** | `@mismo/agent-db-architect` | 3001 | SQL + Zod + TS types from data contracts |
-| **Backend Engineer** | `@mismo/agent-backend-engineer` | 3002 | Next.js routes + OpenAPI spec |
-| **Frontend Developer** | `@mismo/agent-frontend-developer` | 3003 | React components + API client |
-| **DevOps Agent** | `@mismo/agent-devops` | 3004 | Vercel config + env template + deploy script |
-| **Error Logger** | `@mismo/error-logger` | 3005 | Centralized failure logging, circuit breaker |
+| Service                | Package                           | Port (local) | Description                                    |
+| ---------------------- | --------------------------------- | ------------ | ---------------------------------------------- |
+| **GSD Dependency**     | `@mismo/gsd-dependency`           | 3010         | Topological sort, PRD parsing, cycle detection |
+| **BMAD Validator**     | `@mismo/bmad-validator`           | 3011         | PRD schema validation                          |
+| **Contract Checker**   | `@mismo/contract-checker`         | 3012         | API contract and type safety validation        |
+| **DB Architect**       | `@mismo/agent-db-architect`       | 3030         | SQL + Zod + TS types from data contracts       |
+| **Backend Engineer**   | `@mismo/agent-backend-engineer`   | 3031         | Next.js routes + OpenAPI spec                  |
+| **Frontend Developer** | `@mismo/agent-frontend-developer` | 3032         | React components + API client                  |
+| **DevOps Agent**       | `@mismo/agent-devops`             | 3033         | Vercel config + env template + deploy script   |
+| **Error Logger**       | `@mismo/error-logger`             | 3034         | Centralized failure logging, circuit breaker   |
 
 > **Note:** For Docker deployments, validators use port 3000 (each in its own container). For local dev, use the ports above to run all services concurrently.
 
@@ -80,16 +80,16 @@ flowchart LR
 
 ## Environment Variables
 
-| Variable | Default (Docker) | Local dev example |
-|----------|------------------|-------------------|
-| `GSD_DEPENDENCY_URL` | `http://gsd-dependency:3000` | `http://localhost:3010` |
-| `BMAD_VALIDATOR_URL` | `http://bmad-validator:3000` | `http://localhost:3011` |
-| `CONTRACT_CHECKER_URL` | `http://contract-checker:3000` | `http://localhost:3012` |
-| `DB_ARCHITECT_URL` | `http://db-architect:3001` | `http://localhost:3001` |
-| `BACKEND_ENGINEER_URL` | `http://backend-engineer:3002` | `http://localhost:3002` |
-| `FRONTEND_DEVELOPER_URL` | `http://frontend-developer:3003` | `http://localhost:3003` |
-| `DEVOPS_AGENT_URL` | `http://devops-agent:3004` | `http://localhost:3004` |
-| `ERROR_LOGGER_URL` | `http://error-logger:3005` | `http://localhost:3005` |
+| Variable                 | Default (Docker)                 | Local dev example       |
+| ------------------------ | -------------------------------- | ----------------------- |
+| `GSD_DEPENDENCY_URL`     | `http://gsd-dependency:3000`     | `http://localhost:3010` |
+| `BMAD_VALIDATOR_URL`     | `http://bmad-validator:3000`     | `http://localhost:3011` |
+| `CONTRACT_CHECKER_URL`   | `http://contract-checker:3000`   | `http://localhost:3012` |
+| `DB_ARCHITECT_URL`       | `http://db-architect:3030`       | `http://localhost:3030` |
+| `BACKEND_ENGINEER_URL`   | `http://backend-engineer:3031`   | `http://localhost:3031` |
+| `FRONTEND_DEVELOPER_URL` | `http://frontend-developer:3032` | `http://localhost:3032` |
+| `DEVOPS_AGENT_URL`       | `http://devops-agent:3033`       | `http://localhost:3033` |
+| `ERROR_LOGGER_URL`       | `http://error-logger:3034`       | `http://localhost:3034` |
 
 For Docker, use service names as hostnames. For local development, set these in `.env` (see `.env.example`).
 
@@ -164,13 +164,13 @@ pnpm --filter @mismo/bmad-validator dev      # Port 3000 (use different port via
 pnpm --filter @mismo/contract-checker dev    # Port 3000 (use PORT=3007)
 
 # Agents
-pnpm --filter @mismo/agent-db-architect dev      # Port 3001
-pnpm --filter @mismo/agent-backend-engineer dev # Port 3002
-pnpm --filter @mismo/agent-frontend-developer dev # Port 3003
-pnpm --filter @mismo/agent-devops dev             # Port 3004
+pnpm --filter @mismo/agent-db-architect dev      # Port 3030
+pnpm --filter @mismo/agent-backend-engineer dev # Port 3031
+pnpm --filter @mismo/agent-frontend-developer dev # Port 3032
+pnpm --filter @mismo/agent-devops dev             # Port 3033
 
 # Error logging
-pnpm --filter @mismo/error-logger dev  # Port 3005
+pnpm --filter @mismo/error-logger dev  # Port 3034
 ```
 
 ### Option C: Docker Compose (n8n HA)

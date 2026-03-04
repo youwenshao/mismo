@@ -73,23 +73,24 @@ The deployment implements validation gates integrated into n8n workflows:
 
 The complete build pipeline adds agent microservices and error logging. See [docs/gsd-build-pipeline.md](../../docs/gsd-build-pipeline.md) for full documentation.
 
-| Service | Main Compose | Worker Compose | Port |
-|---------|--------------|----------------|------|
-| bmad-validator | ✓ | — | 3001→3000 |
-| gsd-dependency | ✓ | — | 3002→3000 |
-| contract-checker | — | ✓ | 3003→3000 |
-| farm-monitor | ✓ | — | (internal; no exposed port) |
-| db-architect | (add Dockerfile) | — | 3001 |
-| backend-engineer | (add Dockerfile) | — | 3002 |
-| frontend-developer | (add Dockerfile) | — | 3003 |
-| devops | (add Dockerfile) | — | 3004 |
-| error-logger | (add Dockerfile) | — | 3005 |
-| mobile-scaffold | (add Dockerfile) | — | 3020 |
-| mobile-feature | (add Dockerfile) | — | 3021 |
-| mobile-build-engineer | (add Dockerfile) | — | 3022 |
-| store-submission | (add Dockerfile) | — | 3023 |
+| Service               | Main Compose     | Worker Compose | Port                        |
+| --------------------- | ---------------- | -------------- | --------------------------- |
+| bmad-validator        | ✓                | —              | 3011→3000                   |
+| gsd-dependency        | ✓                | —              | 3010→3000                   |
+| contract-checker      | —                | ✓              | 3012→3000                   |
+| farm-monitor          | ✓                | —              | (internal; no exposed port) |
+| db-architect          | (add Dockerfile) | —              | 3030                        |
+| backend-engineer      | (add Dockerfile) | —              | 3031                        |
+| frontend-developer    | (add Dockerfile) | —              | 3032                        |
+| devops                | (add Dockerfile) | —              | 3033                        |
+| error-logger          | (add Dockerfile) | —              | 3034                        |
+| mobile-scaffold       | (add Dockerfile) | —              | 3020                        |
+| mobile-feature        | (add Dockerfile) | —              | 3021                        |
+| mobile-build-engineer | (add Dockerfile) | —              | 3022                        |
+| store-submission      | (add Dockerfile) | —              | 3023                        |
 
 For local development:
+
 - **GSD (web) pipeline**: `./scripts/start-build-pipeline.sh`
 - **Mobile pipeline**: `./scripts/start-mobile-pipeline.sh`
 
@@ -100,6 +101,7 @@ Set `GSD_DEPENDENCY_URL`, `BMAD_VALIDATOR_URL`, `CONTRACT_CHECKER_URL`, `DB_ARCH
 When Commission status becomes COMPLETED, the `notify_n8n_commission_completed` trigger sends a webhook to n8n. Import `packages/n8n-nodes/workflows/delivery-pipeline.json` and configure the webhook URL in the Supabase pg_net function to point to your n8n instance (e.g. `https://n8n.yourdomain.com/webhook/delivery-pipeline`).
 
 **Required for Delivery Pipeline:**
+
 - `GITHUB_TOKEN` — GitHub PAT with repo, admin:org, user scope
 - `GITHUB_DELIVERY_ORG` — Agency org (e.g. `mismo-agency`)
 - `DELIVERY_AGENT_URL` — Internal app URL (e.g. `http://internal-app:3001` when internal app runs in Docker)

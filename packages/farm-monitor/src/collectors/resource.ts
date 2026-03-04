@@ -1,13 +1,15 @@
 import { NodeSSH } from 'node-ssh'
+import * as net from 'net'
 
 interface StudioConfig {
   id: string
   host: string
   role: 'control-plane' | 'worker'
+  workerConcurrency: number
 }
 
 interface FarmConfig {
-  ssh: { user: string; keyPath: string }
+  ssh: { user: string; keyPath: string; passphrase?: string }
 }
 
 export interface ResourceMetrics {
@@ -27,23 +29,60 @@ export class ResourceCollector {
   }
 
   async collect(studio: StudioConfig): Promise<ResourceMetrics | null> {
+    const isReachable = await new Promise<boolean>((resolve) => {
+      const socket = net.connect(22, studio.host, () => {
+        socket.end()
+        resolve(true)
+      })
+      socket.setTimeout(5000)
+      socket.on('timeout', () => {
+        socket.destroy()
+        resolve(false)
+      })
+      socket.on('error', () => {
+        resolve(false)
+      })
+    })
+
+    if (!isReachable) {
+      console.error(`[resource-collector] Host ${studio.host} is unreachable on port 22`)
+      return null
+    }
+
     const ssh = new NodeSSH()
+    const start = Date.now()
     try {
+      console.log(`[resource-collector] Connecting to ${studio.id} (${studio.host})...`)
       await ssh.connect({
         host: studio.host,
         username: this.config.ssh.user,
         privateKeyPath: this.config.ssh.keyPath,
-        readyTimeout: 10_000,
+        passphrase: this.config.ssh.passphrase,
+        readyTimeout: 30_000,
       })
+      console.log(`[resource-collector] Connected to ${studio.id} in ${Date.now() - start}ms`)
 
       const [cpuResult, ramResult, diskResult, dockerResult] = await Promise.all([
-        ssh.execCommand("top -l 1 -n 0 | awk '/CPU usage/ { gsub(/%/,\"\"); printf \"%d\", $3+$5 }'"),
-        ssh.execCommand("vm_stat | awk '/Pages active/ {a=$NF+0} /Pages wired/ {w=$NF+0} /Pages speculative/ {s=$NF+0} /Pages occupied by compressor/ {c=$NF+0} /Pages free/ {f=$NF+0} /Pages inactive/ {i=$NF+0} END { u=a+w+s+c; t=u+f+i; if(t>0) printf \"%d\",u*100/t; else print 0}'"),
-        ssh.execCommand("df / | awk 'NR==2 { gsub(/%/,\"\",$5); print $5 }'"),
-        ssh.execCommand("docker ps --format '{{.Names}}' 2>/dev/null | wc -l; docker ps --filter name=n8n-worker --format '{{.Names}}' 2>/dev/null | head -1; docker inspect n8n-worker --format '{{.RestartCount}}' 2>/dev/null || echo 0"),
+        ssh.execCommand('top -l 1 -n 0 | awk \'/CPU usage/ { gsub(/%/,""); printf "%d", $3+$5 }\''),
+        ssh.execCommand(
+          'vm_stat | awk \'/Pages active/ {a=$NF+0} /Pages wired/ {w=$NF+0} /Pages speculative/ {s=$NF+0} /Pages occupied by compressor/ {c=$NF+0} /Pages free/ {f=$NF+0} /Pages inactive/ {i=$NF+0} END { u=a+w+s+c; t=u+f+i; if(t>0) printf "%d",u*100/t; else print 0}\'',
+        ),
+        ssh.execCommand('df / | awk \'NR==2 { gsub(/%/,"",$5); print $5 }\''),
+        ssh.execCommand(
+          "export PATH=$PATH:/usr/local/bin:/opt/homebrew/bin; docker ps --format '{{.Names}}' | wc -l | tr -d ' '; WORKER_NAME=$(docker ps --filter name=n8n-worker --format '{{.Names}}' | head -1); echo ${WORKER_NAME:-none}; if [ -n \"$WORKER_NAME\" ]; then docker inspect \"$WORKER_NAME\" --format '{{.RestartCount}}' 2>/dev/null || echo 0; else echo 0; fi",
+        ),
       ])
 
-      const dockerLines = dockerResult.stdout.trim().split('\n')
+      if (dockerResult.stderr) {
+        console.warn(
+          `[resource-collector] Docker stderr on ${studio.id}: ${dockerResult.stderr.trim()}`,
+        )
+      }
+
+      const dockerLines = dockerResult.stdout
+        .split('\n')
+        .map((l) => l.trim())
+        .filter((l) => l.length > 0)
 
       return {
         cpuPercent: parseInt(cpuResult.stdout.trim()) || 0,

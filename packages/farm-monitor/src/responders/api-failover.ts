@@ -20,6 +20,9 @@ export class ApiFailoverResponder {
   ) {}
 
   private getClient(): SupabaseClient {
+    if (!this.config.supabase.url) {
+      throw new Error('SUPABASE_URL is not configured. Check .env or environment variables.')
+    }
     if (!this.supabase) {
       this.supabase = createClient(this.config.supabase.url, this.config.supabase.serviceRoleKey)
     }
@@ -42,8 +45,12 @@ export class ApiFailoverResponder {
       if (state.api.activeProvider !== 'deepseek') {
         state.api.activeProvider = 'deepseek'
         if (state.shouldAlert('kimi-failover', 'P1')) {
-          await this.alertRouter.send('P1', 'API', 'Kimi API degraded — switching to DeepSeek',
-            `Kimi latency: ${kimi.latencyMs}ms, status: ${kimi.status}${kimi.error ? `, error: ${kimi.error}` : ''}`)
+          await this.alertRouter.send(
+            'P1',
+            'API',
+            'Kimi API degraded — switching to DeepSeek',
+            `Kimi latency: ${kimi.latencyMs}ms, status: ${kimi.status}${kimi.error ? `, error: ${kimi.error}` : ''}`,
+          )
           state.recordAlert('kimi-failover', 'P1')
         }
         await this.setActiveProvider('deepseek')
@@ -61,13 +68,20 @@ export class ApiFailoverResponder {
     }
   }
 
-  private async handleSupabase(supabase: ApiHealthResult['supabase'], state: MonitorState): Promise<void> {
+  private async handleSupabase(
+    supabase: ApiHealthResult['supabase'],
+    state: MonitorState,
+  ): Promise<void> {
     if (supabase.status === 'down') {
       if (!state.api.supabaseDown) {
         state.api.supabaseDown = true
         if (state.shouldAlert('supabase-down', 'P0')) {
-          await this.alertRouter.send('P0', 'API', 'Supabase connection lost',
-            `Error: ${supabase.error || 'Connection failed'}. Builds will be queued locally.`)
+          await this.alertRouter.send(
+            'P0',
+            'API',
+            'Supabase connection lost',
+            `Error: ${supabase.error || 'Connection failed'}. Builds will be queued locally.`,
+          )
           state.recordAlert('supabase-down', 'P0')
         }
       }
@@ -76,21 +90,32 @@ export class ApiFailoverResponder {
       if (state.api.supabaseDown) {
         state.api.supabaseDown = false
         console.log('[api-failover] Supabase connection restored')
-        await this.alertRouter.send('P2', 'API', 'Supabase connection restored',
-          `Connection back online after ${state.api.supabaseLastAttempt ? Math.round((Date.now() - state.api.supabaseLastAttempt) / 1000) : '?'}s`)
+        await this.alertRouter.send(
+          'P2',
+          'API',
+          'Supabase connection restored',
+          `Connection back online after ${state.api.supabaseLastAttempt ? Math.round((Date.now() - state.api.supabaseLastAttempt) / 1000) : '?'}s`,
+        )
       }
     }
   }
 
-  private async handleGitHub(github: ApiHealthResult['github'], state: MonitorState): Promise<void> {
+  private async handleGitHub(
+    github: ApiHealthResult['github'],
+    state: MonitorState,
+  ): Promise<void> {
     if (github.status === 'rate_limited') {
       if (!state.api.githubRateLimited) {
         state.api.githubRateLimited = true
         state.api.githubResetAt = github.resetAt
         const resetTime = new Date(github.resetAt).toISOString()
         if (state.shouldAlert('github-rate-limit', 'P1')) {
-          await this.alertRouter.send('P1', 'API', 'GitHub API rate limit approaching',
-            `Remaining: ${github.remaining} requests. Resets at ${resetTime}. Pausing new repo creation.`)
+          await this.alertRouter.send(
+            'P1',
+            'API',
+            'GitHub API rate limit approaching',
+            `Remaining: ${github.remaining} requests. Resets at ${resetTime}. Pausing new repo creation.`,
+          )
           state.recordAlert('github-rate-limit', 'P1')
         }
         await this.setGitHubPause(true, github.resetAt)
@@ -108,11 +133,14 @@ export class ApiFailoverResponder {
   private async setActiveProvider(provider: string): Promise<void> {
     try {
       const client = this.getClient()
-      await client.from('SystemConfig').upsert({
-        key: 'active_ai_provider',
-        value: { provider, updatedAt: new Date().toISOString() },
-        updatedBy: 'farm-monitor',
-      }, { onConflict: 'key' })
+      await client.from('SystemConfig').upsert(
+        {
+          key: 'active_ai_provider',
+          value: { provider, updatedAt: new Date().toISOString() },
+          updatedBy: 'farm-monitor',
+        },
+        { onConflict: 'key' },
+      )
     } catch (err) {
       console.error('[api-failover] Failed to update active provider in DB:', err)
     }
@@ -121,11 +149,18 @@ export class ApiFailoverResponder {
   private async setGitHubPause(paused: boolean, resetAt: number): Promise<void> {
     try {
       const client = this.getClient()
-      await client.from('SystemConfig').upsert({
-        key: 'github_builds_paused',
-        value: { paused, resetAt: resetAt ? new Date(resetAt).toISOString() : null, updatedAt: new Date().toISOString() },
-        updatedBy: 'farm-monitor',
-      }, { onConflict: 'key' })
+      await client.from('SystemConfig').upsert(
+        {
+          key: 'github_builds_paused',
+          value: {
+            paused,
+            resetAt: resetAt ? new Date(resetAt).toISOString() : null,
+            updatedAt: new Date().toISOString(),
+          },
+          updatedBy: 'farm-monitor',
+        },
+        { onConflict: 'key' },
+      )
     } catch (err) {
       console.error('[api-failover] Failed to update GitHub pause state:', err)
     }

@@ -8,7 +8,8 @@ export class BackendEngineerAgent implements INodeType {
     icon: 'fa:server',
     group: ['transform'],
     version: 1,
-    description: 'Generates Next.js API routes, OpenAPI spec, and TypeScript types from DB schema and API contracts',
+    description:
+      'Generates Next.js API routes, OpenAPI spec, and TypeScript types from DB schema and API contracts',
     defaults: {
       name: 'Backend Engineer Agent',
     },
@@ -42,7 +43,7 @@ export class BackendEngineerAgent implements INodeType {
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
     const items = this.getInputData()
     const returnData: INodeExecutionData[] = []
-    const baseUrl = process.env.BACKEND_ENGINEER_URL || 'http://backend-engineer:3002'
+    const baseUrl = process.env.BACKEND_ENGINEER_URL || 'http://backend-engineer:3031'
 
     for (let i = 0; i < items.length; i++) {
       const buildId = this.getNodeParameter('buildId', i) as string
@@ -50,7 +51,8 @@ export class BackendEngineerAgent implements INodeType {
       const apiContractsRaw = this.getNodeParameter('apiContracts', i) as string
 
       const dbSchema = typeof dbSchemaRaw === 'string' ? JSON.parse(dbSchemaRaw) : dbSchemaRaw
-      const apiContracts = typeof apiContractsRaw === 'string' ? JSON.parse(apiContractsRaw) : apiContractsRaw
+      const apiContracts =
+        typeof apiContractsRaw === 'string' ? JSON.parse(apiContractsRaw) : apiContractsRaw
 
       try {
         const response = await this.helpers.request({

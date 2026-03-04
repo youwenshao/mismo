@@ -13,6 +13,7 @@
     "@mismo/shared": "workspace:*",
     "@supabase/supabase-js": "^2.49.1",
     "better-sqlite3": "^11.7.0",
+    "dotenv": "^17.3.1",
     "node-ssh": "^13.2.1"
   },
   "devDependencies": {

@@ -56,6 +56,7 @@ export function StudioCard({
   role,
   chip,
   ram,
+  workerConcurrency,
   services,
   online,
   cpuPercent,
@@ -121,16 +122,22 @@ export function StudioCard({
       <div className="flex items-center gap-3 text-[10px] text-gray-500 mb-3 border-t border-gray-100 pt-3">
         <span>{containerCount} containers</span>
         <span className="text-gray-200">|</span>
-        <span className={workerRunning ? 'text-green-600' : 'text-red-500'}>
-          Worker {workerRunning ? 'up' : 'down'}
-        </span>
-        {workerRestartCount > 0 && (
+        {workerConcurrency > 0 ? (
           <>
-            <span className="text-gray-200">|</span>
-            <span className={workerRestartCount >= 3 ? 'text-red-500' : 'text-gray-500'}>
-              {workerRestartCount} restarts
+            <span className={workerRunning ? 'text-green-600' : 'text-red-500'}>
+              Worker {workerRunning ? 'up' : 'down'}
             </span>
+            {workerRestartCount > 0 && (
+              <>
+                <span className="text-gray-200">|</span>
+                <span className={workerRestartCount >= 3 ? 'text-red-500' : 'text-gray-500'}>
+                  {workerRestartCount} restarts
+                </span>
+              </>
+            )}
           </>
+        ) : (
+          <span className="text-gray-400">No worker</span>
         )}
       </div>
 

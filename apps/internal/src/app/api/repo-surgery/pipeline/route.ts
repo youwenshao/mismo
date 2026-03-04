@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     const pipeline = new RepoSurgeryPipeline()
     const result = await pipeline.run(surgeryId, parsed)
 
-    return NextResponse.json({ surgeryId, ...result })
+    return NextResponse.json(result)
   } catch (err) {
     if (err instanceof ZodError) {
       return NextResponse.json(

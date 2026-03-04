@@ -80,7 +80,7 @@ export function calculatePriceEstimate(input: PricingInput): PriceEstimate {
   for (const domain of input.regulatoryDomains) {
     const lower = domain.toLowerCase()
     if (lower.includes('health') || lower.includes('medical') || lower.includes('hipaa')) {
-      complianceAddon += PRICING.complianceAddon.healthcare
+      complianceAddon += PRICING.complianceAddon.hipaa
     } else if (lower.includes('financ') || lower.includes('bank') || lower.includes('payment')) {
       complianceAddon += PRICING.complianceAddon.financial
     } else if (lower.includes('child') || lower.includes('minor') || lower.includes('coppa')) {

@@ -1,13 +1,6 @@
 'use client'
 
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 
 interface QueueDataPoint {
   time: string
@@ -46,6 +39,7 @@ export function QueueDepthChart({ data }: QueueDepthChartProps) {
             axisLine={false}
             tickLine={false}
             width={30}
+            domain={[0, 'auto']}
           />
           <Tooltip
             contentStyle={{
@@ -58,7 +52,6 @@ export function QueueDepthChart({ data }: QueueDepthChartProps) {
           <Area
             type="monotone"
             dataKey="studio1"
-            stackId="1"
             stroke="#000"
             fill="#000"
             fillOpacity={0.1}
@@ -67,7 +60,6 @@ export function QueueDepthChart({ data }: QueueDepthChartProps) {
           <Area
             type="monotone"
             dataKey="studio2"
-            stackId="1"
             stroke="#6b7280"
             fill="#6b7280"
             fillOpacity={0.1}
@@ -76,7 +68,6 @@ export function QueueDepthChart({ data }: QueueDepthChartProps) {
           <Area
             type="monotone"
             dataKey="studio3"
-            stackId="1"
             stroke="#d1d5db"
             fill="#d1d5db"
             fillOpacity={0.1}

@@ -24,9 +24,8 @@ export function Sidebar() {
   }
 
   async function handleSignOut() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    window.location.href = 'http://localhost:3000'
+    await fetch('/api/auth/signout', { method: 'POST' })
+    window.location.href = 'http://localhost:3000/auth'
   }
 
   return (

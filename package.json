@@ -15,7 +15,8 @@
     "repo-surgery:cleanup": "bash scripts/repo-surgery-cleanup.sh",
     "prepare": "husky",
     "security:audit": "pnpm audit --audit-level=high",
-    "security:secrets": "gitleaks detect --source . --verbose"
+    "security:secrets": "gitleaks detect --source . --verbose",
+    "test:frontend-deployment": "bash scripts/test-frontend-deployment.sh"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -34,8 +35,12 @@
     "turbo": "^2.4.0"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": ["prettier --write"],
-    "*.{json,md}": ["prettier --write"]
+    "*.{ts,tsx,js,jsx}": [
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "lucide-react": "^0.575.0"

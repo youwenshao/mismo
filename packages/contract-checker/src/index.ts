@@ -1,7 +1,6 @@
 import express, { Request, Response } from 'express'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@mismo/db'
 
-const prisma = new PrismaClient()
 const app = express()
 app.use(express.json())
 
@@ -42,7 +41,7 @@ async function logFailureToBuild(buildId: string | undefined, source: string, er
     data: {
       status: 'FAILED',
       failureCount: { increment: 1 },
-      errorLogs: [...existingLogs, { source, errors, timestamp: new Date().toISOString() }],
+      errorLogs: [...existingLogs, { source, errors, timestamp: new Date().toISOString() }] as any,
     },
   })
 }
@@ -62,7 +61,8 @@ function checkApiContracts(
     const normalizedMethod = endpoint.method.toUpperCase()
 
     const match = implementedRoutes.find(
-      (r) => normalizePath(r.path) === normalizedPath && r.method.toUpperCase() === normalizedMethod,
+      (r) =>
+        normalizePath(r.path) === normalizedPath && r.method.toUpperCase() === normalizedMethod,
     )
 
     if (!match) {
@@ -126,7 +126,9 @@ function checkTypeSafety(
       }
 
       if (/\bfetch\s*\(/.test(line)) {
-        const surroundingLines = lines.slice(Math.max(0, i - 2), Math.min(lines.length, i + 5)).join('\n')
+        const surroundingLines = lines
+          .slice(Math.max(0, i - 2), Math.min(lines.length, i + 5))
+          .join('\n')
         const hasValidation = /\.parse\(|\.safeParse\(|z\.\w+|Schema\b/.test(surroundingLines)
         if (!hasValidation) {
           violations.push({
@@ -147,7 +149,7 @@ function checkTypeSafety(
       })
 
       const referencesSchema = identifiers.some(
-        (id) => file.code.includes(id) || file.code.includes(`from`) && file.code.includes(id),
+        (id) => file.code.includes(id) || (file.code.includes(`from`) && file.code.includes(id)),
       )
 
       if (!referencesSchema) {
@@ -187,7 +189,9 @@ app.post('/check-api', async (req: Request, res: Response) => {
     return res.status(status).json({ success: true, ...result })
   } catch (error) {
     console.error('[check-api]', error)
-    return res.status(500).json({ success: false, valid: false, mismatches: [], error: 'Internal Server Error' })
+    return res
+      .status(500)
+      .json({ success: false, valid: false, mismatches: [], error: 'Internal Server Error' })
   }
 })
 
@@ -214,7 +218,9 @@ app.post('/check-types', async (req: Request, res: Response) => {
     return res.status(status).json({ success: true, ...result })
   } catch (error) {
     console.error('[check-types]', error)
-    return res.status(500).json({ success: false, valid: false, violations: [], error: 'Internal Server Error' })
+    return res
+      .status(500)
+      .json({ success: false, valid: false, violations: [], error: 'Internal Server Error' })
   }
 })
 
@@ -224,7 +230,14 @@ app.post('/check', async (req: Request, res: Response) => {
   if (apiContracts && implementedRoutes) {
     try {
       if (!apiContracts?.endpoints || !Array.isArray(implementedRoutes)) {
-        return res.status(400).json({ success: false, valid: false, mismatches: [], error: 'Invalid apiContracts or implementedRoutes' })
+        return res
+          .status(400)
+          .json({
+            success: false,
+            valid: false,
+            mismatches: [],
+            error: 'Invalid apiContracts or implementedRoutes',
+          })
       }
       const result = checkApiContracts(apiContracts, implementedRoutes)
       if (!result.valid) {
@@ -366,7 +379,9 @@ app.post('/check-mobile-architecture', async (req: Request, res: Response) => {
     return res.status(result.valid ? 200 : 400).json({ success: true, ...result })
   } catch (error) {
     console.error('[check-mobile-architecture]', error)
-    return res.status(500).json({ success: false, valid: false, violations: [], error: 'Internal Server Error' })
+    return res
+      .status(500)
+      .json({ success: false, valid: false, violations: [], error: 'Internal Server Error' })
   }
 })
 

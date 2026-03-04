@@ -20,22 +20,24 @@ export async function POST(req: NextRequest) {
     }
 
     const parser = new ASTParser()
-    const boundaryMapper = new BoundaryMapper(parser)
-    const contractExtractor = new ContractExtractor(parser)
+    const boundaryMapper = new BoundaryMapper()
+    const contractExtractor = new ContractExtractor()
+
+    const astData = await parser.parseDirectory(body.cloneDir)
 
     if (body.operation === 'boundary') {
-      const boundaryMap = await boundaryMapper.classifyDirectory(body.cloneDir)
+      const boundaryMap = await boundaryMapper.classifyDirectory(body.cloneDir, astData)
       return NextResponse.json({ boundaryMap })
     }
 
     if (body.operation === 'contracts') {
-      const contracts = await contractExtractor.extract(body.cloneDir)
+      const contracts = await contractExtractor.extract(body.cloneDir, astData)
       return NextResponse.json({ contracts })
     }
 
     const [boundaryMap, contracts] = await Promise.all([
-      boundaryMapper.classifyDirectory(body.cloneDir),
-      contractExtractor.extract(body.cloneDir),
+      boundaryMapper.classifyDirectory(body.cloneDir, astData),
+      contractExtractor.extract(body.cloneDir, astData),
     ])
 
     return NextResponse.json({ boundaryMap, contracts })

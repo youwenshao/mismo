@@ -22,7 +22,10 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!user) {
-    return NextResponse.redirect(`${WEB_APP_URL}/auth`)
+    const { pathname } = request.nextUrl
+    return NextResponse.redirect(
+      `${WEB_APP_URL}/auth?next=${encodeURIComponent('http://localhost:3001' + pathname)}`,
+    )
   }
 
   return supabaseResponse

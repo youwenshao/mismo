@@ -8,7 +8,8 @@ export class ErrorLogger implements INodeType {
     icon: 'fa:exclamation-triangle',
     group: ['transform'],
     version: 1,
-    description: 'Logs errors to the centralized error logging service with circuit breaker support',
+    description:
+      'Logs errors to the centralized error logging service with circuit breaker support',
     defaults: {
       name: 'Error Logger',
     },
@@ -52,7 +53,7 @@ export class ErrorLogger implements INodeType {
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
     const items = this.getInputData()
     const returnData: INodeExecutionData[] = []
-    const baseUrl = process.env.ERROR_LOGGER_URL || 'http://error-logger:3005'
+    const baseUrl = process.env.ERROR_LOGGER_URL || 'http://error-logger:3034'
 
     for (let i = 0; i < items.length; i++) {
       const buildId = this.getNodeParameter('buildId', i) as string

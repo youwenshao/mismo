@@ -6,6 +6,7 @@ import { hashEmail, isWhitelistedAdminWithDb } from '@/lib/auth'
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl
   const code = searchParams.get('code')
+  const next = searchParams.get('next')
   const internalUrl = process.env.INTERNAL_APP_URL ?? 'http://localhost:3001'
 
   if (!code) {
@@ -63,7 +64,9 @@ export async function GET(request: NextRequest) {
 
   let redirectUrl: string
 
-  if (dbUser.role === 'ADMIN' || dbUser.role === 'ENGINEER') {
+  if (next) {
+    redirectUrl = next
+  } else if (dbUser.role === 'ADMIN' || dbUser.role === 'ENGINEER') {
     redirectUrl = internalUrl
   } else if (!dbUser.hasCompletedOnboarding) {
     redirectUrl = `${origin}/chat`

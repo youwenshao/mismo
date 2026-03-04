@@ -1,20 +1,10 @@
-type NotificationEvent =
-  | 'BUILD_STARTED'
-  | 'BUILD_PROGRESS'
-  | 'BUILD_COMPLETE'
-  | 'TRANSFER_READY'
-  | 'SUPPORT_REQUIRED'
-  | 'FEEDBACK_REQUEST'
-  | 'MAINTENANCE_REPORT'
-  | 'FARM_ALERT'
-
 type NotificationChannel = 'EMAIL' | 'SLACK' | 'SMS' | 'PHONE'
 import { sendEmail } from './channels/resend'
 import { sendSlackNotification } from './channels/slack'
 import { sendSms } from './channels/sms'
 import { makePhoneCall } from './channels/phone'
 import { getStrings, type Locale } from './i18n/strings'
-import type { AnyEventData, EventDataMap } from './templates/registry'
+import type { AnyEventData, EventDataMap, NotificationEvent } from './templates/registry'
 import { renderTemplate } from './templates/render'
 
 export interface DispatchResult {
@@ -128,7 +118,10 @@ export async function dispatchFarmAlert(options: FarmAlertOptions): Promise<Disp
       }
 
       try {
-        const callResult = await makePhoneCall({ to: alertPhone, message: `Priority zero farm alert: ${title}. ${body}` })
+        const callResult = await makePhoneCall({
+          to: alertPhone,
+          message: `Priority zero farm alert: ${title}. ${body}`,
+        })
         channels.push({ channel: 'PHONE', success: true, messageId: callResult.sid })
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err)
